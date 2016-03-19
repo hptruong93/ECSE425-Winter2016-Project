@@ -282,8 +282,14 @@ public class Assembler {
 		return input.substring(0, index);
 	}
 
+	/**
+	 * Assume first instruction starts at 0x00.
+	 * Each instruction is 32 bits = 4 bytes
+	 * @param name name of the label
+	 * @return the address at which the label is at
+	 */
 	private static int getLabelAddress(String name) {
-		return labels.get(name);
+		return 4 * labels.get(name);
 	}
 
 	private static String toImmediate(int immediate) {
