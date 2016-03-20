@@ -2,6 +2,8 @@
 vlib work
 
 ;#Compile everything
+vcom CPU.vhd
+vcom decoder.vhd
 vcom ALU.vhd
 vcom test.vhd
 
@@ -10,4 +12,4 @@ vsim -t ps fsm_tb
 
 force -deposit clk 0 0 ns, 1 0.5 ns -repeat 1 ns
 
-run 200ns
+#run 20ns
