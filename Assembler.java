@@ -136,14 +136,14 @@ public class Assembler {
 			+"or		$23 $24 $31		\n"
 			+"andi		$23 $10 100		\n"
 			+"ori		$1 	$2	4 	\n"
-			+"nor		$1	$2	$3	\n"
+			+"nor		$1	$2	$3	\n"// wrong machine code output correct is 4392997
 			+"xor		$1 	$2 	$3	\n"
 			+"xori		$2	$5	6	\n"
-			+"sll		$2 	$3	$7	\n"
-			+"srl		$2	$6	$8	\n"
+			+"sll		$2 	$3	$7	\n"// way off correct value 200704
+			+"srl		$2	$6	$8	\n"// wrong
 			+"sra		$23	$5	$6	\n"
-			+"lw 		$23	1000($5)	\n"
-			+"sw		$1	100($2)		\n"
+			+"lw 		$23	1000($5)	\n"// wrong register rs
+			+"sw		$1	100($2)		\n"// wrong  
 			+"lb		$3	23($4)		\n"
 			+"sb		$1	23($3)		\n"
 			+"beq		$5	$6	100	\n"/*Not handling constant value for BEQ-- Check line 364 */
@@ -155,9 +155,9 @@ public class Assembler {
 			+"jr		$31			\n"
 			+"jal		12356			\n";
 
-		magic(input);
+		loopTwice(input);
 
-		input = "#Fibonacci Sequence#\n" 
+/*		input = "#Fibonacci Sequence#\n" 
 			+ "xor $1 $1  $01 #set register #1 to 0\n" 
 			+ "xor $2 $02 $0002 #set register #2 to 0\n"
 			+ "xor $3 $3 $3 #output register\n"
@@ -175,9 +175,9 @@ public class Assembler {
 			+ "j Loop\n"
 			+ "End:\n" 
 			+ "jr $31";
-		magic(input);
+		loopTwice(input);
+*/
 	}
-
 
 	private static void loopTwice(String input) {
 		String[] lines = input.split("\n");
@@ -204,6 +204,7 @@ public class Assembler {
                 }
 	}
 
+private	static int n = 0;
 	private static void process(int lineNumber, String line, boolean labelingOnly) {
 		line = removeComments(line).trim();
 		if (line.isEmpty()) {
@@ -230,7 +231,9 @@ public class Assembler {
 		if (!labelingOnly && !command.isEmpty()) {
 			List<String> split = split(command);
 			String result = generate(split);
-			System.out.print(result.substring(0,6) + "   " + result.substring(6)+ "\n");
+		System.out.print(n + ": " + result.substring(0,4) + " " + result.substring(4, 8) + " " + result.substring(8, 12) + " " +  result.substring(12, 16) + " " +  result.substring(16, 20) + " " + result.substring(20, 24) + " " + result.substring(24, 28) + " " +  result.substring(28, 32) + "  ----  " + command + "\n");
+		//	System.out.println(Integer.parseInt(result, 2));
+		n++;
 		}
 	}
 
@@ -302,8 +305,8 @@ public class Assembler {
 					toBinary(0, SHIFT_AMOUNT_LENGTH) + toFunction(op);
 		} else if (branchType.contains(op)) {
 			checkParam(3, command);
-			String s = command.get(1);
-			String t = command.get(2);
+			String t = command.get(1);
+			String s = command.get(2);
 			String label = command.get(3);
 
 			result = toOpCode(op) + toReg(s) + toReg(t) + toImmediate(getLabelAddress(label));
