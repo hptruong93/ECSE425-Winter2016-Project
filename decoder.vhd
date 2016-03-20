@@ -8,7 +8,10 @@ entity Decoder is
 port (	clk 	: in STD_LOGIC;
 			reset : in STD_LOGIC;
 			instruction : in STD_LOGIC_VECTOR(32-1 downto 0);
+
+			pc_reg : in STD_LOGIC_VECTOR(32-1 downto 0);
 			registers : in register_array;
+
 			operation : out STD_LOGIC_VECTOR(6-1 downto 0);
 			destination_register : out STD_LOGIC_VECTOR(5-1 downto 0); --send to writeback
 			signal_to_mem : out STD_LOGIC_VECTOR(3-1 downto 0);
@@ -44,8 +47,10 @@ begin
 		if reset = '1' then
 			
 		elsif (rising_edge(clk)) then
+			branch_signal <= BRANCH_NOT;
+
 			case( op_code ) is
-			
+				
 				when "000000" =>
 					operation <= funct;
 					destination_register <= rd;
@@ -85,6 +90,11 @@ begin
 
 						--A wild jr appears
 						when "001000" => --jr
+							operation <= "100000"; --add
+							data1 <= registers(to_integer(unsigned(rs)));
+							data2 <= registers(0);
+							destination_register <= "00000"; --Don't write back
+							writeback_source <= ALU_AS_SOURCE;
 							branch_signal <= BRANCH_ALWAYS;
 -----------------------------------------------------------------------------------------------------------------------------------
 -----------------------------------------------SHIFTS OPERATIONS-------------------------------------------------------------------
@@ -154,7 +164,7 @@ begin
 				when "001111" => --lui --We shift the immediate value by 16 using the ALU
 					operation <= "000000"; --sll
 					data1	<= STD_LOGIC_VECTOR(resize(signed(immediate), data1'length));
-					data2	<= STD_LOGIC_VECTOR(to_unsigned(16, data2'length));--STD_LOGIC_VECTOR(resize(unsigned("1000"), data2'length));
+					data2	<= STD_LOGIC_VECTOR(to_unsigned(16, data2'length));
 					destination_register <= rt;
 					writeback_source <= ALU_AS_SOURCE;
 				when "100011" => --lw
@@ -187,20 +197,35 @@ begin
 					signal_to_mem <= STORE_BYTE;
 -----------------------------------------------------------------------------------------------------------------------------------
 -----------------------------------------------BRANCH AND JUMPS--------------------------------------------------------------------
+-----------------------------------------------Assume resolved in EX---------------------------------------------------------------
 -----------------------------------------------------------------------------------------------------------------------------------
 				when "000100" => --beq
-					--if registers(to_integer(unsigned(rs))) = registers(to_integer(unsigned(rt))) then
-					--	branch_signal <= BRANCH_ALWAYS;
-					--else
-					--	branch_signal <= 
-					--end if;
+					operation <= "100010"; --sub
+					data1 <= registers(to_integer(unsigned(rs)));
+					data2 <= registers(to_integer(unsigned(rt)));
+					destination_register <= "00000"; --Don't write back
+					writeback_source <= MEM_AS_SOURCE;
+					branch_signal <= BRANCH_IF_ZERO;
 				when "000101" => --bne
-
+					operation <= "100010"; --sub
+					data1 <= registers(to_integer(unsigned(rs)));
+					data2 <= registers(to_integer(unsigned(rt)));
+					destination_register <= "00000"; --Don't write back
+					writeback_source <= MEM_AS_SOURCE;
+					branch_signal <= BRANCH_IF_NOT_ZERO;
 				when "000010" => --j
+					operation <= "100000"; --add
+					data1 <= std_logic_vector(resize(signed(target), data1'length));;
+					data2 <= registers(0);
+					destination_register <= "00000"; --Don't write back
+					writeback_source <= MEM_AS_SOURCE;
 					branch_signal <= BRANCH_ALWAYS;
-
-				
-				when "000011" => --jal
+				when "000011" => --jal --> $31 = $PC + 8, jump
+					operation <= "100000"; --add
+					data1	<= pc_reg;
+					data2	<= STD_LOGIC_VECTOR(to_unsigned(8, data2'length));
+					destination_register <= "11111"; --$31 = $PC + 8
+					writeback_source <= ALU_AS_SOURCE;
 					branch_signal <= BRANCH_ALWAYS;
 
 
