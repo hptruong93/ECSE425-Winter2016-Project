@@ -2,10 +2,10 @@ LIBRARY ieee;
 USE ieee.STD_LOGIC_1164.all;
 use IEEE.numeric_std.all;
 
-ENTITY fsm_tb IS
-END fsm_tb;
+ENTITY alu_tb IS
+END alu_tb;
 
-ARCHITECTURE behaviour OF fsm_tb IS
+ARCHITECTURE behaviour OF alu_tb IS
 
 SIGNAL clk, reset: STD_LOGIC := '0';
 CONSTANT clk_period : time := 1 ns;
@@ -33,7 +33,7 @@ signal expected_hi, expected_lo, lo_reg, hi_reg : signed(32-1 downto 0);
 
 
 BEGIN
-	test_bench: ALU	PORT MAP(clk, reset, data1_test, data2_test, operation, lo_reg, hi_reg, result);
+	test_bench: ALU PORT MAP(clk, reset, data1_test, data2_test, operation, lo_reg, hi_reg, result);
 
 	 --clock process
 	clk_process : PROCESS
