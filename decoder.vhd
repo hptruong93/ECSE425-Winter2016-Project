@@ -13,8 +13,9 @@ port (	clk 	: in STD_LOGIC;
 			registers : in register_array;
 
 			operation : out STD_LOGIC_VECTOR(6-1 downto 0);
-			destination_register : out STD_LOGIC_VECTOR(5-1 downto 0); --send to writeback
-			signal_to_mem : out STD_LOGIC_VECTOR(3-1 downto 0);
+			mem_writeback_register : out STD_LOGIC_VECTOR(5-1 downto 0); --send to memstage or writeback
+			-- for store, this represents the register that we're storing. For load, this represents the register getting the value from memory.
+			signal_to_mem : out STD_LOGIC_VECTOR(3-1 downto 0); --send to mem stage
 			writeback_source : out STD_LOGIC_VECTOR(3-1 downto 0); --send to writeback
 			branch_signal : out STD_LOGIC_VECTOR(2-1 downto 0); --send to branch
 			data1 : out STD_LOGIC_VECTOR(32-1 downto 0); --send to ALU
@@ -53,7 +54,7 @@ begin
 				
 				when "000000" =>
 					operation <= funct;
-					destination_register <= rd;
+					mem_writeback_register <= rd;
 					case( funct ) is
 						when "100000" => --add
 							data1 <= registers(to_integer(unsigned(rs)));
@@ -93,8 +94,8 @@ begin
 							operation <= "100000"; --add
 							data1 <= registers(to_integer(unsigned(rs)));
 							data2 <= registers(0);
-							destination_register <= "00000"; --Don't write back
-							writeback_source <= ALU_AS_SOURCE;
+							mem_writeback_register <= "00000"; --Don't write back
+							writeback_source <= NO_WRITE_BACK;
 							branch_signal <= BRANCH_ALWAYS;
 -----------------------------------------------------------------------------------------------------------------------------------
 -----------------------------------------------SHIFTS OPERATIONS-------------------------------------------------------------------
@@ -131,31 +132,31 @@ begin
 					operation <= "100000";
 					data1 <= registers(to_integer(unsigned(rs)));
 					data2 <= STD_LOGIC_VECTOR(resize(signed(immediate), data2'length));
-					destination_register <= rt;
+					mem_writeback_register <= rt;
 					writeback_source <= ALU_AS_SOURCE;
 				when "001010" => -- slti
 					operation <= "101010";
 					data1 <= registers(to_integer(unsigned(rs)));
 					data2 <= STD_LOGIC_VECTOR(resize(signed(immediate), data2'length));
-					destination_register <= rt;
+					mem_writeback_register <= rt;
 					writeback_source <= ALU_AS_SOURCE;
 				when "001100" => -- andi
 					operation <= "100100";
 					data1 <= registers(to_integer(unsigned(rs)));
 					data2 <= STD_LOGIC_VECTOR(resize(signed(immediate), data2'length));
-					destination_register <= rt;
+					mem_writeback_register <= rt;
 					writeback_source <= ALU_AS_SOURCE;
 				when "001101" => -- ori
 					operation <= "100101";
 					data1 <= registers(to_integer(unsigned(rs)));
 					data2 <= STD_LOGIC_VECTOR(resize(signed(immediate), data2'length));
-					destination_register <= rt;
+					mem_writeback_register <= rt;
 					writeback_source <= ALU_AS_SOURCE;
 				when "001110" => -- xori
 					operation <= "100110";
 					data1 <= registers(to_integer(unsigned(rs)));
 					data2 <= STD_LOGIC_VECTOR(resize(signed(immediate), data2'length));
-					destination_register <= rt;
+					mem_writeback_register <= rt;
 					writeback_source <= ALU_AS_SOURCE;
 
 -----------------------------------------------------------------------------------------------------------------------------------
@@ -165,35 +166,35 @@ begin
 					operation <= "000000"; --sll
 					data1	<= STD_LOGIC_VECTOR(resize(signed(immediate), data1'length));
 					data2	<= STD_LOGIC_VECTOR(to_unsigned(16, data2'length));
-					destination_register <= rt;
+					mem_writeback_register <= rt;
 					writeback_source <= ALU_AS_SOURCE;
 				when "100011" => --lw
 					operation <= "100000"; --add
 					data1	<= registers(to_integer(unsigned(rs)));
 					data2	<= STD_LOGIC_VECTOR(resize(signed(immediate), data2'length));
-					destination_register <= rt;
+					mem_writeback_register <= rt;
 					writeback_source <= MEM_AS_SOURCE;
 					signal_to_mem <= LOAD_WORD;
 				when "101011" => --sw
 					operation <= "100000"; --add
 					data1	<= registers(to_integer(unsigned(rs)));
 					data2	<= STD_LOGIC_VECTOR(resize(signed(immediate), data2'length));
-					destination_register <= "00000"; --Don't write back
-					writeback_source <= MEM_AS_SOURCE;
+					mem_writeback_register <= rt; --Don't write back
+					writeback_source <= NO_WRITE_BACK;
 					signal_to_mem <= STORE_WORD;
 				when "100000" => --lb
 					operation <= "100000"; --add
 					data1	<= registers(to_integer(unsigned(rs)));
 					data2	<= STD_LOGIC_VECTOR(resize(signed(immediate), data2'length));
-					destination_register <= rt;
+					mem_writeback_register <= rt;
 					writeback_source <= MEM_AS_SOURCE;
 					signal_to_mem <= LOAD_BYTE;
 				when "101000" => --sb
 					operation <= "100000"; --add
 					data1	<= registers(to_integer(unsigned(rs)));
 					data2	<= STD_LOGIC_VECTOR(resize(signed(immediate), data2'length));
-					destination_register <= "00000"; --Don't write back
-					writeback_source <= MEM_AS_SOURCE;
+					mem_writeback_register <= rt; --Don't write back
+					writeback_source <= NO_WRITE_BACK;
 					signal_to_mem <= STORE_BYTE;
 -----------------------------------------------------------------------------------------------------------------------------------
 -----------------------------------------------BRANCH AND JUMPS--------------------------------------------------------------------
@@ -203,28 +204,28 @@ begin
 					operation <= "100010"; --sub
 					data1 <= registers(to_integer(unsigned(rs)));
 					data2 <= registers(to_integer(unsigned(rt)));
-					destination_register <= "00000"; --Don't write back
-					writeback_source <= MEM_AS_SOURCE;
+					mem_writeback_register <= "00000"; --Don't write back
+					writeback_source <= NO_WRITE_BACK;
 					branch_signal <= BRANCH_IF_ZERO;
 				when "000101" => --bne
 					operation <= "100010"; --sub
 					data1 <= registers(to_integer(unsigned(rs)));
 					data2 <= registers(to_integer(unsigned(rt)));
-					destination_register <= "00000"; --Don't write back
-					writeback_source <= MEM_AS_SOURCE;
+					mem_writeback_register <= "00000"; --Don't write back
+					writeback_source <= NO_WRITE_BACK;
 					branch_signal <= BRANCH_IF_NOT_ZERO;
 				when "000010" => --j
 					operation <= "100000"; --add
-					data1 <= std_logic_vector(resize(signed(target), data1'length));;
+					data1 <= std_logic_vector(resize(signed(target), data1'length));
 					data2 <= registers(0);
-					destination_register <= "00000"; --Don't write back
-					writeback_source <= MEM_AS_SOURCE;
+					mem_writeback_register <= "00000"; --Don't write back
+					writeback_source <= NO_WRITE_BACK;
 					branch_signal <= BRANCH_ALWAYS;
 				when "000011" => --jal --> $31 = $PC + 8, jump
 					operation <= "100000"; --add
 					data1	<= pc_reg;
 					data2	<= STD_LOGIC_VECTOR(to_unsigned(8, data2'length));
-					destination_register <= "11111"; --$31 = $PC + 8
+					mem_writeback_register <= "11111"; --$31 = $PC + 8
 					writeback_source <= ALU_AS_SOURCE;
 					branch_signal <= BRANCH_ALWAYS;
 

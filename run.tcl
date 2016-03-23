@@ -2,10 +2,15 @@
 vlib work
 
 ;#Compile everything
+vcom memory_arbiter_lib.vhd
+vcom Main_Memory.vhd
+vcom memory_arbiter.vhd
 vcom CPU.vhd
 vcom decoder.vhd
 vcom ALU.vhd
+vcom MemStage.vhd
 vcom test.vhd
+
 
 ;#Start a simulation session with the fsm_tb component
 vsim -t ps fsm_tb
