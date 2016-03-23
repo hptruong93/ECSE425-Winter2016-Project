@@ -9,6 +9,7 @@ vcom CPU.vhd
 vcom decoder.vhd
 vcom ALU.vhd
 vcom MemStage.vhd
+vcom WriteBack.vhd
 vcom test.vhd
 
 

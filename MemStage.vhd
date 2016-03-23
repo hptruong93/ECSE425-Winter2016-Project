@@ -61,6 +61,7 @@ begin
 					case( current_state ) is
 						when MEM_WAIT =>
 							if (is_mem_busy = '0') then
+								data_line <= registers(to_integer(unsigned(mem_writeback_register)));
 								do_write <= '1';
 								is_busy <= '1';
 								current_state <= MEM_ACCESS;
@@ -96,6 +97,7 @@ begin
 					case( current_state ) is
 						when MEM_WAIT =>
 							if (is_mem_busy = '0') then
+								data_line <= registers(to_integer(unsigned(mem_writeback_register)));
 								do_write <= '1';
 								is_busy <= '1';
 								current_state <= MEM_ACCESS;
