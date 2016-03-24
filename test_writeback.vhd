@@ -74,29 +74,32 @@ BEGIN
 	--TODO: Thoroughly test the crap
 	stim_process: PROCESS
 	BEGIN
+		WAIT FOR 1 * clk_period; --clock high first
+
 		reset <= '1';
 		WAIT FOR 1 * clk_period;
 		reset	<= '0';
+		WAIT FOR 1 * clk_period;
 
 		REPORT "Write from LO_AS_SOURCE";
 		writeback_source <= LO_AS_SOURCE;
 		lo_reg <= DUMMY_32_ONE;
 		mem_writeback_register <= "11111";
-		WAIT FOR 2 * clk_period;
+		WAIT FOR 1 * clk_period;
 		ASSERT (registers(31) = STD_LOGIC_VECTOR(DUMMY_32_ONE)) REPORT ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ERROR IN LO_AS_SOURCE" SEVERITY ERROR;
 
 		REPORT "Write from HI_AS_SOURCE";
 		writeback_source <= HI_AS_SOURCE;
 		hi_reg <= DUMMY_32_TWO;
 		mem_writeback_register <= "11111";
-		WAIT FOR 2 * clk_period;
+		WAIT FOR 1 * clk_period;
 		ASSERT (registers(31) = STD_LOGIC_VECTOR(DUMMY_32_TWO)) REPORT ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ERROR IN HI_AS_SOURCE" SEVERITY ERROR;
 
 		REPORT "Write from ALU_AS_SOURCE";
 		writeback_source <= ALU_AS_SOURCE;
 		alu_output <= DUMMY_32_THREE;
 		mem_writeback_register <= "11111";
-		WAIT FOR 2 * clk_period;
+		WAIT FOR 1 * clk_period;
 		ASSERT (registers(31) = STD_LOGIC_VECTOR(DUMMY_32_THREE)) REPORT ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ERROR IN ALU_AS_SOURCE" SEVERITY ERROR;
 
 ------------------------------------------------------------------------------------------------------------------------------------
@@ -107,19 +110,19 @@ BEGIN
 		mem_stage_output <= STD_LOGIC_VECTOR(DUMMY_32_TWO);
 		mem_writeback_register <= "11111";
 		mem_stage_busy <= '0';
-		WAIT FOR 2 * clk_period;
+		WAIT FOR 1 * clk_period;
 		ASSERT (registers(31) = STD_LOGIC_VECTOR(DUMMY_32_TWO)) REPORT ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ERROR IN MEM_AS_SOURCE" SEVERITY ERROR;
 
 		REPORT "Write from MEM_AS_SOURCE busy";
 		mem_stage_output <= STD_LOGIC_VECTOR(DUMMY_32_ONE);
 		mem_stage_busy <= '1';
-		WAIT FOR 2 * clk_period;
+		WAIT FOR 1 * clk_period;
 		ASSERT (registers(31) = STD_LOGIC_VECTOR(DUMMY_32_TWO)) REPORT ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ERROR IN MEM_AS_SOURCE" SEVERITY ERROR;
 
 		REPORT "Write from MEM_AS_SOURCE not busy";
 		mem_stage_output <= STD_LOGIC_VECTOR(DUMMY_32_TWO);
 		mem_stage_busy <= '0';
-		WAIT FOR 2 * clk_period;
+		WAIT FOR 1 * clk_period;
 		ASSERT (registers(31) = STD_LOGIC_VECTOR(DUMMY_32_TWO)) REPORT ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ERROR IN MEM_AS_SOURCE" SEVERITY ERROR;
 
 ------------------------------------------------------------------------------------------------------------------------------------
@@ -130,19 +133,19 @@ BEGIN
 		mem_stage_output <= STD_LOGIC_VECTOR(DUMMY_32_THREE);
 		mem_writeback_register <= "11111";
 		mem_stage_busy <= '0';
-		WAIT FOR 2 * clk_period;
+		WAIT FOR 1 * clk_period;
 		ASSERT (registers(31) = STD_LOGIC_VECTOR(DUMMY_32_THREE)) REPORT ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ERROR IN MEM_BYTE_AS_SOURCE" SEVERITY ERROR;
 
 		REPORT "Write from MEM_BYTE_AS_SOURCE busy";
 		mem_stage_output <= STD_LOGIC_VECTOR(DUMMY_32_ONE);
 		mem_stage_busy <= '1';
-		WAIT FOR 2 * clk_period;
+		WAIT FOR 1 * clk_period;
 		ASSERT (registers(31) = STD_LOGIC_VECTOR(DUMMY_32_THREE)) REPORT ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ERROR IN MEM_BYTE_AS_SOURCE" SEVERITY ERROR;
 
 		REPORT "Write from MEM_BYTE_AS_SOURCE not busy";
 		mem_stage_output <= STD_LOGIC_VECTOR(DUMMY_32_THREE);
 		mem_stage_busy <= '0';
-		WAIT FOR 2 * clk_period;
+		WAIT FOR 1 * clk_period;
 		ASSERT (registers(31) = STD_LOGIC_VECTOR(DUMMY_32_THREE)) REPORT ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ERROR IN MEM_BYTE_AS_SOURCE" SEVERITY ERROR;
 
 ------------------------------------------------------------------------------------------------------------------------------------
@@ -153,7 +156,7 @@ BEGIN
 		writeback_source <= NO_WRITE_BACK;
 		alu_output <= DUMMY_32_THREE;
 		mem_writeback_register <= "11111";
-		WAIT FOR 2 * clk_period;
+		WAIT FOR 1 * clk_period;
 		ASSERT (registers(31) = STD_LOGIC_VECTOR(DUMMY_32_THREE)) REPORT ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ERROR IN MEM_BYTE_AS_SOURCE" SEVERITY ERROR;
 	END PROCESS;
 END;

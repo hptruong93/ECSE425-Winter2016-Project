@@ -7,7 +7,6 @@ use work.register_array.all;
 entity MemStage is
 port (	clk 	: in STD_LOGIC;
 			reset : in STD_LOGIC;
-			
 
 			mem_address : in SIGNED(32-1 downto 0); -- coming from ALU
 			--operation : out STD_LOGIC_VECTOR(6-1 downto 0);
@@ -84,7 +83,7 @@ begin
 							if (is_mem_busy = '0') then
 								is_busy <= '0';
 
-								if data_line(7) = '1' then
+								if data_line(7) = '1' then --sign extended
 									data_line(31 downto 8) <= "111111111111111111111111";
 								else
 									data_line(31 downto 8) <= "000000000000000000000000";
