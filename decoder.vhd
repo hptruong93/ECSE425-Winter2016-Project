@@ -222,6 +222,7 @@ begin
 					writeback_source <= NO_WRITE_BACK;
 					branch_signal <= BRANCH_ALWAYS;
 				when "000011" => --jal --> $31 = $PC + 8, jump
+					--The address in $ra is really PC+8. The instruction immediately following the jal instruction is in the "branch delay slot"
 					operation <= "100000"; --add
 					data1	<= pc_reg;
 					data2	<= STD_LOGIC_VECTOR(to_unsigned(8, data2'length));
