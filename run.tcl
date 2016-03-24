@@ -28,4 +28,4 @@ vcom test_writeback.vhd
 
 vsim -t ps instructionfetch_tb
 force -deposit clk 0 0 ns, 1 0.5 ns -repeat 1 ns
-run 5 ns
+run 14 ns

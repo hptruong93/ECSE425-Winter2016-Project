@@ -3,6 +3,7 @@ library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 use work.register_array.all;
+use ieee.numeric_std_unsigned.all;
 
 entity InstructionFetch is
 port (	clk 	: in STD_LOGIC;
@@ -33,18 +34,19 @@ type state is (
 	);
 signal current_state : state;
 
-signal program_counter : NATURAL;
+signal program_counter : STD_LOGIC_VECTOR(32-1 downto 0);
 
 begin
+	--instruction <= data;
 	synced_clock : process(clk, reset)
 	begin
 		if reset = '1' then
 			instruction <= (others => '0');
 			current_state <= FIRST_CONTACT;
-			address <= STD_LOGIC_VECTOR(to_unsigned(program_counter, 32));
+			address <= program_counter;
 			pc_reg <= (others => '0');
 		elsif (rising_edge(clk)) then
-			pc_reg <= STD_LOGIC_VECTOR(to_unsigned(program_counter, 32));
+			pc_reg <= program_counter;
 			case( current_state ) is
 				when FIRST_CONTACT =>
 					do_read <= '1';
@@ -55,7 +57,7 @@ begin
 						when BRANCH_NOT =>
 							if is_mem_busy = '0' then
 								program_counter <= program_counter + 4;
-								address <= STD_LOGIC_VECTOR(to_unsigned(program_counter, 32));
+								address <= program_counter + 4;
 								do_read <= '1';
 								is_busy <= '0';
 								instruction <= data;
@@ -66,9 +68,12 @@ begin
 								current_state <= FETCHING;
 							end if;
 						when BRANCH_ALWAYS =>
+							is_busy <= '1';
 							do_read <= '0'; -- assume is_mem_busy is going to be clear next clock cycle
 							address <= branch_address;
+							program_counter <= branch_address;
 							current_state <= FETCH_BRANCH_SET;
+							
 						when others =>
 					end case;
 				when INSTRUCTION_RECEIVED =>
@@ -81,6 +86,8 @@ begin
 						when BRANCH_ALWAYS =>
 							do_read <= '0';
 							is_busy <= '1';
+							address <= branch_address;
+							program_counter <= branch_address;
 							current_state <= FETCH_BRANCH_SET;
 						when others =>
 					end case;
@@ -91,7 +98,7 @@ begin
 				when FETCH_BRANCH =>
 					if is_mem_busy = '0' then
 						program_counter <= program_counter + 4;
-						address <= STD_LOGIC_VECTOR(to_unsigned(program_counter, 32));
+						address <= program_counter + 4;
 						do_read <= '1';
 						instruction <= data;
 						is_busy <= '0';
