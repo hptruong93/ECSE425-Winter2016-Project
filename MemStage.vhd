@@ -18,7 +18,8 @@ port (	clk 	: in STD_LOGIC;
 			do_read : out STD_LOGIC;
 			do_write : out	STD_LOGIC;
 			is_busy : out STD_LOGIC;
-			data_line : inout STD_LOGIC_VECTOR(32-1 downto 0)
+			address_line : out NATURAl;
+			data_line : inout STD_LOGIC_VECTOR(32-1 downto 0) -- received and sent from/to memory arbiter
 	);
 end MemStage;
 
@@ -44,9 +45,10 @@ begin
 				when LOAD_WORD =>
 					case( current_state ) is
 						when MEM_WAIT =>
+							is_busy <= '1';
 							if (is_mem_busy = '0') then
 								do_read <= '1';
-								is_busy <= '1';
+								address_line <= to_integer(mem_address); -- where to load from
 								current_state <= MEM_ACCESS;
 							end if;
 						when MEM_ACCESS =>
@@ -59,10 +61,11 @@ begin
 				when STORE_WORD =>
 					case( current_state ) is
 						when MEM_WAIT =>
+							is_busy <= '1';
 							if (is_mem_busy = '0') then
+								address_line <= to_integer(mem_address);  -- where to store
 								data_line <= registers(to_integer(unsigned(mem_writeback_register)));
 								do_write <= '1';
-								is_busy <= '1';
 								current_state <= MEM_ACCESS;
 							end if;
 						when MEM_ACCESS =>
@@ -74,9 +77,10 @@ begin
 				when LOAD_BYTE =>
 					case( current_state ) is
 						when MEM_WAIT =>
+							is_busy <= '1';
 							if (is_mem_busy = '0') then
-								do_write <= '1';
-								is_busy <= '1';
+								do_read <= '1';
+								address_line <= to_integer(mem_address);  -- where to load from
 								current_state <= MEM_ACCESS;
 							end if;
 						when MEM_ACCESS =>
@@ -92,13 +96,14 @@ begin
 								current_state <= MEM_WAIT;
 							end if;
 					end case;
-				when STORE_BYTE => --TODO: Do we overwrite
+				when STORE_BYTE => -- preserve all words. TODO
 					case( current_state ) is
 						when MEM_WAIT =>
+							is_busy <= '1';
 							if (is_mem_busy = '0') then
 								data_line <= registers(to_integer(unsigned(mem_writeback_register)));
 								do_write <= '1';
-								is_busy <= '1';
+								address_line <= to_integer(mem_address);  -- where to store
 								current_state <= MEM_ACCESS;
 							end if;
 						when MEM_ACCESS =>
