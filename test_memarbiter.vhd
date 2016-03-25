@@ -4,7 +4,6 @@ use IEEE.numeric_std.all;
 use work.register_array.all;
 use ieee.numeric_std_unsigned.all;
 
-
 ENTITY memarbiter_tb IS
 END memarbiter_tb;
  
@@ -13,10 +12,6 @@ ARCHITECTURE behaviour OF memarbiter_tb IS
 SIGNAL clk, reset: STD_LOGIC := '0';
 CONSTANT clk_period : time := 1 ns;
 
-CONSTANT DUMMY_32_ZERO :    signed(32-1 downto 0) := "00000000000000000000000000000000";
-CONSTANT DUMMY_32_ONE :     signed(32-1 downto 0) := "01010110101011010010100010010010";
-CONSTANT DUMMY_32_TWO :     signed(32-1 downto 0) := "00100100110101010110110101100101";
-CONSTANT DUMMY_32_THREE :   signed(32-1 downto 0) := "11010110101001000011110101010101";
 
 COMPONENT memory_arbiter IS
 				port (
@@ -61,6 +56,7 @@ signal re2          : STD_LOGIC;
 signal we2          : STD_LOGIC;
 signal busy2        : STD_LOGIC;
  
+signal count : std_logic := '0';
 
 BEGIN
 	test_bench: memory_arbiter PORT MAP (
@@ -99,6 +95,7 @@ BEGIN
 	--TODO: Thoroughly test the crap
 	stim_process: PROCESS
 	BEGIN
+		if count = '0' then count <= '1';
 		WAIT FOR 1 * clk_period; --So clk starts at 1
 
 		reset <= '1';
@@ -106,64 +103,161 @@ BEGIN
 		reset <= '0';
 		WAIT FOR 1 * clk_period;
 
-		Word_Byte <= '1';
+		we2 <= '0';
+		re2 <= '0';
+
 		REPORT "Read next word from file";
-		--addr1 <= 0;
-		--re1 <= '1';
-		--we1 <= '0';
-		--re2 <= '0';
-		--we2 <= '0';
-
-		--WAIT FOR 1 * clk_period;
-		--ASSERT (busy1 = '1') REPORT ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> busy /= 1" SEVERITY ERROR;
-
-		--while (busy1 = '1') loop
-		--    WAIT FOR 1 * clk_period;
-		--end loop;
-		
-		--addr1 <= 0;
-		--re1 <= '0';
-		--we1 <= '0';
-		--re2 <= '0';
-		--we2 <= '0';
-
-
-		--WAIT FOR 1 * clk_period;
-		--REPORT "first read value is " & integer'image(to_integer(signed(data1_out)));
-
-		REPORT "Now write to mem";
-		--data1_in <= "00000000000000000000011011000001"; --1729
-		data1_in <=   "00000000000000000000000000000011";
-		addr1 <= 4;
-		re1 <= '0';
-		we1 <= '1';
-		re2 <= '0';
-		we2 <= '0';
-
-		WAIT FOR 1 * clk_period;
-		while (busy1 = '1') loop
-			WAIT FOR 1 * clk_period;
-		end loop;
 
 		Word_Byte <= '1';
-		addr1 <= 4;
-		re1 <= '1';
 		we1 <= '0';
-		re2 <= '0';
-		we2 <= '0';
+		re1 <= '1';
+		addr1 <= 0;
+		data1_in <= ZERO_BYTE_32;
 
 		WAIT FOR 1 * clk_period;
 		while (busy1 = '1') loop
 			WAIT FOR 1 * clk_period;
 		end loop;
 
-		REPORT "read back value is " & integer'image(to_integer(signed(data1_out)));
+		REPORT "FULL WORD IS " & STD_LOGIC'image(data1_out(31)) & STD_LOGIC'image(data1_out(30)) & STD_LOGIC'image(data1_out(29)) & STD_LOGIC'image(data1_out(28)) & STD_LOGIC'image(data1_out(27)) & STD_LOGIC'image(data1_out(26)) & STD_LOGIC'image(data1_out(25)) & STD_LOGIC'image(data1_out(24)) & STD_LOGIC'image(data1_out(23)) & STD_LOGIC'image(data1_out(22)) & STD_LOGIC'image(data1_out(21)) & STD_LOGIC'image(data1_out(20)) & STD_LOGIC'image(data1_out(19)) & STD_LOGIC'image(data1_out(18)) & STD_LOGIC'image(data1_out(17)) & STD_LOGIC'image(data1_out(16)) & STD_LOGIC'image(data1_out(15)) & STD_LOGIC'image(data1_out(14)) & STD_LOGIC'image(data1_out(13)) & STD_LOGIC'image(data1_out(12)) & STD_LOGIC'image(data1_out(11)) & STD_LOGIC'image(data1_out(10)) & STD_LOGIC'image(data1_out(9)) & STD_LOGIC'image(data1_out(8)) & STD_LOGIC'image(data1_out(7)) & STD_LOGIC'image(data1_out(6)) & STD_LOGIC'image(data1_out(5)) & STD_LOGIC'image(data1_out(4)) & STD_LOGIC'image(data1_out(3)) & STD_LOGIC'image(data1_out(2)) & STD_LOGIC'image(data1_out(1)) & STD_LOGIC'image(data1_out(0));
 
-		ASSERT (data1_out = "00000000000000000000000000000011") REPORT ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  incorrect data1_out" SEVERITY ERROR;
+		Word_Byte <= '0';
+		we1 <= '0';
+		re1 <= '1';
+		addr1 <= 0;
+		data1_in <= ZERO_BYTE_32;
+
+		WAIT FOR 1 * clk_period;
+		while (busy1 = '1') loop
+			WAIT FOR 1 * clk_period;
+		end loop;
+
+		REPORT "1ST BYTE IS" & STD_LOGIC'image(data1_out(31)) & STD_LOGIC'image(data1_out(30)) & STD_LOGIC'image(data1_out(29)) & STD_LOGIC'image(data1_out(28)) & STD_LOGIC'image(data1_out(27)) & STD_LOGIC'image(data1_out(26)) & STD_LOGIC'image(data1_out(25)) & STD_LOGIC'image(data1_out(24)) & STD_LOGIC'image(data1_out(23)) & STD_LOGIC'image(data1_out(22)) & STD_LOGIC'image(data1_out(21)) & STD_LOGIC'image(data1_out(20)) & STD_LOGIC'image(data1_out(19)) & STD_LOGIC'image(data1_out(18)) & STD_LOGIC'image(data1_out(17)) & STD_LOGIC'image(data1_out(16)) & STD_LOGIC'image(data1_out(15)) & STD_LOGIC'image(data1_out(14)) & STD_LOGIC'image(data1_out(13)) & STD_LOGIC'image(data1_out(12)) & STD_LOGIC'image(data1_out(11)) & STD_LOGIC'image(data1_out(10)) & STD_LOGIC'image(data1_out(9)) & STD_LOGIC'image(data1_out(8)) & STD_LOGIC'image(data1_out(7)) & STD_LOGIC'image(data1_out(6)) & STD_LOGIC'image(data1_out(5)) & STD_LOGIC'image(data1_out(4)) & STD_LOGIC'image(data1_out(3)) & STD_LOGIC'image(data1_out(2)) & STD_LOGIC'image(data1_out(1)) & STD_LOGIC'image(data1_out(0));
+
+		we1 <= '0';
+		re1 <= '0';
+		WAIT FOR 1 * clk_period;
+
+		Word_Byte <= '0';
+		we1 <= '0';
+		re1 <= '1';
+		addr1 <= 1;
+		data1_in <= ZERO_BYTE_32;
+
+		WAIT FOR 1 * clk_period;
+		while (busy1 = '1') loop
+			WAIT FOR 1 * clk_period;
+		end loop;
+
+		REPORT "2ND BYTE is " & STD_LOGIC'image(data1_out(31)) & STD_LOGIC'image(data1_out(30)) & STD_LOGIC'image(data1_out(29)) & STD_LOGIC'image(data1_out(28)) & STD_LOGIC'image(data1_out(27)) & STD_LOGIC'image(data1_out(26)) & STD_LOGIC'image(data1_out(25)) & STD_LOGIC'image(data1_out(24)) & STD_LOGIC'image(data1_out(23)) & STD_LOGIC'image(data1_out(22)) & STD_LOGIC'image(data1_out(21)) & STD_LOGIC'image(data1_out(20)) & STD_LOGIC'image(data1_out(19)) & STD_LOGIC'image(data1_out(18)) & STD_LOGIC'image(data1_out(17)) & STD_LOGIC'image(data1_out(16)) & STD_LOGIC'image(data1_out(15)) & STD_LOGIC'image(data1_out(14)) & STD_LOGIC'image(data1_out(13)) & STD_LOGIC'image(data1_out(12)) & STD_LOGIC'image(data1_out(11)) & STD_LOGIC'image(data1_out(10)) & STD_LOGIC'image(data1_out(9)) & STD_LOGIC'image(data1_out(8)) & STD_LOGIC'image(data1_out(7)) & STD_LOGIC'image(data1_out(6)) & STD_LOGIC'image(data1_out(5)) & STD_LOGIC'image(data1_out(4)) & STD_LOGIC'image(data1_out(3)) & STD_LOGIC'image(data1_out(2)) & STD_LOGIC'image(data1_out(1)) & STD_LOGIC'image(data1_out(0));
+		we1 <= '0';
+		re1 <= '0';
+		WAIT FOR 1 * clk_period;
+
+		Word_Byte <= '0';
+		we1 <= '0';
+		re1 <= '1';
+		addr1 <= 2;
+		data1_in <= ZERO_BYTE_32;
+
+		WAIT FOR 1 * clk_period;
+		while (busy1 = '1') loop
+			WAIT FOR 1 * clk_period;
+		end loop;
+
+		REPORT "3RD BYTE is " & STD_LOGIC'image(data1_out(31)) & STD_LOGIC'image(data1_out(30)) & STD_LOGIC'image(data1_out(29)) & STD_LOGIC'image(data1_out(28)) & STD_LOGIC'image(data1_out(27)) & STD_LOGIC'image(data1_out(26)) & STD_LOGIC'image(data1_out(25)) & STD_LOGIC'image(data1_out(24)) & STD_LOGIC'image(data1_out(23)) & STD_LOGIC'image(data1_out(22)) & STD_LOGIC'image(data1_out(21)) & STD_LOGIC'image(data1_out(20)) & STD_LOGIC'image(data1_out(19)) & STD_LOGIC'image(data1_out(18)) & STD_LOGIC'image(data1_out(17)) & STD_LOGIC'image(data1_out(16)) & STD_LOGIC'image(data1_out(15)) & STD_LOGIC'image(data1_out(14)) & STD_LOGIC'image(data1_out(13)) & STD_LOGIC'image(data1_out(12)) & STD_LOGIC'image(data1_out(11)) & STD_LOGIC'image(data1_out(10)) & STD_LOGIC'image(data1_out(9)) & STD_LOGIC'image(data1_out(8)) & STD_LOGIC'image(data1_out(7)) & STD_LOGIC'image(data1_out(6)) & STD_LOGIC'image(data1_out(5)) & STD_LOGIC'image(data1_out(4)) & STD_LOGIC'image(data1_out(3)) & STD_LOGIC'image(data1_out(2)) & STD_LOGIC'image(data1_out(1)) & STD_LOGIC'image(data1_out(0));
+		we1 <= '0';
+		re1 <= '0';
+		WAIT FOR 1 * clk_period;
+
+		Word_Byte <= '0';
+		we1 <= '0';
+		re1 <= '1';
+		addr1 <= 3;
+		data1_in <= ZERO_BYTE_32;
+
+		WAIT FOR 1 * clk_period;
+		while (busy1 = '1') loop
+			WAIT FOR 1 * clk_period;
+		end loop;
+
+		REPORT "4TH BYTE is " & STD_LOGIC'image(data1_out(31)) & STD_LOGIC'image(data1_out(30)) & STD_LOGIC'image(data1_out(29)) & STD_LOGIC'image(data1_out(28)) & STD_LOGIC'image(data1_out(27)) & STD_LOGIC'image(data1_out(26)) & STD_LOGIC'image(data1_out(25)) & STD_LOGIC'image(data1_out(24)) & STD_LOGIC'image(data1_out(23)) & STD_LOGIC'image(data1_out(22)) & STD_LOGIC'image(data1_out(21)) & STD_LOGIC'image(data1_out(20)) & STD_LOGIC'image(data1_out(19)) & STD_LOGIC'image(data1_out(18)) & STD_LOGIC'image(data1_out(17)) & STD_LOGIC'image(data1_out(16)) & STD_LOGIC'image(data1_out(15)) & STD_LOGIC'image(data1_out(14)) & STD_LOGIC'image(data1_out(13)) & STD_LOGIC'image(data1_out(12)) & STD_LOGIC'image(data1_out(11)) & STD_LOGIC'image(data1_out(10)) & STD_LOGIC'image(data1_out(9)) & STD_LOGIC'image(data1_out(8)) & STD_LOGIC'image(data1_out(7)) & STD_LOGIC'image(data1_out(6)) & STD_LOGIC'image(data1_out(5)) & STD_LOGIC'image(data1_out(4)) & STD_LOGIC'image(data1_out(3)) & STD_LOGIC'image(data1_out(2)) & STD_LOGIC'image(data1_out(1)) & STD_LOGIC'image(data1_out(0));
+		we1 <= '0';
+		re1 <= '0';
+		WAIT FOR 1 * clk_period;
+---------------------------------------------------------------------------------------------
+		Word_Byte <= '0';
+		we1 <= '1';
+		re1 <= '0';
+		addr1 <= 3;
+		WAIT FOR 1 * clk_period;
+		data1_in <= FIRST_BYTE_32;
+
+		WAIT FOR 1 * clk_period;
+		while (busy1 = '1') loop
+			WAIT FOR 1 * clk_period;
+		end loop;
+
+		we1 <= '0';
+		re1 <= '0';
+		WAIT FOR 1 * clk_period;
+
+---------------------------------------------------------------------------------------------
+		Word_Byte <= '0';
+		we1 <= '1';
+		re1 <= '0';
 		
+		addr1 <= 1;
+		WAIT FOR 1 * clk_period;
+		data1_in <= FIRST_BYTE_32;
 
+		WAIT FOR 1 * clk_period;
+		while (busy1 = '1') loop
+			WAIT FOR 1 * clk_period;
+		end loop;
+
+		we1 <= '0';
+		re1 <= '0';
+		WAIT FOR 1 * clk_period;
+
+-----------------------------------------------------------------------------------------------
+		Word_Byte <= '0';
+		we1 <= '1';
+		re1 <= '0';
+		addr1 <= 0;
+		data1_in <= FIRST_BYTE_32;
+
+		WAIT FOR 1 * clk_period;
+		while (busy1 = '1') loop
+			WAIT FOR 1 * clk_period;
+		end loop;
+
+		we1 <= '0';
+		re1 <= '0';
+		WAIT FOR 1 * clk_period;
+		REPORT "Done writing.";
+---------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------
+
+		Word_Byte <= '1';
+		we1 <= '0';
+		re1 <= '1';
+		addr1 <= 0;
+		data1_in <= ZERO_BYTE_32;
+
+		WAIT FOR 1 * clk_period;
+		while (busy1 = '1') loop
+			WAIT FOR 1 * clk_period;
+		end loop;
+
+		REPORT "DATA WRITTEN IS" & STD_LOGIC'image(data1_out(31)) & STD_LOGIC'image(data1_out(30)) & STD_LOGIC'image(data1_out(29)) & STD_LOGIC'image(data1_out(28)) & STD_LOGIC'image(data1_out(27)) & STD_LOGIC'image(data1_out(26)) & STD_LOGIC'image(data1_out(25)) & STD_LOGIC'image(data1_out(24)) & STD_LOGIC'image(data1_out(23)) & STD_LOGIC'image(data1_out(22)) & STD_LOGIC'image(data1_out(21)) & STD_LOGIC'image(data1_out(20)) & STD_LOGIC'image(data1_out(19)) & STD_LOGIC'image(data1_out(18)) & STD_LOGIC'image(data1_out(17)) & STD_LOGIC'image(data1_out(16)) & STD_LOGIC'image(data1_out(15)) & STD_LOGIC'image(data1_out(14)) & STD_LOGIC'image(data1_out(13)) & STD_LOGIC'image(data1_out(12)) & STD_LOGIC'image(data1_out(11)) & STD_LOGIC'image(data1_out(10)) & STD_LOGIC'image(data1_out(9)) & STD_LOGIC'image(data1_out(8)) & STD_LOGIC'image(data1_out(7)) & STD_LOGIC'image(data1_out(6)) & STD_LOGIC'image(data1_out(5)) & STD_LOGIC'image(data1_out(4)) & STD_LOGIC'image(data1_out(3)) & STD_LOGIC'image(data1_out(2)) & STD_LOGIC'image(data1_out(1)) & STD_LOGIC'image(data1_out(0));
+		WAIT FOR 1 * clk_period;
 
 
 		REPORT "#####################################################End test";
+		else
+			count <= '1';
+			WAIT FOR 100 * clk_period;
+		end if;
 	END PROCESS;
 END;
