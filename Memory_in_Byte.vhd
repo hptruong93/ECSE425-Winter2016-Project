@@ -44,7 +44,6 @@ BEGIN
 		variable  bin_value : std_logic_vector(Num_Bits_in_Byte-1 downto 0);
 		variable delay_cnt : integer :=0;
 	begin
-	
 		--	Initializing the memory from a file
 		if (initialize'event and initialize='1') then
 			  --Open the file read.txt from the specified location for reading(READ_MODE).
