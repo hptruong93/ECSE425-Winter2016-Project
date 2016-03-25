@@ -97,7 +97,7 @@ BEGIN
  
         WAIT FOR 1 * clk_period;
         ASSERT ( is_busy = '0') REPORT ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> busy != 0" SEVERITY ERROR;
-        ASSERT ( do_read = '1') REPORT ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> do_read != 1" SEVERITY ERROR;
+        ASSERT ( do_read = '0') REPORT ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> do_read != 0" SEVERITY ERROR;
         ASSERT ( instruction = data) REPORT ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> instruction != data" SEVERITY ERROR;
        
  
@@ -123,7 +123,7 @@ BEGIN
         REPORT "Read next instruction should be in FETCHING and going to INSTRUCTION_RECEIVED";
         WAIT FOR 1 * clk_period;
         ASSERT ( is_busy = '0') REPORT ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  busy != 0" SEVERITY ERROR;
-        ASSERT ( do_read = '1') REPORT ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  do_read != 1" SEVERITY ERROR;
+        ASSERT ( do_read = '0') REPORT ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  do_read != 1" SEVERITY ERROR;
         ASSERT ( instruction = data) REPORT ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> instruction != data " SEVERITY ERROR;
    
  
@@ -153,7 +153,7 @@ BEGIN
  
         WAIT FOR 1 * clk_period;
         ASSERT (is_busy = '0') REPORT ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> busy != 0" SEVERITY ERROR;
-        ASSERT (do_read = '1') REPORT ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  read != 1 " SEVERITY ERROR;
+        ASSERT (do_read = '0') REPORT ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  read != 0 " SEVERITY ERROR;
         ASSERT (instruction = data) REPORT ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> instruction != data" SEVERITY ERROR;
         ASSERT (address = branch_address + 4) REPORT ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> address != PC" SEVERITY ERROR;
 
@@ -174,7 +174,7 @@ BEGIN
  
         WAIT FOR 1 * clk_period;
         ASSERT (is_busy = '0') REPORT ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  busy != 0" SEVERITY ERROR;
-        ASSERT (do_read = '1') REPORT ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> do_read != 1" SEVERITY ERROR;
+        ASSERT (do_read = '0') REPORT ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> do_read != 1" SEVERITY ERROR;
         ASSERT (instruction = data) REPORT ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> instruction != data" SEVERITY ERROR;
         ASSERT (address = branch_address + 8) REPORT ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> address != PC" SEVERITY ERROR;
        
@@ -185,7 +185,7 @@ BEGIN
         WAIT FOR 1 * clk_period;
         ASSERT (is_busy = '1') REPORT ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  busy != 1" SEVERITY ERROR;
         ASSERT (do_read = '1') REPORT ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> do_read != 1" SEVERITY ERROR;
-        ASSERT (instruction = data) REPORT ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> instruction != data" SEVERITY ERROR;
+        ASSERT (instruction /= data) REPORT ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> instruction != data" SEVERITY ERROR;
         ASSERT (address = branch_address + 8) REPORT ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> address != PC" SEVERITY ERROR;
        
         REPORT "BRANCH_ALWAYS after getting instruction should go to FETCH_BRANCH_SET without puting data on the instruction line";

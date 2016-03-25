@@ -18,36 +18,36 @@ vcom WriteBack.vhd
 vcom MasterPipeline.vhd
 
 #Testing files
-# vcom test_mainmemory.vhd
-# vcom test_instructionfetch.vhd
-# vcom test_alu.vhd
-# vcom test_memstage.vhd
-# vcom test_writeback.vhd
-# vcom test_memarbiter.vhd
+vcom test_mainmemory.vhd
+vcom test_instructionfetch.vhd
+vcom test_alu.vhd
+vcom test_memstage.vhd
+vcom test_writeback.vhd
+vcom test_memarbiter.vhd
 
 
 #Start a simulation session with the fsm_tb component
-# vsim -t ps alu_tb
-# force -deposit clk 0 0 ns, 1 0.5 ns -repeat 1 ns
-# run 20ns
+vsim -t ps alu_tb
+force -deposit clk 0 0 ns, 1 0.5 ns -repeat 1 ns
+run 20ns
 
-# vsim -t ps writeback_tb
+vsim -t ps writeback_tb
 # force -deposit clk 0 0 ns, 1 0.5 ns -repeat 1 ns
-# run 20ns
+run 20ns
 
-# vsim -t ps memstage_tb
+vsim -t ps memstage_tb
 # force -deposit clk 0 0 ns, 1 0.5 ns -repeat 1 ns
-# run 200ns
+run 200ns
 
 
-# vsim -t ps instructionfetch_tb
+vsim -t ps instructionfetch_tb
 # force -deposit clk 0 0 ns, 1 0.5 ns -repeat 1 ns
-# run 14 ns
+run 14 ns
 
-# vsim -t ps memarbiter_tb
+vsim -t ps memarbiter_tb
 # force -deposit clk 0 0 ns, 1 0.5 ns -repeat 1 ns
-# run 1000 ns
+run 1000 ns
 
-# vsim -t ps mainmemory_tb
+vsim -t ps mainmemory_tb
 # force -deposit clk 0 0 ns, 1 0.5 ns -repeat 1 ns
-# run 200 ns
+run 200 ns
