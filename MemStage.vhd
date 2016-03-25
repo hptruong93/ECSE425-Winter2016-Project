@@ -13,8 +13,9 @@ port (	clk 	: in STD_LOGIC;
 			mem_writeback_register : in STD_LOGIC_VECTOR(5-1 downto 0); -- used for store, tells which register to read from.
 			registers : in register_array;
 			signal_to_mem : in STD_LOGIC_VECTOR(3-1 downto 0);
-
 			is_mem_busy : in STD_LOGIC;
+
+			word_byte: out STD_LOGIC; --  when '1' you are interacting with the memory in word otherwise in byte
 			do_read : out STD_LOGIC;
 			do_write : out	STD_LOGIC;
 			is_busy : out STD_LOGIC;
@@ -47,6 +48,7 @@ begin
 						when MEM_WAIT =>
 							is_busy <= '1';
 							if (is_mem_busy = '0') then
+								word_byte <= '1'; -- interact with mem in word
 								do_read <= '1';
 								address_line <= to_integer(mem_address); -- where to load from
 								current_state <= MEM_ACCESS;
@@ -63,6 +65,7 @@ begin
 						when MEM_WAIT =>
 							is_busy <= '1';
 							if (is_mem_busy = '0') then
+								word_byte <= '1'; -- interact with mem in word
 								address_line <= to_integer(mem_address);  -- where to store
 								data_line <= registers(to_integer(unsigned(mem_writeback_register)));
 								do_write <= '1';
@@ -79,6 +82,7 @@ begin
 						when MEM_WAIT =>
 							is_busy <= '1';
 							if (is_mem_busy = '0') then
+								word_byte <= '0'; -- interact with mem in byte
 								do_read <= '1';
 								address_line <= to_integer(mem_address);  -- where to load from
 								current_state <= MEM_ACCESS;
@@ -101,6 +105,7 @@ begin
 						when MEM_WAIT =>
 							is_busy <= '1';
 							if (is_mem_busy = '0') then
+								word_byte <= '0'; -- interact with mem in byte
 								data_line <= registers(to_integer(unsigned(mem_writeback_register)));
 								do_write <= '1';
 								address_line <= to_integer(mem_address);  -- where to store
