@@ -29,6 +29,7 @@ COMPONENT MemStage IS
 					is_mem_busy : in STD_LOGIC;
 					do_read : out STD_LOGIC;
 					do_write : out	STD_LOGIC;
+					word_byte: out STD_LOGIC; --  when '1' you are interacting with the memory in word otherwise in byte
 					is_busy : out STD_LOGIC;
 					address_line : out NATURAl;
 					data_line : inout STD_LOGIC_VECTOR(32-1 downto 0) -- received and sent from/to memory arbiter
@@ -46,6 +47,7 @@ signal is_mem_busy : STD_LOGIC;
 signal do_read : STD_LOGIC;
 signal do_write : STD_LOGIC;
 signal is_busy : STD_LOGIC;
+signal word_byte : STD_LOGIC;
 signal data_line : STD_LOGIC_VECTOR(32-1 downto 0);
 signal address_line : NATURAL;
 
@@ -64,6 +66,7 @@ BEGIN
 						is_mem_busy => is_mem_busy,
 						do_read => do_read,
 						do_write => do_write,
+						word_byte => word_byte,
 						is_busy => is_busy,
 						address_line => address_line,
 						data_line => data_line
@@ -89,18 +92,19 @@ BEGIN
 		reset	<= '0';
 		WAIT FOR 1 * clk_period;
 
-		REPORT "LOAD WORD, AVAILABLE MEM";
+		REPORT "################### 1. LOAD WORD, AVAILABLE MEM";
 		signal_to_mem <= LOAD_WORD;
 		is_mem_busy <= '0';
 		mem_address <= DUMMY_32_ONE;
 		WAIT FOR 1 * clk_period;
 		ASSERT (is_busy = '1') REPORT "is_busy should be 1" SEVERITY ERROR;
 		ASSERT (do_read = '1') REPORT "do_read should be 1" SEVERITY ERROR;
+		ASSERT (word_byte = '1') REPORT "word_byte should be 1" SEVERITY ERROR;
 		ASSERT (address_line = DUMMY_32_ONE) REPORT "Wrong address on address line" SEVERITY ERROR;
 		WAIT FOR 1 * clk_period;
 		ASSERT (is_busy = '0') REPORT "is_busy should be 0, access is done" SEVERITY ERROR;
 
-		REPORT "LOAD WORD, BUSY MEM";
+		REPORT "################### 2. LOAD WORD, BUSY MEM";
 		signal_to_mem <= LOAD_WORD;
 		is_mem_busy <= '1';
 		mem_address <= DUMMY_32_ONE;
@@ -112,10 +116,11 @@ BEGIN
 		WAIT FOR 1 * clk_period; -- What comes next repeats above test
 		ASSERT (is_busy = '1') REPORT "is_busy should be 1" SEVERITY ERROR;
 		ASSERT (do_read = '1') REPORT "do_read should be 1, no longer waiting on memory" SEVERITY ERROR;
+		ASSERT (word_byte = '1') REPORT "word_byte should be 1" SEVERITY ERROR;
 		WAIT FOR 1 * clk_period;
 		ASSERT (is_busy = '0') REPORT "is_busy should be 0, access is done" SEVERITY ERROR;
 
-		REPORT "STORE WORD, AVAILABLE MEM";
+		REPORT "################### 3. STORE WORD, AVAILABLE MEM";
 		signal_to_mem <= STORE_WORD;
 		mem_writeback_register <= "01010"; -- write to R10
 		is_mem_busy <= '0';
@@ -124,12 +129,13 @@ BEGIN
 		WAIT FOR 1 * clk_period;
 		ASSERT (is_busy = '1') REPORT "is_busy should be 1" SEVERITY ERROR;
 		ASSERT (do_write = '1') REPORT "do_read should be 1" SEVERITY ERROR;
+		ASSERT (word_byte = '1') REPORT "word_byte should be 1" SEVERITY ERROR;
 		ASSERT (address_line = DUMMY_32_ONE) REPORT "Wrong address on address line" SEVERITY ERROR;
 		ASSERT (data_line = registers(to_integer(unsigned(mem_writeback_register))));
 		WAIT FOR 1 * clk_period;
 		ASSERT (is_busy = '0') REPORT "is_busy should be 0, access is done" SEVERITY ERROR;
 
-		REPORT "STORE WORD, BUSY MEM";
+		REPORT "################### 4. STORE WORD, BUSY MEM";
 		signal_to_mem <= STORE_WORD;
 		is_mem_busy <= '1';
 		mem_address <= DUMMY_32_ONE;
@@ -142,24 +148,26 @@ BEGIN
 		WAIT FOR 1 * clk_period; -- What comes next repeats above test
 		ASSERT (is_busy = '1') REPORT "is_busy should be 1" SEVERITY ERROR;
 		ASSERT (do_write = '1') REPORT "do_read should be 1" SEVERITY ERROR;
+		ASSERT (word_byte = '1') REPORT "word_byte should be 1" SEVERITY ERROR;
 		ASSERT (address_line = DUMMY_32_ONE) REPORT "Wrong address on address line" SEVERITY ERROR;
 		ASSERT (data_line = registers(to_integer(unsigned(mem_writeback_register))));
 		WAIT FOR 1 * clk_period;
 		ASSERT (is_busy = '0') REPORT "is_busy should be 0, access is done" SEVERITY ERROR;
 
-		REPORT "LOAD BYTE, AVAILABLE MEM";
+		REPORT "################### 5. LOAD BYTE, AVAILABLE MEM";
 		signal_to_mem <= LOAD_BYTE;
 		is_mem_busy <= '0';
 		mem_address <= DUMMY_32_ONE;
 		WAIT FOR 1 * clk_period;
 		ASSERT (is_busy = '1') REPORT "is_busy should be 1" SEVERITY ERROR;
 		ASSERT (do_read = '1') REPORT "do_read should be 1" SEVERITY ERROR;
+		ASSERT (word_byte = '0') REPORT "word_byte should be 0" SEVERITY ERROR;
 		ASSERT (address_line = DUMMY_32_ONE) REPORT "Wrong address on address line" SEVERITY ERROR;
 		WAIT FOR 1 * clk_period;
 		ASSERT (is_busy = '0') REPORT "is_busy should be 0, access is done" SEVERITY ERROR;
 
 
-		REPORT "LOAD BYTE, BUSY MEM";
+		REPORT "################### 6. LOAD BYTE, BUSY MEM";
 		signal_to_mem <= LOAD_BYTE;
 		is_mem_busy <= '1';
 		mem_address <= DUMMY_32_ONE;
@@ -171,11 +179,12 @@ BEGIN
 		WAIT FOR 1 * clk_period; -- What comes next repeats above test
 		ASSERT (is_busy = '1') REPORT "is_busy should be 1" SEVERITY ERROR;
 		ASSERT (do_read = '1') REPORT "do_read should be 1, no longer waiting on memory" SEVERITY ERROR;
+		ASSERT (word_byte = '0') REPORT "word_byte should be 0" SEVERITY ERROR;
 		WAIT FOR 1 * clk_period;
 		ASSERT (is_busy = '0') REPORT "is_busy should be 0, access is done" SEVERITY ERROR;
 
 
-		REPORT "STORE BYTE, AVAILABLE MEM";
+		REPORT "################### 7. STORE BYTE, AVAILABLE MEM";
 		signal_to_mem <= STORE_BYTE;
 		mem_writeback_register <= "01010"; -- write to R10
 		is_mem_busy <= '0';
@@ -184,12 +193,13 @@ BEGIN
 		WAIT FOR 1 * clk_period;
 		ASSERT (is_busy = '1') REPORT "is_busy should be 1" SEVERITY ERROR;
 		ASSERT (do_write = '1') REPORT "do_read should be 1" SEVERITY ERROR;
+		ASSERT (word_byte = '0') REPORT "word_byte should be 0" SEVERITY ERROR;
 		ASSERT (address_line = DUMMY_32_ONE) REPORT "Wrong address on address line" SEVERITY ERROR;
 		ASSERT (data_line = registers(to_integer(unsigned(mem_writeback_register))));
 		WAIT FOR 1 * clk_period;
 		ASSERT (is_busy = '0') REPORT "is_busy should be 0, access is done" SEVERITY ERROR;
 
-		REPORT "STORE BYTE, BUSY MEM";
+		REPORT "################### 8. STORE BYTE, BUSY MEM";
 		signal_to_mem <= STORE_BYTE;
 		is_mem_busy <= '1';
 		mem_address <= DUMMY_32_ONE;
@@ -202,6 +212,7 @@ BEGIN
 		WAIT FOR 1 * clk_period; -- What comes next repeats above test
 		ASSERT (is_busy = '1') REPORT "is_busy should be 1" SEVERITY ERROR;
 		ASSERT (do_write = '1') REPORT "do_read should be 1" SEVERITY ERROR;
+		ASSERT (word_byte = '0') REPORT "word_byte should be 0" SEVERITY ERROR;
 		ASSERT (address_line = DUMMY_32_ONE) REPORT "Wrong address on address line" SEVERITY ERROR;
 		ASSERT (data_line = registers(to_integer(unsigned(mem_writeback_register))));
 		WAIT FOR 1 * clk_period;

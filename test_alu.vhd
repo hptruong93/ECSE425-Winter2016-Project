@@ -52,7 +52,7 @@ BEGIN
 		WAIT FOR 1 * clk_period;
 		reset	<= '0';
 
-		REPORT "Add test: 3 + 2";
+		REPORT "################### 1. Add test: 3 + 2";
 		operation <= "100000";
 		data1_test <= to_signed(2, 32);
 		data2_test <= to_signed(3, 32);
@@ -60,7 +60,7 @@ BEGIN
 		WAIT FOR 1 * clk_period;
 		ASSERT (result = expected_result) REPORT ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ERROR IN ADD: positive" SEVERITY ERROR;
 
-		REPORT "Add test: -3 - 1";
+		REPORT "################### 2. Add test: -3 - 1";
 		operation <= "100000";
 		data1_test <= to_signed(-3, 32);
 		data2_test <= to_signed(-1, 32);
@@ -68,7 +68,7 @@ BEGIN
 		WAIT FOR 1* clk_period;
 		ASSERT (result = expected_result) REPORT ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ERROR IN ADD: negative" SEVERITY ERROR;
 
-		REPORT "Sub test: 17, 5";
+		REPORT "################### 3. Sub test: 17, 5";
 		operation <= "100010";
 		data1_test <= to_signed(17, 32);
 		data2_test <= to_signed(5, 32);
@@ -76,7 +76,7 @@ BEGIN
 		WAIT FOR 1 * clk_period;
 		ASSERT (result = expected_result) REPORT ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ERROR IN SUB" SEVERITY ERROR;
 
-		REPORT "Mult test: 5, 6";
+		REPORT "################### 4. Mult test: 5, 6";
 		operation <= "011000";
 		data1_test <= to_signed(5, 32);
 		data2_test <= to_signed(6, 32);
@@ -86,17 +86,7 @@ BEGIN
 		ASSERT (lo_reg = expected_lo) REPORT ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ERROR IN MUL HI" SEVERITY ERROR;
 		ASSERT (hi_reg = expected_hi) REPORT ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ERROR IN MUL LO" SEVERITY ERROR;
 
-		--REPORT "Mult test: 2147483647, 2";
-		--operation <= "011000";
-		--data1_test <= to_signed(2147483647, 32);
-		--data2_test <= to_signed(2, 32);
-		--expected_hi <= to_signed(0, 32);
-		--expected_lo <= to_signed(0, 32);
-		--WAIT FOR 3 * clk_period;
-		--ASSERT (lo_reg = expected_lo) REPORT "ERROR IN MUL HI" SEVERITY ERROR;
-		--ASSERT (hi_reg = expected_hi) REPORT "ERROR IN MUL LO" SEVERITY ERROR;
-
-		REPORT "Div test: 300, 50";
+		REPORT "################### 5. Div test: 300, 50";
 		operation <= "011010";
 		data1_test <= to_signed(300, 32);
 		data2_test <= to_signed(50, 32);
@@ -106,7 +96,7 @@ BEGIN
 		ASSERT (lo_reg = expected_lo) REPORT ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ERROR IN DIV HI" SEVERITY ERROR;
 		ASSERT (hi_reg = expected_hi) REPORT ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ERROR IN DIV LO" SEVERITY ERROR;
 
-		REPORT "Div test: 34, 5";
+		REPORT "################### 6. Div test: 34, 5";
 		operation <= "011010";
 		data1_test <= to_signed(34, 32);
 		data2_test <= to_signed(5, 32);
@@ -116,7 +106,7 @@ BEGIN
 		ASSERT (lo_reg = expected_lo) REPORT ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ERROR IN DIV HI" SEVERITY ERROR;
 		ASSERT (hi_reg = expected_hi) REPORT ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ERROR IN DIV LO" SEVERITY ERROR;
 
-		REPORT "XOR test";
+		REPORT "################### 7. XOR test";
 		operation <= "100110";
 		data1_test <= to_signed(364836, 32);
 		data2_test <= to_signed(947376, 32);
@@ -124,7 +114,7 @@ BEGIN
 		WAIT FOR 1 * clk_period;
 		ASSERT (result = expected_result) REPORT ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ERROR IN XOR" SEVERITY ERROR;
 
-		REPORT "SHIFT LEFT test";
+		REPORT "################### 8. SHIFT LEFT test";
 		operation <= "000000";
 		data1_test <= to_signed(40, 32);
 		data2_test <= to_signed(1, 32);
@@ -132,7 +122,7 @@ BEGIN
 		WAIT FOR 1 * clk_period;
 		ASSERT (result = expected_result) REPORT ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ERROR IN SHIFT LEFT" SEVERITY ERROR;
 
-		REPORT "SHIFT RIGHT LOGICAL test";
+		REPORT "################### 9. SHIFT RIGHT LOGICAL test";
 		operation <= "000010";
 		data1_test <= to_signed(40, 32);
 		data2_test <= to_signed(1, 32);
@@ -140,7 +130,7 @@ BEGIN
 		WAIT FOR 1 * clk_period;
 		ASSERT (result = expected_result) REPORT ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ERROR IN SHIFT RIGHT LOGICAL" SEVERITY ERROR;
 
-		REPORT "SHIFT RIGHT ARITHMETIC test";
+		REPORT "################### 10. SHIFT RIGHT ARITHMETIC test";
 		operation <= "000011";
 		data1_test <= to_signed(40, 32);
 		data2_test <= to_signed(1, 32);
@@ -148,7 +138,7 @@ BEGIN
 		WAIT FOR 1 * clk_period;
 		ASSERT (result = expected_result) REPORT ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ERROR IN SHIFT RIGHT ARITHMETIC" SEVERITY ERROR;
 
-		REPORT "SHIFT RIGHT ARITHMETIC test: Negative";
+		REPORT "################### 11. SHIFT RIGHT ARITHMETIC test: Negative";
 		operation <= "000011";
 		data1_test <= to_signed(-40, 32);
 		data2_test <= to_signed(1, 32);
