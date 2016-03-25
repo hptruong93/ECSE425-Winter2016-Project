@@ -1,4 +1,4 @@
-#Hours wasted on this project: 5
+#Hours wasted on this project: 7
 
 ;#Create the work library, which is the default library used by ModelSim
 vlib work
@@ -17,6 +17,7 @@ vcom MemStage.vhd
 vcom WriteBack.vhd
 
 #Testing files
+vcom test_mainmemory.vhd
 vcom test_instructionfetch.vhd
 vcom test_alu.vhd
 # vcom test_memstage.vhd
@@ -39,6 +40,10 @@ vcom test_memarbiter.vhd
 # force -deposit clk 0 0 ns, 1 0.5 ns -repeat 1 ns
 # run 14 ns
 
-vsim -t ps memarbiter_tb
+# vsim -t ps memarbiter_tb
+# force -deposit clk 0 0 ns, 1 0.5 ns -repeat 1 ns
+# run 50 ns
+
+vsim -t ps mainmemory_tb
 force -deposit clk 0 0 ns, 1 0.5 ns -repeat 1 ns
 run 20 ns
