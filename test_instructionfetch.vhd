@@ -3,8 +3,8 @@ USE ieee.STD_LOGIC_1164.all;
 use IEEE.numeric_std.all;
 use work.register_array.all;
 use ieee.numeric_std_unsigned.all;
- 
- 
+
+
 ENTITY instructionfetch_tb IS
 END instructionfetch_tb;
  
@@ -12,12 +12,12 @@ ARCHITECTURE behaviour OF instructionfetch_tb IS
  
 SIGNAL clk, reset: STD_LOGIC := '0';
 CONSTANT clk_period : time := 1 ns;
- 
+
 CONSTANT DUMMY_32_ZERO :    signed(32-1 downto 0) := "00000000000000000000000000000000";
 CONSTANT DUMMY_32_ONE :     signed(32-1 downto 0) := "01010110101011010010100010010010";
 CONSTANT DUMMY_32_TWO :     signed(32-1 downto 0) := "00100100110101010110110101100101";
 CONSTANT DUMMY_32_THREE :   signed(32-1 downto 0) := "11010110101001000011110101010101";
- 
+
 COMPONENT InstructionFetch IS
             port (  clk     : in STD_LOGIC;
                         reset : in STD_LOGIC;

@@ -10,7 +10,7 @@ port (	clk 	: in STD_LOGIC;
 			reset : in STD_LOGIC;
 
 			branch_signal : in  STD_LOGIC_VECTOR(2-1 downto 0);
-			branch_address : in STD_LOGIC_VECTOR(32-1 downto 0); --from decoder and ALU
+			branch_address : in STD_LOGIC_VECTOR(32-1 downto 0); --from decoder
 			data : in STD_LOGIC_VECTOR(32-1 downto 0); --from memory
 
 			is_mem_busy : in STD_LOGIC;
