@@ -47,6 +47,8 @@ begin
 			pc_reg <= (others => '0');
 		elsif (rising_edge(clk)) then
 			pc_reg <= program_counter;
+			instruction <= (others => '0');
+
 			case( current_state ) is
 				when FIRST_CONTACT =>
 					do_read <= '1';
@@ -58,7 +60,7 @@ begin
 							if is_mem_busy = '0' then
 								program_counter <= program_counter + 4;
 								address <= program_counter + 4;
-								do_read <= '1';
+								do_read <= '0';
 								is_busy <= '0';
 								instruction <= data;
 								current_state <= INSTRUCTION_RECEIVED;
@@ -99,7 +101,7 @@ begin
 					if is_mem_busy = '0' then
 						program_counter <= program_counter + 4;
 						address <= program_counter + 4;
-						do_read <= '1';
+						do_read <= '0';
 						instruction <= data;
 						is_busy <= '0';
 						current_state <= INSTRUCTION_RECEIVED;

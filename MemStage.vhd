@@ -20,7 +20,9 @@ port (	clk 	: in STD_LOGIC;
 			do_write : out	STD_LOGIC;
 			is_busy : out STD_LOGIC;
 			address_line : out NATURAl;
-			data_line : inout STD_LOGIC_VECTOR(32-1 downto 0) -- received and sent from/to memory arbiter
+			input_data_line : in STD_LOGIC_VECTOR(32-1 downto 0); -- coming from memory arbiter
+			output_data_line : out STD_LOGIC_VECTOR(32-1 downto 0); -- sending to memory arbiter
+			mem_stage_output : out STD_LOGIC_VECTOR(32-1 downto 0) -- passed onto write back stage
 	);
 end MemStage;
 
@@ -56,6 +58,7 @@ begin
 						when MEM_ACCESS =>
 							if (is_mem_busy = '0') then
 								is_busy <= '0';
+								mem_stage_output <= input_data_line;
 								current_state <= MEM_WAIT;
 							end if;
 					end case ;
@@ -67,7 +70,7 @@ begin
 							if (is_mem_busy = '0') then
 								word_byte <= '1'; -- interact with mem in word
 								address_line <= to_integer(mem_address);  -- where to store
-								data_line <= registers(to_integer(unsigned(mem_writeback_register)));
+								output_data_line <= registers(to_integer(unsigned(mem_writeback_register)));
 								do_write <= '1';
 								current_state <= MEM_ACCESS;
 							end if;
@@ -91,12 +94,12 @@ begin
 							if (is_mem_busy = '0') then
 								is_busy <= '0';
 
-								if data_line(7) = '1' then --sign extended
-									data_line(31 downto 8) <= "111111111111111111111111";
+								if input_data_line(7) = '1' then --sign extended
+									mem_stage_output(31 downto 8) <= "111111111111111111111111";
 								else
-									data_line(31 downto 8) <= "000000000000000000000000";
+									mem_stage_output(31 downto 8) <= "000000000000000000000000";
 								end if;
-								data_line(31) <= data_line(7);
+								mem_stage_output(7 downto 0) <= input_data_line(7 downto 0);
 								current_state <= MEM_WAIT;
 							end if;
 					end case;
@@ -106,7 +109,7 @@ begin
 							is_busy <= '1';
 							if (is_mem_busy = '0') then
 								word_byte <= '0'; -- interact with mem in byte
-								data_line <= registers(to_integer(unsigned(mem_writeback_register)));
+								output_data_line <= registers(to_integer(unsigned(mem_writeback_register)));
 								do_write <= '1';
 								address_line <= to_integer(mem_address);  -- where to store
 								current_state <= MEM_ACCESS;
