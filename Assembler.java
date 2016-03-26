@@ -5,6 +5,17 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
+import java.nio.charset.Charset;
 
 
 public class Assembler {
@@ -21,7 +32,7 @@ public class Assembler {
 	private static final String REGISTER_ZERO = toBinary(0, REGISTER_LENGTH);
 
 	private static String input;
-	private static Map<String, Integer> labels;
+	private static Map<String, Integer> labels = new HashMap<>();
 	private static final Set<String> rtype = new HashSet<>(Arrays.asList(new String[]{
 			"add", "sub", "slt", "and", "or", "nor", "xor", "sll", "srl", "sra",
 	}));
@@ -105,57 +116,59 @@ public class Assembler {
 	}
 
 	public static void main(String args[]) {
-		labels = new HashMap<>();
-		input = "add $1 $2 $3 ####Some comments\n"
-				+ "sub $1 $2 $3\n"
-				+ "addi $1 0x123";
-		
-		String[] lines = input.split("\n");
-		/*for (int i = 0; i < lines.length; i++) {
-			String line = lines[i];
-			try {
-				process(i, line);
-			} catch (Exception e) {
-				System.out.println("Exception encountered on line " + i);
-				System.out.println(line);
-				throw e;
-			}
-		}*/	
-		input = "#####################testin individual instructions#######################\n"
-			+"add 		$3 $0 $23		\n"
-			+"sub 		$4 $3 $2 		\n"
-			+"addi 		$1 $10 1000		\n"
-			+"slt 		$1 $2 $10 		\n"
-			+"slti 		$1 $2 230		\n"
-			+"mult		$2 $3 			\n"
-			+"div 		$2 $3			\n"
-			+"mfhi          $1			\n"
-			+"mflo		$1			\n"	
-			+"lui 		$1 200			\n"
-			+"and           $2 $3 $4		\n"
-			+"or		$23 $24 $31		\n"
-			+"andi		$23 $10 100		\n"
-			+"ori		$1 	$2	4 	\n"
-			+"nor		$1	$2	$3	\n"// wrong machine code output correct is 4392997
-			+"xor		$1 	$2 	$3	\n"
-			+"xori		$2	$5	6	\n"
-			+"sll		$2 	$3	$7	\n"// way off correct value 200704
-			+"srl		$2	$6	$8	\n"// wrong
-			+"sra		$23	$5	$6	\n"
-			+"lw 		$23	1000($5)	\n"// wrong register rs
-			+"sw		$1	100($2)		\n"// wrong  
-			+"lb		$3	23($4)		\n"
-			+"sb		$1	23($3)		\n"
-			+"beq		$5	$6	100	\n"/*Not handling constant value for BEQ-- Check line 364 */
-			+"beq		$2	$10	END	\n"/* Can't find label same as bove */
-			+"END:					\n"
-			+"bne 		$1	$2	100	\n" /*same as above */
-			+"j 		LABEL			\n"
-			+"LABEL:				\n"
-			+"jr		$31			\n"
-			+"jal		12356			\n";
-
+		String input = readFromFile(new File("H:\\ECSE425\\assembly.asm")).toString();
 		loopTwice(input);
+
+		// input = "add $1 $2 $3 ####Some comments\n"
+		// 		+ "sub $1 $2 $3\n"
+		// 		+ "addi $1 0x123";
+		
+		// String[] lines = input.split("\n");
+		// /*for (int i = 0; i < lines.length; i++) {
+		// 	String line = lines[i];
+		// 	try {
+		// 		process(i, line);
+		// 	} catch (Exception e) {
+		// 		System.out.println("Exception encountered on line " + i);
+		// 		System.out.println(line);
+		// 		throw e;
+		// 	}
+		// }*/	
+		// input = "#####################testin individual instructions#######################\n"
+		// 	+"add 		$3 $0 $23		\n"
+		// 	+"sub 		$4 $3 $2 		\n"
+		// 	+"addi 		$1 $10 1000		\n"
+		// 	+"slt 		$1 $2 $10 		\n"
+		// 	+"slti 		$1 $2 230		\n"
+		// 	+"mult		$2 $3 			\n"
+		// 	+"div 		$2 $3			\n"
+		// 	+"mfhi          $1			\n"
+		// 	+"mflo		$1			\n"	
+		// 	+"lui 		$1 200			\n"
+		// 	+"and           $2 $3 $4		\n"
+		// 	+"or		$23 $24 $31		\n"
+		// 	+"andi		$23 $10 100		\n"
+		// 	+"ori		$1 	$2	4 	\n"
+		// 	+"nor		$1	$2	$3	\n"// wrong machine code output correct is 4392997
+		// 	+"xor		$1 	$2 	$3	\n"
+		// 	+"xori		$2	$5	6	\n"
+		// 	+"sll		$2 	$3	$7	\n"// way off correct value 200704
+		// 	+"srl		$2	$6	$8	\n"// wrong
+		// 	+"sra		$23	$5	$6	\n"
+		// 	+"lw 		$23	1000($5)	\n"// wrong register rs
+		// 	+"sw		$1	100($2)		\n"// wrong  
+		// 	+"lb		$3	23($4)		\n"
+		// 	+"sb		$1	23($3)		\n"
+		// 	+"beq		$5	$6	100	\n"/*Not handling constant value for BEQ-- Check line 364 */
+		// 	+"beq		$2	$10	END	\n"/* Can't find label same as bove */
+		// 	+"END:					\n"
+		// 	+"bne 		$1	$2	100	\n" /*same as above */
+		// 	+"j 		LABEL			\n"
+		// 	+"LABEL:				\n"
+		// 	+"jr		$31			\n"
+		// 	+"jal		12356			\n";
+
+		// loopTwice(input);
 
 /*		input = "#Fibonacci Sequence#\n" 
 			+ "xor $1 $1  $01 #set register #1 to 0\n" 
@@ -224,14 +237,15 @@ private	static int n = 0;
 		command = command.trim();
 
 		if (labelingOnly && !label.isEmpty()) {
-//			System.out.println("Labeling " + label + " on line " + lineNumber);
+			// System.out.println("Labeling " + label + " on line " + lineNumber);
 			labels.put(label, lineNumber);
 		}
 
 		if (!labelingOnly && !command.isEmpty()) {
 			List<String> split = split(command);
 			String result = generate(split);
-		System.out.print(n + ": " + result.substring(0,4) + " " + result.substring(4, 8) + " " + result.substring(8, 12) + " " +  result.substring(12, 16) + " " +  result.substring(16, 20) + " " + result.substring(20, 24) + " " + result.substring(24, 28) + " " +  result.substring(28, 32) + "  ----  " + command + "\n");
+			System.out.println(result);
+		//System.out.print(n + ": " + result.substring(0,4) + " " + result.substring(4, 8) + " " + result.substring(8, 12) + " " +  result.substring(12, 16) + " " +  result.substring(16, 20) + " " + result.substring(20, 24) + " " + result.substring(24, 28) + " " +  result.substring(28, 32) + "  ----  " + command + "\n");
 		//	System.out.println(Integer.parseInt(result, 2));
 		n++;
 		}
@@ -452,6 +466,47 @@ private	static int n = 0;
 				throw new IllegalArgumentException("Expected " + expected + " argument but only have " + (command.size() - 1) + "argument(s)");
 			}
 		}
+	}
+
+	/**
+	 * Read a plain text file.
+	 * @param file file that will be read
+	 * @return StringBuffer the read result.
+	 */
+	public static StringBuffer readFromFile(File file) {
+		StringBuffer output = new StringBuffer("");
+		FileInputStream fr = null;
+
+		try {
+			fr = new FileInputStream(file);
+
+			InputStreamReader char_input = new InputStreamReader(fr, Charset.forName("UTF-8").newDecoder());
+
+			BufferedReader br = new BufferedReader(char_input);
+
+			while (true) {
+	            String in = br.readLine();
+	            if (in == null) {
+	               break;
+	            }
+	            output.append(in).append("\n");
+	        }
+
+			br.close();
+
+		} catch (IOException e) {
+			e.printStackTrace();
+			return null;
+		} finally {
+			if (fr != null) {
+				try {
+					fr.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		return output;
 	}
 
 }

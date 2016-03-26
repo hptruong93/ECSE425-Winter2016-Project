@@ -56,6 +56,7 @@ begin
 				when "000000" =>
 					operation <= funct;
 					mem_writeback_register <= rd;
+					REPORT "Here Michael Jackson " & integer'image(to_integer(unsigned(rd)));
 					case( funct ) is
 						when "100000" => --add
 							data1 <= registers(to_integer(unsigned(rs)));
@@ -130,6 +131,8 @@ begin
 -----------------------------------------------IMMEDIATE OPERATIONS----------------------------------------------------------------
 -----------------------------------------------------------------------------------------------------------------------------------
 				when "001000" => -- addi
+					REPORT "Here Oprah Winfrey " & integer'image(to_integer(unsigned(rt)));
+					REPORT "Here Mariah Carey " & integer'image(to_integer(unsigned(ALU_AS_SOURCE)));
 					operation <= "100000";
 					data1 <= registers(to_integer(unsigned(rs)));
 					data2 <= STD_LOGIC_VECTOR(resize(signed(immediate), data2'length));

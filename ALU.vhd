@@ -33,6 +33,9 @@ begin
 		elsif (rising_edge(clk)) then
 			case( operation ) is
 				when "100000" => --add
+					REPORT "Here 23" & STD_LOGIC'image(data1(31));
+					REPORT "Adding shit 29 " & integer'image(to_integer(data1));
+					REPORT "Adding another shit 29 " & integer'image(to_integer(data2));
 					result <= data1 + data2;
 				when "100010" => --sub
 					result <= data1 - data2; --Add overflow

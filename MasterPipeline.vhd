@@ -8,6 +8,9 @@ entity MasterPipeline is
 port (	clk 	: in STD_LOGIC;
 			reset : in STD_LOGIC;
 
+			--For testing only
+			observed_registers	: out register_array;
+
 			-- ports connected to mem arbiter
 			instruction_address : out NATURAL; -- fed to port 1 of mem arbiter, has priority
 			fetched_instruction	: in STD_LOGIC_VECTOR(MEM_DATA_WIDTH-1 downto 0);
@@ -142,6 +145,9 @@ signal mem_stage_output : STD_LOGIC_VECTOR(32-1 downto 0);
 
 begin
 	instruction_address <= to_integer(unsigned(instruction_address_output));
+
+	observed_registers <= registers;
+
 	fetch_instance : InstructionFetch port map (
 		clk => clk,
 		reset => reset,
