@@ -80,7 +80,7 @@ begin
 							or (rt = previous_destinations(0) and previous_destinations(0) /= "00000") 
 							or (rt = previous_destinations(1) and previous_destinations(1) /= "00000") ) then
 							
-							REPORT ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> STALL THIS SHIT";
+							SHOW(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> STALL THIS SHIT");
 							operation <= "100000";
 							data1 <= registers(0);
 							data2 <= registers(0);
