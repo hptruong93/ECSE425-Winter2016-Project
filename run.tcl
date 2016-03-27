@@ -1,4 +1,4 @@
-#Hours spent on this project, increment as you go: 50
+#Hours spent on this project, increment as you go: 76
 
 ;#Create the work library, which is the default library used by ModelSim
 vlib work
