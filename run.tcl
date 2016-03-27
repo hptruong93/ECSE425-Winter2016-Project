@@ -80,6 +80,6 @@ vcom test_thewholething.vhd
 # run 10 ns
 
 vsim -t ps thewholething_tb
-AddWaves
+# AddWaves
 force -deposit clk 0 0 ns, 1 0.5 ns -repeat 1 ns
 run 20 ns

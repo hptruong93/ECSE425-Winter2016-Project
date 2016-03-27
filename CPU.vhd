@@ -39,6 +39,7 @@ package register_array is
 	CONSTANT FOURTH_BYTE_32 :	 STD_LOGIC_VECTOR(32-1 downto 0) := "00011001ZZZZZZZZZZZZZZZZZZZZZZZZ";
 
 	procedure SHOW (msg : IN String);
+	procedure SHOW_TWO (msg1 : IN String; msg2 : IN String);
 	
 end register_array;
 
@@ -51,4 +52,15 @@ package body register_array is
 		write(my_line, msg);
 		writeline(OUTPUT, my_line);
 	end SHOW;
+
+	procedure SHOW_TWO (msg1 : IN String; msg2 : IN String) is
+		variable my_line : line;
+	begin
+		write(my_line, string("" & time'image(now)));
+		write(my_line, string'(" --> "));
+		write(my_line, msg1);
+		write(my_line, string'(" "));
+		write(my_line, msg2);
+		writeline(OUTPUT, my_line);
+	end SHOW_TWO;
 end register_array;

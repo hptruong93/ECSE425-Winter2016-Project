@@ -82,8 +82,7 @@ begin
 						when HI_AS_SOURCE =>
 							registers(to_integer(unsigned(mem_writeback_register))) <= STD_LOGIC_VECTOR(hi_reg);
 						when ALU_AS_SOURCE =>
-							SHOW("Here alu output " & integer'image(to_integer(signed(alu_output))));
-							SHOW("Here mem_writeback_register " & integer'image(to_integer(unsigned(mem_writeback_register))));
+							SHOW_TWO("Here alu output " & integer'image(to_integer(signed(alu_output))), "and mem_writeback_register " & integer'image(to_integer(unsigned(mem_writeback_register))));
 							registers(to_integer(unsigned(mem_writeback_register))) <= STD_LOGIC_VECTOR(alu_output);
 						when MEM_AS_SOURCE | MEM_BYTE_AS_SOURCE =>
 							if mem_stage_busy = '0' then

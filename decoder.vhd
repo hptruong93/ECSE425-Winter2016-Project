@@ -102,6 +102,7 @@ begin
 
 							--A wild jr appears
 							when "001000" => --jr
+								SHOW("Handling a wild jr at register " & integer'image(to_integer(unsigned(rs))));
 								operation <= "100000"; --Tell ALU to not do anything
 								data1 <= (others => '0');
 								data2 <= (others => '0');
