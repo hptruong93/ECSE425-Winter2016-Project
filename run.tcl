@@ -33,7 +33,7 @@ vcom memory_arbiter.vhd
 
 vcom CPU.vhd
 vcom InstructionFetch.vhd
-vcom decoder.vhd3
+vcom decoder.vhd
 vcom ALU.vhd
 vcom MemStage.vhd
 vcom WriteBack.vhd
