@@ -135,11 +135,11 @@ signal registers : register_array;
 signal pc_reg : STD_LOGIC_VECTOR(32-1 downto 0); -- Fetch ==> Decode
 signal instruction_address_output : STD_LOGIC_VECTOR(32-1 downto 0);
 signal mem_writeback_register : STD_LOGIC_VECTOR(5-1 downto 0); -- Decoder ==> Write back unit
---signal temp_mem_writeback_register : STD_LOGIC_VECTOR(5-1 downto 0); -- Decoder ==> Write back unit
+signal temp_mem_writeback_register : STD_LOGIC_VECTOR(5-1 downto 0); -- Decoder ==> Write back unit
 
 signal signal_to_mem : STD_LOGIC_VECTOR(3-1 downto 0);
 signal writeback_source : STD_LOGIC_VECTOR(3-1 downto 0);
---signal temp_writeback_source : STD_LOGIC_VECTOR(3-1 downto 0);
+signal temp_writeback_source : STD_LOGIC_VECTOR(3-1 downto 0);
 
 signal branch_signal : STD_LOGIC_VECTOR(2-1 downto 0); --send to branch
 signal branch_address : STD_LOGIC_VECTOR(32-1 downto 0);
@@ -227,14 +227,24 @@ begin
 		lo_reg => lo_reg,
 		hi_reg => hi_reg,
 
-		writeback_source => writeback_source,
+		writeback_source => temp_writeback_source,
 		alu_output => result,
 		mem_stage_busy => mem_stage_busy,
 		mem_stage_output => mem_stage_output,
-		mem_writeback_register => mem_writeback_register,
+		mem_writeback_register => temp_mem_writeback_register,
 
 		registers => registers
 	);
+
+	testa : process(clk, reset)
+	begin
+		if reset = '1' then
+			
+		elsif (rising_edge(clk)) then
+			temp_writeback_source <= writeback_source;
+			temp_mem_writeback_register <= mem_writeback_register;			
+		end if;
+	end process ; -- synced_clock
 
 	synced_clock : process(clk, reset)
 	begin

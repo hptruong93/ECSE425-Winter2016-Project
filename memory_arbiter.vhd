@@ -79,6 +79,9 @@ begin
 		case y is
 			when idle =>
 				if re1 = '1' then
+					mm_re <= re1;
+					mm_we <= we1;
+					busy1 <= '1';
 					y <= read1;
 				elsif we1 = '1' then
 					y <= write1;
@@ -89,10 +92,9 @@ begin
 				else
 					y <= idle;
 				end if;
-			when read1 => 
+			when read1 =>
 				busy1 <= '1';
 				mm_address <= addr1;
-				--mm_data <= data1;
 				mm_re <= re1;
 				mm_we <= we1;
 				--REPORT "Here Leonardo DiCaprio" & STD_LOGIC'image(mm_re);
@@ -102,7 +104,8 @@ begin
 					busy2 <= '0'; -- user cancels mem access on 2
 				end if;
 				if (mm_rd_ready = '1') then
-				
+					mm_re <= '0';
+					mm_we <= '0';
 					busy1 <= '0';
 					data1_out <= mm_data;
 					--REPORT "Here Will Smith" & STD_LOGIC'image(mm_data(31)) & STD_LOGIC'image(mm_data(30)) & STD_LOGIC'image(mm_data(29)) & STD_LOGIC'image(mm_data(28)) & STD_LOGIC'image(mm_data(27)) & STD_LOGIC'image(mm_data(26)) & STD_LOGIC'image(mm_data(25)) & STD_LOGIC'image(mm_data(24)) & STD_LOGIC'image(mm_data(23)) & STD_LOGIC'image(mm_data(22)) & STD_LOGIC'image(mm_data(21)) & STD_LOGIC'image(mm_data(20)) & STD_LOGIC'image(mm_data(19)) & STD_LOGIC'image(mm_data(18)) & STD_LOGIC'image(mm_data(17)) & STD_LOGIC'image(mm_data(16)) & STD_LOGIC'image(mm_data(15)) & STD_LOGIC'image(mm_data(14)) & STD_LOGIC'image(mm_data(13)) & STD_LOGIC'image(mm_data(12)) & STD_LOGIC'image(mm_data(11)) & STD_LOGIC'image(mm_data(10)) & STD_LOGIC'image(mm_data(9)) & STD_LOGIC'image(mm_data(8)) & STD_LOGIC'image(mm_data(7)) & STD_LOGIC'image(mm_data(6)) & STD_LOGIC'image(mm_data(5)) & STD_LOGIC'image(mm_data(4)) & STD_LOGIC'image(mm_data(3)) & STD_LOGIC'image(mm_data(2)) & STD_LOGIC'image(mm_data(1)) & STD_LOGIC'image(mm_data(0));
