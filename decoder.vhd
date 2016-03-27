@@ -60,18 +60,19 @@ begin
 			previous_destinations(0) <= "00000";
 			previous_destinations(1) <= "00000";
 		elsif (rising_edge(clk)) then
-			do_stall <= '0';
-			previous_destinations(0) <= previous_destinations(1);
 			if instruction = STD_LOGIC_VECTOR(ALL_32_ZEROES) then
-				SHOW("STALLING");
+				SHOW("DECODER STALLING");
 				operation <= "100000";
 				data1 <= (others => '0');
 				data2 <= (others => '0');
 				mem_writeback_register <= (others => '0');
 				writeback_source <= NO_WRITE_BACK;
 			else
+				do_stall <= '0';
+				previous_destinations(0) <= previous_destinations(1);
 				branch_signal <= BRANCH_NOT;
 				SHOW("OP code is " & integer'image(to_integer(unsigned(op_code))));
+				SHOW("Rs and rt are " & integer'image(to_integer(unsigned(rs))) & integer'image(to_integer(unsigned(rt))));
 
 				case( op_code ) is
 					when "000000" =>
@@ -79,7 +80,7 @@ begin
 							or (rs = previous_destinations(1) and previous_destinations(1) /= "00000")
 							or (rt = previous_destinations(0) and previous_destinations(0) /= "00000") 
 							or (rt = previous_destinations(1) and previous_destinations(1) /= "00000") ) then
-							
+
 							SHOW(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> STALL THIS SHIT");
 							operation <= "100000";
 							data1 <= registers(0);
@@ -87,59 +88,59 @@ begin
 							writeback_source <= NO_WRITE_BACK;
 							--mem_writeback_register <= "00000";
 							do_stall <= '1';
-						end if;
+						else
+							previous_destinations(1) <= rd;
+							operation <= funct;
+							mem_writeback_register <= rd;
+							case( funct ) is
+								when "100000" => --add
+									SHOW(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ADD!!! " & integer'image(to_integer(unsigned(rs))) & integer'image(to_integer(unsigned(rt))));
+									data1 <= registers(to_integer(unsigned(rs)));
+									data2 <= registers(to_integer(unsigned(rt)));
+									writeback_source <= ALU_AS_SOURCE;
+								when "100010" => --sub
+									SHOW(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> SUB!!! " & integer'image(to_integer(unsigned(rs))) & integer'image(to_integer(unsigned(rt))));
+									data1 <= registers(to_integer(unsigned(rs)));
+									data2 <= registers(to_integer(unsigned(rt)));
+									writeback_source <= ALU_AS_SOURCE;
+								when "011000" => --mult
+									data1 <= registers(to_integer(unsigned(rs)));
+									data2 <= registers(to_integer(unsigned(rt)));
+									writeback_source <= ALU_AS_SOURCE;
+								when "011010" => --div
+									data1 <= registers(to_integer(unsigned(rs)));
+									data2 <= registers(to_integer(unsigned(rt)));
+									writeback_source <= ALU_AS_SOURCE;
+								when "100100" => --and
+									data1 <= registers(to_integer(unsigned(rs)));
+									data2 <= registers(to_integer(unsigned(rt)));
+									writeback_source <= ALU_AS_SOURCE;
+								when "100101" => --or
+									data1 <= registers(to_integer(unsigned(rs)));
+									data2 <= registers(to_integer(unsigned(rt)));
+									writeback_source <= ALU_AS_SOURCE;
+								when "100111" => --nor
+									data1 <= registers(to_integer(unsigned(rs)));
+									data2 <= registers(to_integer(unsigned(rt)));
+									writeback_source <= ALU_AS_SOURCE;
+								when "100110" => --xor
+									data1 <= registers(to_integer(unsigned(rs)));
+									data2 <= registers(to_integer(unsigned(rt)));
+									writeback_source <= ALU_AS_SOURCE;
 
-						operation <= funct;
-						mem_writeback_register <= rd;
-						case( funct ) is
-							when "100000" => --add
-								SHOW(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ADD!!! " & integer'image(to_integer(unsigned(rs))) & integer'image(to_integer(unsigned(rt))));
-								data1 <= registers(to_integer(unsigned(rs)));
-								data2 <= registers(to_integer(unsigned(rt)));
-								writeback_source <= ALU_AS_SOURCE;
-							when "100010" => --sub
-								SHOW(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> SUB!!! " & integer'image(to_integer(unsigned(rs))) & integer'image(to_integer(unsigned(rt))));
-								data1 <= registers(to_integer(unsigned(rs)));
-								data2 <= registers(to_integer(unsigned(rt)));
-								writeback_source <= ALU_AS_SOURCE;
-							when "011000" => --mult
-								data1 <= registers(to_integer(unsigned(rs)));
-								data2 <= registers(to_integer(unsigned(rt)));
-								writeback_source <= ALU_AS_SOURCE;
-							when "011010" => --div
-								data1 <= registers(to_integer(unsigned(rs)));
-								data2 <= registers(to_integer(unsigned(rt)));
-								writeback_source <= ALU_AS_SOURCE;
-							when "100100" => --and
-								data1 <= registers(to_integer(unsigned(rs)));
-								data2 <= registers(to_integer(unsigned(rt)));
-								writeback_source <= ALU_AS_SOURCE;
-							when "100101" => --or
-								data1 <= registers(to_integer(unsigned(rs)));
-								data2 <= registers(to_integer(unsigned(rt)));
-								writeback_source <= ALU_AS_SOURCE;
-							when "100111" => --nor
-								data1 <= registers(to_integer(unsigned(rs)));
-								data2 <= registers(to_integer(unsigned(rt)));
-								writeback_source <= ALU_AS_SOURCE;
-							when "100110" => --xor
-								data1 <= registers(to_integer(unsigned(rs)));
-								data2 <= registers(to_integer(unsigned(rt)));
-								writeback_source <= ALU_AS_SOURCE;
-
-							--A wild jr appears
-							when "001000" => --jr
-								SHOW("Handling a wild jr at register " & integer'image(to_integer(unsigned(rs))));
-								operation <= "100000"; --Tell ALU to not do anything
-								data1 <= (others => '0');
-								data2 <= (others => '0');
-								writeback_source <= NO_WRITE_BACK;
-								mem_writeback_register <= "00000"; --Don't write back
-								branch_signal <= BRANCH_ALWAYS;
-								branch_address <= registers(to_integer(unsigned(rs)));
-		-------------------------------------------------------------------------------------------------------------------------------------
-		-------------------------------------------------SHIFTS OPERATIONS-------------------------------------------------------------------
-		-------------------------------------------------------------------------------------------------------------------------------------
+								--A wild jr appears
+								when "001000" => --jr
+									SHOW("Handling a wild jr at register " & integer'image(to_integer(unsigned(rs))));
+									operation <= "100000"; --Tell ALU to not do anything
+									data1 <= (others => '0');
+									data2 <= (others => '0');
+									writeback_source <= NO_WRITE_BACK;
+									mem_writeback_register <= "00000"; --Don't write back
+									branch_signal <= BRANCH_ALWAYS;
+									branch_address <= registers(to_integer(unsigned(rs)));
+			-------------------------------------------------------------------------------------------------------------------------------------
+			-------------------------------------------------SHIFTS OPERATIONS-------------------------------------------------------------------
+			-------------------------------------------------------------------------------------------------------------------------------------
 								when "101010" => --slt
 									data1 <= registers(to_integer(unsigned(rs)));
 									data2 <= registers(to_integer(unsigned(rt)));
@@ -164,6 +165,7 @@ begin
 								
 								when others =>
 							end case ;
+						end if;
 						
 	-----------------------------------------------------------------------------------------------------------------------------------
 	-----------------------------------------------IMMEDIATE OPERATIONS----------------------------------------------------------------
