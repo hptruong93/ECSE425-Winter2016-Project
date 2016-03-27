@@ -20,14 +20,15 @@ port (	clk 	: in STD_LOGIC;
 			branch_signal : out STD_LOGIC_VECTOR(2-1 downto 0); --send to branch
 			branch_address : out STD_LOGIC_VECTOR(32-1 downto 0);
 			data1 : out STD_LOGIC_VECTOR(32-1 downto 0); --send to ALU
-			data2 : out STD_LOGIC_VECTOR(32-1 downto 0) --send to ALU
-
+			data2 : out STD_LOGIC_VECTOR(32-1 downto 0); --send to ALU
+			do_stall : out STD_LOGIC
 	);
 end Decoder;
 
 architecture behavioral of Decoder is
+type previous_destination_array is array(0 to 1) of STD_LOGIC_VECTOR(5-1 downto 0);
 
-
+signal previous_destinations : previous_destination_array; --biggest index is latest
 signal op_code, funct : STD_LOGIC_VECTOR(6-1 downto 0);
 signal rs, rt, rd ,sa : STD_LOGIC_VECTOR(5-1 downto 0);
 signal immediate : STD_LOGIC_VECTOR(16-1 downto 0);
@@ -44,92 +45,125 @@ begin
 	immediate <= instruction(15 downto 0);
 	target <= instruction(25 downto 0);
 
+	--shifted_destinations : process(clk, reset)
+	--begin
+	--	if reset = '1' then
+	--	else
+	--		previous_destinations(0) <= previous_destinations(1);
+	--		previous_destinations(1) <= "00000";
+	--	end if;
+	--end process;
+
 	synced_clock : process(clk, reset)
 	begin
 		if reset = '1' then
-			
+			previous_destinations(0) <= "00000";
+			previous_destinations(1) <= "00000";
 		elsif (rising_edge(clk)) then
+			do_stall <= '0';
+			previous_destinations(0) <= previous_destinations(1);
 			if instruction = STD_LOGIC_VECTOR(ALL_32_ZEROES) then
+				operation <= "100000";
+				data1 <= registers(0);
+				data2 <= registers(0);
+				writeback_source <= NO_WRITE_BACK;
+				mem_writeback_register <= "00000";
 			else
 				branch_signal <= BRANCH_NOT;
 
 				case( op_code ) is
 					
 					when "000000" =>
-						operation <= funct;
-						mem_writeback_register <= rd;
-						case( funct ) is
-							when "100000" => --add
-								REPORT ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ADD!!!";
-								data1 <= registers(to_integer(unsigned(rs)));
-								data2 <= registers(to_integer(unsigned(rt)));
-								writeback_source <= ALU_AS_SOURCE;
-							when "100010" => --sub
-								REPORT ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> SUB!!!";
-								data1 <= registers(to_integer(unsigned(rs)));
-								data2 <= registers(to_integer(unsigned(rt)));
-								writeback_source <= ALU_AS_SOURCE;
-							when "011000" => --mult
-								data1 <= registers(to_integer(unsigned(rs)));
-								data2 <= registers(to_integer(unsigned(rt)));
-								writeback_source <= ALU_AS_SOURCE;
-							when "011010" => --div
-								data1 <= registers(to_integer(unsigned(rs)));
-								data2 <= registers(to_integer(unsigned(rt)));
-								writeback_source <= ALU_AS_SOURCE;
-							when "100100" => --and
-								data1 <= registers(to_integer(unsigned(rs)));
-								data2 <= registers(to_integer(unsigned(rt)));
-								writeback_source <= ALU_AS_SOURCE;
-							when "100101" => --or
-								data1 <= registers(to_integer(unsigned(rs)));
-								data2 <= registers(to_integer(unsigned(rt)));
-								writeback_source <= ALU_AS_SOURCE;
-							when "100111" => --nor
-								data1 <= registers(to_integer(unsigned(rs)));
-								data2 <= registers(to_integer(unsigned(rt)));
-								writeback_source <= ALU_AS_SOURCE;
-							when "100110" => --xor
-								data1 <= registers(to_integer(unsigned(rs)));
-								data2 <= registers(to_integer(unsigned(rt)));
-								writeback_source <= ALU_AS_SOURCE;
 
-							--A wild jr appears
-							when "001000" => --jr
-								operation <= (others => '0'); --Tell ALU to not do anything
-								writeback_source <= NO_WRITE_BACK;
-								mem_writeback_register <= "00000"; --Don't write back
-
-								branch_signal <= BRANCH_ALWAYS;
-								branch_address <= registers(to_integer(unsigned(rs)));
-	-------------------------------------------------------------------------------------------------------------------------------------
-	-------------------------------------------------SHIFTS OPERATIONS-------------------------------------------------------------------
-	-------------------------------------------------------------------------------------------------------------------------------------
-							when "101010" => --slt
-								data1 <= registers(to_integer(unsigned(rs)));
-								data2 <= registers(to_integer(unsigned(rt)));
-								writeback_source <= ALU_AS_SOURCE;
-							when "000000" => --sll
-								data1 <= registers(to_integer(unsigned(rs)));
-								data2 <= STD_LOGIC_VECTOR(resize(signed(sa), data2'length));
-								writeback_source <= ALU_AS_SOURCE;
-							when "000010" => --srl
-								data1 <= registers(to_integer(unsigned(rs)));
-								data2 <= STD_LOGIC_VECTOR(resize(signed(sa), data2'length));
-								writeback_source <= ALU_AS_SOURCE;
-							when "000011" => --sra
-								data1 <= registers(to_integer(unsigned(rs)));
-								data2 <= STD_LOGIC_VECTOR(resize(signed(sa), data2'length));
-								writeback_source <= ALU_AS_SOURCE;
-
-							when "010000" => --mfhi
-								writeback_source <= HI_AS_SOURCE;
-							when "010010" => --mflo
-								writeback_source <= LO_AS_SOURCE;
+						if (  (rs = previous_destinations(0) and previous_destinations(0) /= "00000") 
+							or (rs = previous_destinations(1) and previous_destinations(1) /= "00000")
+							or (rt = previous_destinations(0) and previous_destinations(0) /= "00000") 
+							or (rt = previous_destinations(1) and previous_destinations(1) /= "00000") ) then
 							
-							when others =>
+							REPORT ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> STALL THIS SHIT";
+							operation <= "100000";
+							data1 <= registers(0);
+							data2 <= registers(0);
+							writeback_source <= NO_WRITE_BACK;
+							--mem_writeback_register <= "00000";
+							do_stall <= '1';
+						else
+							previous_destinations(1) <= rd;
+							operation <= funct;
+							mem_writeback_register <= rd;
+							case( funct ) is
+								when "100000" => --add
+									REPORT ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ADD!!!";
+									data1 <= registers(to_integer(unsigned(rs)));
+									data2 <= registers(to_integer(unsigned(rt)));
+									writeback_source <= ALU_AS_SOURCE;
+								when "100010" => --sub
+									REPORT ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> SUB!!!";
+									data1 <= registers(to_integer(unsigned(rs)));
+									data2 <= registers(to_integer(unsigned(rt)));
+									writeback_source <= ALU_AS_SOURCE;
+								when "011000" => --mult
+									data1 <= registers(to_integer(unsigned(rs)));
+									data2 <= registers(to_integer(unsigned(rt)));
+									writeback_source <= ALU_AS_SOURCE;
+								when "011010" => --div
+									data1 <= registers(to_integer(unsigned(rs)));
+									data2 <= registers(to_integer(unsigned(rt)));
+									writeback_source <= ALU_AS_SOURCE;
+								when "100100" => --and
+									data1 <= registers(to_integer(unsigned(rs)));
+									data2 <= registers(to_integer(unsigned(rt)));
+									writeback_source <= ALU_AS_SOURCE;
+								when "100101" => --or
+									data1 <= registers(to_integer(unsigned(rs)));
+									data2 <= registers(to_integer(unsigned(rt)));
+									writeback_source <= ALU_AS_SOURCE;
+								when "100111" => --nor
+									data1 <= registers(to_integer(unsigned(rs)));
+									data2 <= registers(to_integer(unsigned(rt)));
+									writeback_source <= ALU_AS_SOURCE;
+								when "100110" => --xor
+									data1 <= registers(to_integer(unsigned(rs)));
+									data2 <= registers(to_integer(unsigned(rt)));
+									writeback_source <= ALU_AS_SOURCE;
+
+								--A wild jr appears
+								when "001000" => --jr
+									operation <= (others => '0'); --Tell ALU to not do anything
+									writeback_source <= NO_WRITE_BACK;
+									mem_writeback_register <= "00000"; --Don't write back
+
+									branch_signal <= BRANCH_ALWAYS;
+									branch_address <= registers(to_integer(unsigned(rs)));
+		-------------------------------------------------------------------------------------------------------------------------------------
+		-------------------------------------------------SHIFTS OPERATIONS-------------------------------------------------------------------
+		-------------------------------------------------------------------------------------------------------------------------------------
+								when "101010" => --slt
+									data1 <= registers(to_integer(unsigned(rs)));
+									data2 <= registers(to_integer(unsigned(rt)));
+									writeback_source <= ALU_AS_SOURCE;
+								when "000000" => --sll
+									data1 <= registers(to_integer(unsigned(rs)));
+									data2 <= STD_LOGIC_VECTOR(resize(signed(sa), data2'length));
+									writeback_source <= ALU_AS_SOURCE;
+								when "000010" => --srl
+									data1 <= registers(to_integer(unsigned(rs)));
+									data2 <= STD_LOGIC_VECTOR(resize(signed(sa), data2'length));
+									writeback_source <= ALU_AS_SOURCE;
+								when "000011" => --sra
+									data1 <= registers(to_integer(unsigned(rs)));
+									data2 <= STD_LOGIC_VECTOR(resize(signed(sa), data2'length));
+									writeback_source <= ALU_AS_SOURCE;
+
+								when "010000" => --mfhi
+									writeback_source <= HI_AS_SOURCE;
+								when "010010" => --mflo
+									writeback_source <= LO_AS_SOURCE;
+								
+								when others =>
+							end case ;
+						end if;
 						
-						end case ;
 	-----------------------------------------------------------------------------------------------------------------------------------
 	-----------------------------------------------IMMEDIATE OPERATIONS----------------------------------------------------------------
 	-----------------------------------------------------------------------------------------------------------------------------------

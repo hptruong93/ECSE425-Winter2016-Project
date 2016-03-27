@@ -32,7 +32,7 @@ architecture behavioral of MasterPipeline is
 COMPONENT InstructionFetch is
 port (	clk 	: in STD_LOGIC;
 			reset : in STD_LOGIC;
-
+			do_stall : in STD_LOGIC;
 			branch_signal : in  STD_LOGIC_VECTOR(2-1 downto 0);
 			branch_address : in STD_LOGIC_VECTOR(32-1 downto 0); --from decoder
 			data : in STD_LOGIC_VECTOR(32-1 downto 0); --from memory
@@ -63,7 +63,8 @@ port (	clk 	: in STD_LOGIC;
 			branch_signal : out STD_LOGIC_VECTOR(2-1 downto 0); --send to branch
 			branch_address : out STD_LOGIC_VECTOR(32-1 downto 0);
 			data1 : out STD_LOGIC_VECTOR(32-1 downto 0); --send to ALU
-			data2 : out STD_LOGIC_VECTOR(32-1 downto 0) --send to ALU
+			data2 : out STD_LOGIC_VECTOR(32-1 downto 0); --send to ALU
+			do_stall : out STD_LOGIC
 
 	);
 end COMPONENT;
@@ -127,7 +128,7 @@ signal data1 : STD_LOGIC_VECTOR(32-1 downto 0); -- Decoder ==> ALU
 signal data2 : STD_LOGIC_VECTOR(32-1 downto 0); -- Decoder ==> ALU
 signal signed_data1 : signed(32-1 downto 0); -- Decoder ==> ALU
 signal signed_data2 : signed(32-1 downto 0); -- Decoder ==> ALU
-
+signal do_stall : STD_LOGIC;
 signal lo_reg : signed (32-1 downto 0); -- ALU ==> Mem unit
 signal hi_reg : signed (32-1 downto 0); -- ALU ==> Mem unit
 signal result : signed(32-1 downto 0); -- ALU ==> Mem unit
@@ -135,13 +136,16 @@ signal registers : register_array;
 signal pc_reg : STD_LOGIC_VECTOR(32-1 downto 0); -- Fetch ==> Decode
 signal instruction_address_output : STD_LOGIC_VECTOR(32-1 downto 0);
 signal mem_writeback_register : STD_LOGIC_VECTOR(5-1 downto 0); -- Decoder ==> Write back unit
+signal temp_mem_writeback_register : STD_LOGIC_VECTOR(5-1 downto 0);
 signal signal_to_mem : STD_LOGIC_VECTOR(3-1 downto 0);
 signal writeback_source : STD_LOGIC_VECTOR(3-1 downto 0);
+signal temp_writeback_source : STD_LOGIC_VECTOR(3-1 downto 0);
 signal branch_signal : STD_LOGIC_VECTOR(2-1 downto 0); --send to branch
 signal branch_address : STD_LOGIC_VECTOR(32-1 downto 0);
 signal mem_stage_busy : STD_LOGIC;
 signal instruction_fetch_busy : STD_LOGIC;
 signal mem_stage_output : STD_LOGIC_VECTOR(32-1 downto 0);
+
 
 begin
 	instruction_address <= to_integer(unsigned(instruction_address_output));
@@ -155,7 +159,7 @@ begin
  		branch_signal => branch_signal,
 		branch_address => branch_address,
 		data => fetched_instruction,
-
+		do_stall => do_stall,
  		is_mem_busy => busy1,
 
  		pc_reg => pc_reg,
@@ -178,7 +182,8 @@ begin
 		branch_signal => branch_signal,
 		branch_address => branch_address,
 		data1 => data1,
-		data2 => data2
+		data2 => data2,
+		do_stall => do_stall
 	);
 
 
@@ -223,22 +228,30 @@ begin
 		lo_reg => lo_reg,
 		hi_reg => hi_reg,
 
-		writeback_source => writeback_source,
+		writeback_source => temp_writeback_source,
 		alu_output => result,
 		mem_stage_busy => mem_stage_busy,
 		mem_stage_output => mem_stage_output,
-		mem_writeback_register => mem_writeback_register,
+		mem_writeback_register => temp_mem_writeback_register,
 
 		registers => registers
 	);
 
+	promised : process(clk)
+	begin
+		if reset = '1' then
+		elsif (rising_edge(clk)) then
+			temp_writeback_source <= writeback_source;
+			temp_mem_writeback_register <= mem_writeback_register;
+		end if;
+	end process;
 
 	synced_clock : process(clk, reset)
 	begin
 		if reset = '1' then
 			
 		elsif (rising_edge(clk)) then
-			REPORT "++++++++++++++++++++++++++++++++++++Writing back to " & integer'image(to_integer(unsigned(mem_writeback_register)));
+			--REPORT "++++++++++++++++++++++++++++++++++++Writing back to " & integer'image(to_integer(unsigned(mem_writeback_register)));
 			
 		end if;
 	end process ; -- synced_clock
