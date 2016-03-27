@@ -40,6 +40,7 @@ package register_array is
 
 	procedure SHOW (msg : IN String);
 	procedure SHOW_TWO (msg1 : IN String; msg2 : IN String);
+	procedure SHOW_LOVE (msg : IN String; data : IN STD_LOGIC_VECTOR(32-1 downto 0));
 	
 end register_array;
 
@@ -63,4 +64,14 @@ package body register_array is
 		write(my_line, msg2);
 		writeline(OUTPUT, my_line);
 	end SHOW_TWO;
+
+	procedure SHOW_LOVE (msg : IN String; data : IN STD_LOGIC_VECTOR(32-1 downto 0)) is
+		variable my_line : line;
+	begin
+		write(my_line, string("" & time'image(now)));
+		write(my_line, string'(" --> "));
+		write(my_line, msg);
+		write(my_line, string'(" --> " & STD_LOGIC'image(data(31)) & STD_LOGIC'image(data(30)) & STD_LOGIC'image(data(29)) & STD_LOGIC'image(data(28)) & STD_LOGIC'image(data(27)) & STD_LOGIC'image(data(26)) & STD_LOGIC'image(data(25)) & STD_LOGIC'image(data(24)) & STD_LOGIC'image(data(23)) & STD_LOGIC'image(data(22)) & STD_LOGIC'image(data(21)) & STD_LOGIC'image(data(20)) & STD_LOGIC'image(data(19)) & STD_LOGIC'image(data(18)) & STD_LOGIC'image(data(17)) & STD_LOGIC'image(data(16)) & STD_LOGIC'image(data(15)) & STD_LOGIC'image(data(14)) & STD_LOGIC'image(data(13)) & STD_LOGIC'image(data(12)) & STD_LOGIC'image(data(11)) & STD_LOGIC'image(data(10)) & STD_LOGIC'image(data(9)) & STD_LOGIC'image(data(8)) & STD_LOGIC'image(data(7)) & STD_LOGIC'image(data(6)) & STD_LOGIC'image(data(5)) & STD_LOGIC'image(data(4)) & STD_LOGIC'image(data(3)) & STD_LOGIC'image(data(2)) & STD_LOGIC'image(data(1)) & STD_LOGIC'image(data(0))));
+		writeline(OUTPUT, my_line);
+	end SHOW_LOVE;
 end register_array;
