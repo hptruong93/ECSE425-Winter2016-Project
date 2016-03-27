@@ -26,8 +26,8 @@ proc AddWaves {} {
 vlib work
 
 ;#Compile everything
-# vcom Memory_in_Byte.vhd
-# vcom Main_Memory.vhd
+vcom Memory_in_Byte.vhd
+vcom Main_Memory.vhd
 vcom memory_arbiter_lib.vhd
 vcom memory_arbiter.vhd
 
