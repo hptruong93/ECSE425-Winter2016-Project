@@ -46,8 +46,8 @@ vcom MasterPipeline.vhd
 # vcom test_memstage.vhd
 # vcom test_writeback.vhd
 # vcom test_memarbiter.vhd
-# vcom test_masterpipeline.vhd
-vcom test_thewholething.vhd
+vcom test_masterpipeline.vhd
+# vcom test_thewholething.vhd
 
 #Start a simulation session with the fsm_tb component
 # vsim -t ps alu_tb
@@ -76,7 +76,7 @@ vcom test_thewholething.vhd
 # run 200 ns
 
 vsim -t ps masterpipeline_tb
-AddWaves
+# AddWaves
 force -deposit clk 0 0 ns, 1 0.5 ns -repeat 1 ns
 run 15 ns
 
