@@ -81,6 +81,7 @@ begin
 				if re1 = '1' then
 					mm_re <= re1;
 					mm_we <= we1;
+					mm_address <= addr1;
 					busy1 <= '1';
 					y <= read1;
 				elsif we1 = '1' then
