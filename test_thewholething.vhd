@@ -98,7 +98,7 @@ BEGIN
         clk  => clk,
         reset => reset,
   
-        Word_Byte   => word_byte,
+        Word_Byte   => '1',
 
         --Memory port 1
         addr1 => instruction_address,
@@ -117,46 +117,47 @@ BEGIN
         busy2 => busy2 
     );
 
-    -- -- HOW DO WE DO THIS SHIT
-    --clk_process : PROCESS
-    --BEGIN
-    --    clk <= '1';
-    --    WAIT FOR clk_period/2;
-    --    clk <= '0';
-    --    WAIT FOR clk_period/2;
-    --END PROCESS;
+     -- HOW DO WE DO THIS SHIT
+    clk_process : PROCESS
+    BEGIN
+        clk <= '1';
+        WAIT FOR clk_period/2;
+        clk <= '0';
+        WAIT FOR clk_period/2;
+    END PROCESS;
    
  
-    ----TODO: Thoroughly test the crap
-    --stim_process: PROCESS
-    --BEGIN
-    --    if count = '0' then count <= '1';
-    --        WAIT FOR 1 * clk_period; --So clk starts at 1
+    --TODO: Thoroughly test the crap
+    stim_process: PROCESS
+    BEGIN
+        if count = '0' then count <= '1';
 
-    --        reset <= '1';
-    --        WAIT FOR 1 * clk_period;
-    --        reset <= '0';
-    --        WAIT FOR 1 * clk_period;
+            WAIT FOR 1 * clk_period; --So clk starts at 1
 
-    -------------------------------------------------------------------------------------------------------------------------     
+            reset <= '1';
+            WAIT FOR 1 * clk_period;
+            reset <= '0';
+            WAIT FOR 1 * clk_period;
 
-    --        WAIT FOR 1 * clk_period;
+    -----------------------------------------------------------------------------------------------------------------------     
 
-    --        WAIT FOR 4 * clk_period;
-    --        destination_reg <= 3;
-    --        REPORT "WRITTEN IS " & STD_LOGIC'image(observed_registers(destination_reg)(31)) & STD_LOGIC'image(observed_registers(destination_reg)(30)) & STD_LOGIC'image(observed_registers(destination_reg)(29)) & STD_LOGIC'image(observed_registers(destination_reg)(28)) & STD_LOGIC'image(observed_registers(destination_reg)(27)) & STD_LOGIC'image(observed_registers(destination_reg)(26)) & STD_LOGIC'image(observed_registers(destination_reg)(25)) & STD_LOGIC'image(observed_registers(destination_reg)(24)) & STD_LOGIC'image(observed_registers(destination_reg)(23)) & STD_LOGIC'image(observed_registers(destination_reg)(22)) & STD_LOGIC'image(observed_registers(destination_reg)(21)) & STD_LOGIC'image(observed_registers(destination_reg)(20)) & STD_LOGIC'image(observed_registers(destination_reg)(19)) & STD_LOGIC'image(observed_registers(destination_reg)(18)) & STD_LOGIC'image(observed_registers(destination_reg)(17)) & STD_LOGIC'image(observed_registers(destination_reg)(16)) & STD_LOGIC'image(observed_registers(destination_reg)(15)) & STD_LOGIC'image(observed_registers(destination_reg)(14)) & STD_LOGIC'image(observed_registers(destination_reg)(13)) & STD_LOGIC'image(observed_registers(destination_reg)(12)) & STD_LOGIC'image(observed_registers(destination_reg)(11)) & STD_LOGIC'image(observed_registers(destination_reg)(10)) & STD_LOGIC'image(observed_registers(destination_reg)(9)) & STD_LOGIC'image(observed_registers(destination_reg)(8)) & STD_LOGIC'image(observed_registers(destination_reg)(7)) & STD_LOGIC'image(observed_registers(destination_reg)(6)) & STD_LOGIC'image(observed_registers(destination_reg)(5)) & STD_LOGIC'image(observed_registers(destination_reg)(4)) & STD_LOGIC'image(observed_registers(destination_reg)(3)) & STD_LOGIC'image(observed_registers(destination_reg)(2)) & STD_LOGIC'image(observed_registers(destination_reg)(1)) & STD_LOGIC'image(observed_registers(destination_reg)(0));
 
-    --        WAIT FOR 1 * clk_period;
-    --        destination_reg <= 5;
-    --        REPORT "WRITTEN IS " & STD_LOGIC'image(observed_registers(destination_reg)(31)) & STD_LOGIC'image(observed_registers(destination_reg)(30)) & STD_LOGIC'image(observed_registers(destination_reg)(29)) & STD_LOGIC'image(observed_registers(destination_reg)(28)) & STD_LOGIC'image(observed_registers(destination_reg)(27)) & STD_LOGIC'image(observed_registers(destination_reg)(26)) & STD_LOGIC'image(observed_registers(destination_reg)(25)) & STD_LOGIC'image(observed_registers(destination_reg)(24)) & STD_LOGIC'image(observed_registers(destination_reg)(23)) & STD_LOGIC'image(observed_registers(destination_reg)(22)) & STD_LOGIC'image(observed_registers(destination_reg)(21)) & STD_LOGIC'image(observed_registers(destination_reg)(20)) & STD_LOGIC'image(observed_registers(destination_reg)(19)) & STD_LOGIC'image(observed_registers(destination_reg)(18)) & STD_LOGIC'image(observed_registers(destination_reg)(17)) & STD_LOGIC'image(observed_registers(destination_reg)(16)) & STD_LOGIC'image(observed_registers(destination_reg)(15)) & STD_LOGIC'image(observed_registers(destination_reg)(14)) & STD_LOGIC'image(observed_registers(destination_reg)(13)) & STD_LOGIC'image(observed_registers(destination_reg)(12)) & STD_LOGIC'image(observed_registers(destination_reg)(11)) & STD_LOGIC'image(observed_registers(destination_reg)(10)) & STD_LOGIC'image(observed_registers(destination_reg)(9)) & STD_LOGIC'image(observed_registers(destination_reg)(8)) & STD_LOGIC'image(observed_registers(destination_reg)(7)) & STD_LOGIC'image(observed_registers(destination_reg)(6)) & STD_LOGIC'image(observed_registers(destination_reg)(5)) & STD_LOGIC'image(observed_registers(destination_reg)(4)) & STD_LOGIC'image(observed_registers(destination_reg)(3)) & STD_LOGIC'image(observed_registers(destination_reg)(2)) & STD_LOGIC'image(observed_registers(destination_reg)(1)) & STD_LOGIC'image(observed_registers(destination_reg)(0));
 
-    --        WAIT FOR 1 * clk_period;
-    --        destination_reg <= 4;
-    --        REPORT "WRITTEN IS " & STD_LOGIC'image(observed_registers(destination_reg)(31)) & STD_LOGIC'image(observed_registers(destination_reg)(30)) & STD_LOGIC'image(observed_registers(destination_reg)(29)) & STD_LOGIC'image(observed_registers(destination_reg)(28)) & STD_LOGIC'image(observed_registers(destination_reg)(27)) & STD_LOGIC'image(observed_registers(destination_reg)(26)) & STD_LOGIC'image(observed_registers(destination_reg)(25)) & STD_LOGIC'image(observed_registers(destination_reg)(24)) & STD_LOGIC'image(observed_registers(destination_reg)(23)) & STD_LOGIC'image(observed_registers(destination_reg)(22)) & STD_LOGIC'image(observed_registers(destination_reg)(21)) & STD_LOGIC'image(observed_registers(destination_reg)(20)) & STD_LOGIC'image(observed_registers(destination_reg)(19)) & STD_LOGIC'image(observed_registers(destination_reg)(18)) & STD_LOGIC'image(observed_registers(destination_reg)(17)) & STD_LOGIC'image(observed_registers(destination_reg)(16)) & STD_LOGIC'image(observed_registers(destination_reg)(15)) & STD_LOGIC'image(observed_registers(destination_reg)(14)) & STD_LOGIC'image(observed_registers(destination_reg)(13)) & STD_LOGIC'image(observed_registers(destination_reg)(12)) & STD_LOGIC'image(observed_registers(destination_reg)(11)) & STD_LOGIC'image(observed_registers(destination_reg)(10)) & STD_LOGIC'image(observed_registers(destination_reg)(9)) & STD_LOGIC'image(observed_registers(destination_reg)(8)) & STD_LOGIC'image(observed_registers(destination_reg)(7)) & STD_LOGIC'image(observed_registers(destination_reg)(6)) & STD_LOGIC'image(observed_registers(destination_reg)(5)) & STD_LOGIC'image(observed_registers(destination_reg)(4)) & STD_LOGIC'image(observed_registers(destination_reg)(3)) & STD_LOGIC'image(observed_registers(destination_reg)(2)) & STD_LOGIC'image(observed_registers(destination_reg)(1)) & STD_LOGIC'image(observed_registers(destination_reg)(0));
+            WAIT FOR 4 * clk_period;
+            destination_reg <= 3;
+            REPORT "WRITTEN IS " & STD_LOGIC'image(observed_registers(destination_reg)(31)) & STD_LOGIC'image(observed_registers(destination_reg)(30)) & STD_LOGIC'image(observed_registers(destination_reg)(29)) & STD_LOGIC'image(observed_registers(destination_reg)(28)) & STD_LOGIC'image(observed_registers(destination_reg)(27)) & STD_LOGIC'image(observed_registers(destination_reg)(26)) & STD_LOGIC'image(observed_registers(destination_reg)(25)) & STD_LOGIC'image(observed_registers(destination_reg)(24)) & STD_LOGIC'image(observed_registers(destination_reg)(23)) & STD_LOGIC'image(observed_registers(destination_reg)(22)) & STD_LOGIC'image(observed_registers(destination_reg)(21)) & STD_LOGIC'image(observed_registers(destination_reg)(20)) & STD_LOGIC'image(observed_registers(destination_reg)(19)) & STD_LOGIC'image(observed_registers(destination_reg)(18)) & STD_LOGIC'image(observed_registers(destination_reg)(17)) & STD_LOGIC'image(observed_registers(destination_reg)(16)) & STD_LOGIC'image(observed_registers(destination_reg)(15)) & STD_LOGIC'image(observed_registers(destination_reg)(14)) & STD_LOGIC'image(observed_registers(destination_reg)(13)) & STD_LOGIC'image(observed_registers(destination_reg)(12)) & STD_LOGIC'image(observed_registers(destination_reg)(11)) & STD_LOGIC'image(observed_registers(destination_reg)(10)) & STD_LOGIC'image(observed_registers(destination_reg)(9)) & STD_LOGIC'image(observed_registers(destination_reg)(8)) & STD_LOGIC'image(observed_registers(destination_reg)(7)) & STD_LOGIC'image(observed_registers(destination_reg)(6)) & STD_LOGIC'image(observed_registers(destination_reg)(5)) & STD_LOGIC'image(observed_registers(destination_reg)(4)) & STD_LOGIC'image(observed_registers(destination_reg)(3)) & STD_LOGIC'image(observed_registers(destination_reg)(2)) & STD_LOGIC'image(observed_registers(destination_reg)(1)) & STD_LOGIC'image(observed_registers(destination_reg)(0));
 
-    --    else
-    --        count <= '1';
-    --        WAIT FOR 1000 * clk_period;
-    --    end if;
-    --END PROCESS;
+            WAIT FOR 1 * clk_period;
+            destination_reg <= 5;
+            REPORT "WRITTEN IS " & STD_LOGIC'image(observed_registers(destination_reg)(31)) & STD_LOGIC'image(observed_registers(destination_reg)(30)) & STD_LOGIC'image(observed_registers(destination_reg)(29)) & STD_LOGIC'image(observed_registers(destination_reg)(28)) & STD_LOGIC'image(observed_registers(destination_reg)(27)) & STD_LOGIC'image(observed_registers(destination_reg)(26)) & STD_LOGIC'image(observed_registers(destination_reg)(25)) & STD_LOGIC'image(observed_registers(destination_reg)(24)) & STD_LOGIC'image(observed_registers(destination_reg)(23)) & STD_LOGIC'image(observed_registers(destination_reg)(22)) & STD_LOGIC'image(observed_registers(destination_reg)(21)) & STD_LOGIC'image(observed_registers(destination_reg)(20)) & STD_LOGIC'image(observed_registers(destination_reg)(19)) & STD_LOGIC'image(observed_registers(destination_reg)(18)) & STD_LOGIC'image(observed_registers(destination_reg)(17)) & STD_LOGIC'image(observed_registers(destination_reg)(16)) & STD_LOGIC'image(observed_registers(destination_reg)(15)) & STD_LOGIC'image(observed_registers(destination_reg)(14)) & STD_LOGIC'image(observed_registers(destination_reg)(13)) & STD_LOGIC'image(observed_registers(destination_reg)(12)) & STD_LOGIC'image(observed_registers(destination_reg)(11)) & STD_LOGIC'image(observed_registers(destination_reg)(10)) & STD_LOGIC'image(observed_registers(destination_reg)(9)) & STD_LOGIC'image(observed_registers(destination_reg)(8)) & STD_LOGIC'image(observed_registers(destination_reg)(7)) & STD_LOGIC'image(observed_registers(destination_reg)(6)) & STD_LOGIC'image(observed_registers(destination_reg)(5)) & STD_LOGIC'image(observed_registers(destination_reg)(4)) & STD_LOGIC'image(observed_registers(destination_reg)(3)) & STD_LOGIC'image(observed_registers(destination_reg)(2)) & STD_LOGIC'image(observed_registers(destination_reg)(1)) & STD_LOGIC'image(observed_registers(destination_reg)(0));
+
+            WAIT FOR 1 * clk_period;
+            destination_reg <= 4;
+            REPORT "WRITTEN IS " & STD_LOGIC'image(observed_registers(destination_reg)(31)) & STD_LOGIC'image(observed_registers(destination_reg)(30)) & STD_LOGIC'image(observed_registers(destination_reg)(29)) & STD_LOGIC'image(observed_registers(destination_reg)(28)) & STD_LOGIC'image(observed_registers(destination_reg)(27)) & STD_LOGIC'image(observed_registers(destination_reg)(26)) & STD_LOGIC'image(observed_registers(destination_reg)(25)) & STD_LOGIC'image(observed_registers(destination_reg)(24)) & STD_LOGIC'image(observed_registers(destination_reg)(23)) & STD_LOGIC'image(observed_registers(destination_reg)(22)) & STD_LOGIC'image(observed_registers(destination_reg)(21)) & STD_LOGIC'image(observed_registers(destination_reg)(20)) & STD_LOGIC'image(observed_registers(destination_reg)(19)) & STD_LOGIC'image(observed_registers(destination_reg)(18)) & STD_LOGIC'image(observed_registers(destination_reg)(17)) & STD_LOGIC'image(observed_registers(destination_reg)(16)) & STD_LOGIC'image(observed_registers(destination_reg)(15)) & STD_LOGIC'image(observed_registers(destination_reg)(14)) & STD_LOGIC'image(observed_registers(destination_reg)(13)) & STD_LOGIC'image(observed_registers(destination_reg)(12)) & STD_LOGIC'image(observed_registers(destination_reg)(11)) & STD_LOGIC'image(observed_registers(destination_reg)(10)) & STD_LOGIC'image(observed_registers(destination_reg)(9)) & STD_LOGIC'image(observed_registers(destination_reg)(8)) & STD_LOGIC'image(observed_registers(destination_reg)(7)) & STD_LOGIC'image(observed_registers(destination_reg)(6)) & STD_LOGIC'image(observed_registers(destination_reg)(5)) & STD_LOGIC'image(observed_registers(destination_reg)(4)) & STD_LOGIC'image(observed_registers(destination_reg)(3)) & STD_LOGIC'image(observed_registers(destination_reg)(2)) & STD_LOGIC'image(observed_registers(destination_reg)(1)) & STD_LOGIC'image(observed_registers(destination_reg)(0));
+            REPORT "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<END TEST";
+        else
+            count <= '1';
+            WAIT FOR 1000 * clk_period;
+        end if;
+    END PROCESS;
 END;

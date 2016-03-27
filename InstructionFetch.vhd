@@ -34,7 +34,7 @@ type state is (
 	);
 signal current_state : state;
 
-signal program_counter : STD_LOGIC_VECTOR(32-1 downto 0);
+signal program_counter : STD_LOGIC_VECTOR(32-1 downto 0)  := "00000000000000000000000000000000";
 
 begin
 	--instruction <= data;
@@ -57,6 +57,7 @@ begin
 				when FETCHING =>
 					case( branch_signal ) is
 						when BRANCH_NOT =>
+							
 							if is_mem_busy = '0' then
 								program_counter <= program_counter + 4;
 								address <= program_counter + 4;

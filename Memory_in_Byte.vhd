@@ -102,8 +102,10 @@ BEGIN
 		
 		-- if not initializing nor dumping
 		elsif(clk'event and clk='1') then
+
 			data <= (others=>'Z'); --Since the data port is an INOUT 
 			if (re='1' and we='0') then
+			--REPORT "Here George Clooney" & INTEGER'image(delay_cnt);
 				if(delay_cnt >= Read_Delay) then -- wait enough till Read_Dalys pass
 					data <= Memory(address);
 					delay_cnt := 0;
@@ -116,6 +118,7 @@ BEGIN
 					rd_ready <='0';
 				end if;
 			elsif (re='0' and we='1') then 
+			
 				if(delay_cnt >= Write_Delay) then -- wait enough till Write_Dalys pass
 					Memory(address)<=data;
 					delay_cnt := 0;
@@ -128,6 +131,7 @@ BEGIN
 					rd_ready <='0';
 				end if;
 			else
+			--REPORT "Here Jessica Alba" & STD_LOGIC'image(re) & "    " & STD_LOGIC'image(we);
 				data <= (others =>'Z'); --if write and read enables get activated simultaneously!
 				wr_done <= '0';
 				rd_ready <='0';

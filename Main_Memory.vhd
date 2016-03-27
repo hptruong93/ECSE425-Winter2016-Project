@@ -203,8 +203,18 @@ rd_ready <= '1' when rd_ready0='1' or rd_ready1='1' or rd_ready2='1' or rd_ready
 wr_done <= '1' when wr_done0='1' or wr_done1='1' or wr_done2='1' or wr_done3='1' else
 			'0';
 		 
+	--magic : process( clk )
+	--begin
+	--	REPORT "YOLOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO0 " & std_logic'image(re);
+	--	REPORT "YOLOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO1 " & std_logic'image(re0);
+	--	REPORT "YOLOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO2 " & std_logic'image(re1);
+	--	REPORT "YOLOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO3 " & std_logic'image(re2);
+	--	REPORT "YOLOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO4 " & std_logic'image(re3);
+	--	REPORT "YOLOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO5 " & std_logic'image(Word_Byte);
+
+	--end process ; -- magic
+
 	process (initialize, dump, clk) 
- 
 			file file_pointer : text;
 			file file_write_pointer0,file_write_pointer1,file_write_pointer2,file_write_pointer3 : text;
 			file file_read_pointer0,file_read_pointer1,file_read_pointer2,file_read_pointer3 : text;

@@ -52,7 +52,7 @@ begin
 			if instruction = STD_LOGIC_VECTOR(ALL_32_ZEROES) then
 			else
 				branch_signal <= BRANCH_NOT;
-
+			
 				case( op_code ) is
 					
 					when "000000" =>
