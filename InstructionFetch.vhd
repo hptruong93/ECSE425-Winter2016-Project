@@ -48,6 +48,7 @@ begin
 		elsif (rising_edge(clk)) then
 			pc_reg <= program_counter;
 			instruction <= (others => '0');
+			REPORT "Fetching " & INTEGER'image(TO_INTEGER(UNSIGNED(program_counter)));
 
 			case( current_state ) is
 				when FIRST_CONTACT =>
@@ -59,6 +60,7 @@ begin
 						when BRANCH_NOT =>
 							
 							if is_mem_busy = '0' then
+								REPORT "GOT FETCH";
 								program_counter <= program_counter + 4;
 								address <= program_counter + 4;
 								do_read <= '0';

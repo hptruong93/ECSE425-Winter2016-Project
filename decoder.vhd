@@ -60,12 +60,12 @@ begin
 						mem_writeback_register <= rd;
 						case( funct ) is
 							when "100000" => --add
-								REPORT ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ADD!!!";
+								REPORT ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ADD!!!" & integer'image(to_integer(unsigned(rs))) & integer'image(to_integer(unsigned(rt)));
 								data1 <= registers(to_integer(unsigned(rs)));
 								data2 <= registers(to_integer(unsigned(rt)));
 								writeback_source <= ALU_AS_SOURCE;
 							when "100010" => --sub
-								REPORT ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> SUB!!!";
+								REPORT ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> SUB!!!" & integer'image(to_integer(unsigned(rs))) & integer'image(to_integer(unsigned(rt)));
 								data1 <= registers(to_integer(unsigned(rs)));
 								data2 <= registers(to_integer(unsigned(rt)));
 								writeback_source <= ALU_AS_SOURCE;

@@ -135,8 +135,12 @@ signal registers : register_array;
 signal pc_reg : STD_LOGIC_VECTOR(32-1 downto 0); -- Fetch ==> Decode
 signal instruction_address_output : STD_LOGIC_VECTOR(32-1 downto 0);
 signal mem_writeback_register : STD_LOGIC_VECTOR(5-1 downto 0); -- Decoder ==> Write back unit
+--signal temp_mem_writeback_register : STD_LOGIC_VECTOR(5-1 downto 0); -- Decoder ==> Write back unit
+
 signal signal_to_mem : STD_LOGIC_VECTOR(3-1 downto 0);
 signal writeback_source : STD_LOGIC_VECTOR(3-1 downto 0);
+--signal temp_writeback_source : STD_LOGIC_VECTOR(3-1 downto 0);
+
 signal branch_signal : STD_LOGIC_VECTOR(2-1 downto 0); --send to branch
 signal branch_address : STD_LOGIC_VECTOR(32-1 downto 0);
 signal mem_stage_busy : STD_LOGIC;
@@ -231,7 +235,6 @@ begin
 
 		registers => registers
 	);
-
 
 	synced_clock : process(clk, reset)
 	begin

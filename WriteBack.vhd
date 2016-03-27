@@ -89,6 +89,7 @@ begin
 								current_state <= MEM_WAIT;
 							end if;
 						when NO_WRITE_BACK =>
+							REPORT "NO WRITE BACK";
 						when others =>
 					end case ;
 
