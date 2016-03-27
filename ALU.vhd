@@ -33,11 +33,10 @@ begin
 		elsif (rising_edge(clk)) then
 			case( operation ) is
 				when "100000" => --add
-					REPORT "Here 23" & STD_LOGIC'image(data1(31));
-					REPORT "Adding shit 29 " & integer'image(to_integer(data1));
-					REPORT "Adding another shit 29 " & integer'image(to_integer(data2));
+					REPORT "Adding two shits " & integer'image(to_integer(data1)) & integer'image(to_integer(data2));
 					result <= data1 + data2;
 				when "100010" => --sub
+					REPORT "Subing two shits " & integer'image(to_integer(data1)) & integer'image(to_integer(data2));
 					result <= data1 - data2; --Add overflow
 				when "011000" => --mult
 					mult_result <= data1 * data2;
@@ -49,6 +48,8 @@ begin
 				when "101010" => --slt
 					if data1 < data2 then
 						result <= to_signed(1, 32);
+					else
+						result <= to_signed(0, 32);
 					end if;
 				when "100100" => --and
 					result <= data1 and data2;

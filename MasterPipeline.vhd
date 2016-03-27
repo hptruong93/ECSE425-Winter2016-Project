@@ -238,6 +238,7 @@ begin
 		if reset = '1' then
 			
 		elsif (rising_edge(clk)) then
+			REPORT "++++++++++++++++++++++++++++++++++++Writing back to " & integer'image(to_integer(unsigned(mem_writeback_register)));
 			
 		end if;
 	end process ; -- synced_clock
