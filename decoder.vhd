@@ -27,8 +27,11 @@ end Decoder;
 
 architecture behavioral of Decoder is
 type previous_destination_array is array(0 to 1) of STD_LOGIC_VECTOR(5-1 downto 0);
+type previous_source_arrray is array(0 to 1) of STD_LOGIC_VECTOR(2-1 downto 0);
 
 signal previous_destinations : previous_destination_array; --biggest index is latest
+signal previous_sources : previous_source_arrray; --biggest index is latest
+
 signal op_code, funct : STD_LOGIC_VECTOR(6-1 downto 0);
 signal rs, rt, rd ,sa : STD_LOGIC_VECTOR(5-1 downto 0);
 signal immediate : STD_LOGIC_VECTOR(16-1 downto 0);
@@ -48,9 +51,8 @@ begin
 	--shifted_destinations : process(clk, reset)
 	--begin
 	--	if reset = '1' then
-	--	else
+	--	elsif (rising_edge(clk)) then
 	--		previous_destinations(0) <= previous_destinations(1);
-	--		previous_destinations(1) <= "00000";
 	--	end if;
 	--end process;
 
@@ -60,6 +62,8 @@ begin
 			previous_destinations(0) <= "00000";
 			previous_destinations(1) <= "00000";
 		elsif (rising_edge(clk)) then
+			do_stall <= '0';
+			previous_destinations(0) <= previous_destinations(1);
 			if instruction = STD_LOGIC_VECTOR(ALL_32_ZEROES) then
 				SHOW("DECODER STALLING");
 				operation <= "100000";
@@ -67,11 +71,11 @@ begin
 				data2 <= (others => '0');
 				mem_writeback_register <= (others => '0');
 				writeback_source <= NO_WRITE_BACK;
+
+				previous_destinations(1) <= (others => '0');
 			else
-				do_stall <= '0';
-				previous_destinations(0) <= previous_destinations(1);
 				branch_signal <= BRANCH_NOT;
-				SHOW("OP code is " & integer'image(to_integer(unsigned(op_code))));
+				SHOW_LOVE("Decoding instruction ", instruction);
 				SHOW("Rs and rt are " & integer'image(to_integer(unsigned(rs))) & integer'image(to_integer(unsigned(rt))));
 
 				case( op_code ) is
@@ -79,14 +83,13 @@ begin
 						if (  (rs = previous_destinations(0) and previous_destinations(0) /= "00000") 
 							or (rs = previous_destinations(1) and previous_destinations(1) /= "00000")
 							or (rt = previous_destinations(0) and previous_destinations(0) /= "00000") 
-							or (rt = previous_destinations(1) and previous_destinations(1) /= "00000") ) then
-
-							SHOW(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> STALL THIS SHIT");
+							or (rt = previous_destinations(1) and previous_destinations(1) /= "00000") ) then --determine if dependency occured
+							SHOW(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Decoder detects dependency");
 							operation <= "100000";
 							data1 <= registers(0);
 							data2 <= registers(0);
 							writeback_source <= NO_WRITE_BACK;
-							--mem_writeback_register <= "00000";
+							mem_writeback_register <= "00000";
 							do_stall <= '1';
 						else
 							previous_destinations(1) <= rd;
@@ -157,7 +160,6 @@ begin
 									data1 <= registers(to_integer(unsigned(rs)));
 									data2 <= STD_LOGIC_VECTOR(resize(signed(sa), data2'length));
 									writeback_source <= ALU_AS_SOURCE;
-
 								when "010000" => --mfhi
 									writeback_source <= HI_AS_SOURCE;
 								when "010010" => --mflo
@@ -167,9 +169,9 @@ begin
 							end case ;
 						end if;
 						
-	-----------------------------------------------------------------------------------------------------------------------------------
-	-----------------------------------------------IMMEDIATE OPERATIONS----------------------------------------------------------------
-	-----------------------------------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------------------------------
+-----------------------------------------------IMMEDIATE OPERATIONS----------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------------------------------
 					when "001000" => -- addi
 						SHOW(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ADDI!!! " & integer'image(to_integer(unsigned(rs))) & integer'image(to_integer(signed(immediate))));
 						operation <= "100000";
@@ -206,9 +208,9 @@ begin
 						mem_writeback_register <= rt;
 						writeback_source <= ALU_AS_SOURCE;
 
-	-----------------------------------------------------------------------------------------------------------------------------------
-	-----------------------------------------------MEMORY OPERATIONS-------------------------------------------------------------------
-	-----------------------------------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------------------------------
+-----------------------------------------------MEMORY OPERATIONS-------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------------------------------
 					when "001111" => --lui --We shift the immediate value by 16 using the ALU
 						SHOW("Here lui");
 						operation <= "000000"; --sll
@@ -248,10 +250,10 @@ begin
 						mem_writeback_register <= rt; --Don't write back
 						writeback_source <= NO_WRITE_BACK;
 						signal_to_mem <= STORE_BYTE;
-	-----------------------------------------------------------------------------------------------------------------------------------
-	-----------------------------------------------BRANCH AND JUMPS--------------------------------------------------------------------
-	-----------------------------------------------Assume resolved in Decode-----------------------------------------------------------
-	-----------------------------------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------------------------------
+-----------------------------------------------BRANCH AND JUMPS--------------------------------------------------------------------
+-----------------------------------------------Assume resolved in Decode-----------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------------------------------
 					when "000100" => --beq
 						SHOW("Here beq");
 						operation <= "100000"; --Tell ALU to not do anything

@@ -35,7 +35,7 @@ type state is (
 	FETCH_BRANCH
 	);
 signal current_state : state;
-
+signal last_instruction : STD_LOGIC_VECTOR(32-1 downto 0);
 signal program_counter : STD_LOGIC_VECTOR(32-1 downto 0)  := "00000000000000000000000000000000";
 
 begin
@@ -49,6 +49,8 @@ begin
 			pc_reg <= (others => '0');
 		elsif (rising_edge(clk)) then
 			if do_stall = '1' then
+				instruction <= last_instruction;
+				SHOW_LOVE("InstructionFetch REISSUING", last_instruction);
 			else
 				pc_reg <= program_counter;
 				instruction <= (others => '0');
@@ -70,6 +72,7 @@ begin
 									do_read <= '1';
 									is_busy <= '0';
 									instruction <= data;
+									last_instruction <= data;
 									current_state <= INSTRUCTION_RECEIVED;
 								else
 									do_read <= '1';
@@ -82,7 +85,6 @@ begin
 								address <= branch_address;
 								program_counter <= branch_address;
 								current_state <= FETCH_BRANCH_SET;
-								
 							when others =>
 						end case;
 					when INSTRUCTION_RECEIVED =>
@@ -121,6 +123,7 @@ begin
 							address <= program_counter + 4;
 							do_read <= '0';
 							instruction <= data;
+							last_instruction <= data;
 							is_busy <= '0';
 							current_state <= BRANCHED_INSTRUCTION_RECEIVED;
 						else
@@ -129,7 +132,7 @@ begin
 							current_state <= FETCH_BRANCH;
 						end if;
 					when others =>
-				end case ;
+				end case ; --case current_state
 			end if;
 		end if;
 	end process;

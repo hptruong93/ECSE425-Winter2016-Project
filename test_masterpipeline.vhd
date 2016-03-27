@@ -109,8 +109,10 @@ BEGIN
 		WAIT FOR 1 * clk_period;
 		fetched_instruction <= "00000010111000110010000000100010"; --sub         $4 $23 $3
 
+		WAIT FOR 2 * clk_period;
+		fetched_instruction <= "00000000000000000000000000000000";
 
-		WAIT FOR 4 * clk_period;
+		WAIT FOR 2 * clk_period;
 		SHOW_LOVE("WRITTEN IS ", observed_registers(destination_reg));
 		destination_reg <= 4;
 
