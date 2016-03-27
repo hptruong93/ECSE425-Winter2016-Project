@@ -41,7 +41,7 @@ begin
 			registers(0) <= (others => '0');
 			registers(1) <= (others => '0');
 			registers(2) <= STD_LOGIC_VECTOR(TO_UNSIGNED(2, 32));--(others => '0');
-			registers(3) <= STD_LOGIC_VECTOR(TO_UNSIGNED(31, 32));--(others => '0');
+			registers(3) <= STD_LOGIC_VECTOR(TO_UNSIGNED(3, 32));--(others => '0');
 			registers(4) <= (others => '0');
 			registers(5) <= (others => '0');
 			registers(6) <= (others => '0');
@@ -61,8 +61,8 @@ begin
 			registers(20) <= (others => '0');
 			registers(21) <= (others => '0');
 			registers(22) <= (others => '0');
-			registers(23) <= STD_LOGIC_VECTOR(TO_UNSIGNED(4, 32));--(others => '0');
-			registers(24) <= (others => '0');
+			registers(23) <= STD_LOGIC_VECTOR(TO_UNSIGNED(23, 32));--(others => '0');
+			registers(24) <= STD_LOGIC_VECTOR(TO_UNSIGNED(24, 32));
 			registers(25) <= (others => '0');
 			registers(26) <= (others => '0');
 			registers(27) <= (others => '0');

@@ -98,7 +98,7 @@ BEGIN
 -----------------------------------------------------------------------------------------------------------------------		
 		busy1 <= '1';
 		busy2 <= '0';
-		fetched_instruction <= "00000000000101110001100000100000"; --add 		$3 $0 $23
+		fetched_instruction <= "00000000000110000001100000100000"; --add 		$3 $0 $24
 		input_memory_data   <= (others => '0');
 		destination_reg <= 3;
 
@@ -106,7 +106,7 @@ BEGIN
 		busy1 <= '0';
 
 		WAIT FOR 1 * clk_period;
-		fetched_instruction <= "00000000010010100000100000101010"; --slt 		$1 $2 $10
+		fetched_instruction <= "00000010111000110000100000100010"; --sub 		$1 $23 $3
 
 
 		WAIT FOR 4 * clk_period;

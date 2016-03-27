@@ -3,6 +3,7 @@ use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 use work.register_array.all;
 use work.memory_arbiter_lib.all;
+use work.ForwardingUtil.all;
 
 entity MasterPipeline is
 port (	clk 	: in STD_LOGIC;
@@ -62,9 +63,36 @@ port (	clk 	: in STD_LOGIC;
 			writeback_source : out STD_LOGIC_VECTOR(3-1 downto 0); --send to writeback
 			branch_signal : out STD_LOGIC_VECTOR(2-1 downto 0); --send to branch
 			branch_address : out STD_LOGIC_VECTOR(32-1 downto 0);
-			data1 : out STD_LOGIC_VECTOR(32-1 downto 0); --send to ALU
-			data2 : out STD_LOGIC_VECTOR(32-1 downto 0) --send to ALU
 
+			data1 : out STD_LOGIC_VECTOR(32-1 downto 0); --send to ALU
+			data2 : out STD_LOGIC_VECTOR(32-1 downto 0); --send to ALU
+
+			--Forwarding
+			data1_register : out STD_LOGIC_VECTOR(5-1 downto 0); --send to ALU
+			data2_register : out STD_LOGIC_VECTOR(5-1 downto 0); --send to ALU
+
+			previous_destinations_output : out previous_destination_array;
+			previous_sources_output : out previous_source_arrray
+	);
+end COMPONENT;
+
+COMPONENT Forwarding IS
+	port (
+			clk 	: in STD_LOGIC;
+			previous_destinations : previous_destination_array;
+			previous_sources : previous_source_arrray;
+
+			alu_output : in SIGNED(32-1 downto 0);
+			mem_output : in STD_LOGIC_VECTOR(32-1 downto 0);
+
+			data1_decoder : in SIGNED(32-1 downto 0);
+			data2_decoder : in SIGNED(32-1 downto 0);
+
+			data1_register : in STD_LOGIC_VECTOR(5-1 downto 0);
+			data2_register : in STD_LOGIC_VECTOR(5-1 downto 0);
+
+			alu_source1 : out SIGNED(32-1 downto 0);
+			alu_source2 : out SIGNED(32-1 downto 0)
 	);
 end COMPONENT;
 
@@ -127,6 +155,12 @@ signal data1 : STD_LOGIC_VECTOR(32-1 downto 0); -- Decoder ==> ALU
 signal data2 : STD_LOGIC_VECTOR(32-1 downto 0); -- Decoder ==> ALU
 signal signed_data1 : signed(32-1 downto 0); -- Decoder ==> ALU
 signal signed_data2 : signed(32-1 downto 0); -- Decoder ==> ALU
+--Forwarding
+signal previous_destinations_output : previous_destination_array;
+signal previous_sources_output : previous_source_arrray;
+signal data1_register : STD_LOGIC_VECTOR(5-1 downto 0); --Decoder to forwarding unit
+signal data2_register : STD_LOGIC_VECTOR(5-1 downto 0); --Decoder to forwarding unit
+signal alu_source1, alu_source2 : SIGNED(32-1 downto 0);
 
 signal lo_reg : signed (32-1 downto 0); -- ALU ==> Mem unit
 signal hi_reg : signed (32-1 downto 0); -- ALU ==> Mem unit
@@ -182,9 +216,30 @@ begin
 		branch_signal => branch_signal,
 		branch_address => branch_address,
 		data1 => data1,
-		data2 => data2
+		data2 => data2,
+		data1_register => data1_register,
+		data2_register => data2_register,
+		previous_destinations_output => previous_destinations_output,
+		previous_sources_output => previous_sources_output
 	);
 
+	forwarding_instance : Forwarding port map (
+		clk => clk,
+		previous_destinations => previous_destinations_output,
+		previous_sources => previous_sources_output,
+
+		alu_output => result,
+		mem_output => mem_stage_output,
+
+		data1_decoder => signed_data1,
+		data2_decoder => signed_data2,
+
+		data1_register => data1_register,
+		data2_register => data2_register,
+
+		alu_source1 => alu_source1,
+		alu_source2 => alu_source2
+	);
 
 	signed_data1 <= signed(data1);
 	signed_data2 <= signed(data2);

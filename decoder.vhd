@@ -3,6 +3,7 @@ library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 use work.register_array.all;
+use work.ForwardingUtil.all;
 
 entity Decoder is
 port (	clk 	: in STD_LOGIC;
@@ -19,22 +20,34 @@ port (	clk 	: in STD_LOGIC;
 			writeback_source : out STD_LOGIC_VECTOR(3-1 downto 0); --send to writeback
 			branch_signal : out STD_LOGIC_VECTOR(2-1 downto 0); --send to branch
 			branch_address : out STD_LOGIC_VECTOR(32-1 downto 0);
-			data1 : out STD_LOGIC_VECTOR(32-1 downto 0); --send to ALU
-			data2 : out STD_LOGIC_VECTOR(32-1 downto 0) --send to ALU
 
+			data1 : out STD_LOGIC_VECTOR(32-1 downto 0); --send to ALU
+			data2 : out STD_LOGIC_VECTOR(32-1 downto 0); --send to ALU
+			--Forwarding
+			data1_register : out STD_LOGIC_VECTOR(5-1 downto 0); --send to ALU
+			data2_register : out STD_LOGIC_VECTOR(5-1 downto 0); --send to ALU
+
+			previous_destinations_output : out previous_destination_array;
+			previous_sources_output : out previous_source_arrray
 	);
 end Decoder;
 
+
+
 architecture behavioral of Decoder is
 
+signal previous_destinations : previous_destination_array; --biggest index is latest
+signal previous_sources : previous_source_arrray; --biggest index is latest
 
 signal op_code, funct : STD_LOGIC_VECTOR(6-1 downto 0);
 signal rs, rt, rd ,sa : STD_LOGIC_VECTOR(5-1 downto 0);
 signal immediate : STD_LOGIC_VECTOR(16-1 downto 0);
 signal target : STD_LOGIC_VECTOR(26-1 downto 0);
 
-
 begin
+	previous_destinations_output <= previous_destinations;
+	previous_sources_output <= previous_sources;
+
 	op_code <= instruction(32-1 downto 26);
 	rs <= instruction(25 downto 21);
 	rt <= instruction(20 downto 16);
@@ -47,10 +60,18 @@ begin
 	synced_clock : process(clk, reset)
 	begin
 		if reset = '1' then
-			
+			for i in previous_destinations'range loop
+				previous_destinations(i) <= "00000";
+				previous_sources(i) <= '0';
+			end loop;
 		elsif (rising_edge(clk)) then
+			previous_destinations(0) <= previous_destinations(1);
+			previous_destinations(1) <= previous_destinations(2);
+			previous_sources(0) <= previous_sources(1);
+			previous_sources(1) <= previous_sources(2);
+
 			if instruction = STD_LOGIC_VECTOR(ALL_32_ZEROES) then
-				SHOW("STALLING");
+				SHOW("Decoder STALLING");
 				operation <= "100000";
 				data1 <= (others => '0');
 				data2 <= (others => '0');
@@ -64,13 +85,23 @@ begin
 					when "000000" =>
 						operation <= funct;
 						mem_writeback_register <= rd;
+
 						case( funct ) is
 							when "100000" => --add
+								previous_destinations(1) <= rd;
+								previous_sources(1) <= FORWARD_SOURCE_ALU;
+								data1_register <= rs;
+								data2_register <= rt;
+
 								SHOW(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ADD!!! " & integer'image(to_integer(unsigned(rs))) & integer'image(to_integer(unsigned(rt))));
 								data1 <= registers(to_integer(unsigned(rs)));
 								data2 <= registers(to_integer(unsigned(rt)));
 								writeback_source <= ALU_AS_SOURCE;
 							when "100010" => --sub
+								previous_destinations(1) <= rd;
+								previous_sources(1) <= FORWARD_SOURCE_ALU;
+								data1_register <= rs;
+								data2_register <= rt;
 								SHOW(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> SUB!!! " & integer'image(to_integer(unsigned(rs))) & integer'image(to_integer(unsigned(rt))));
 								data1 <= registers(to_integer(unsigned(rs)));
 								data2 <= registers(to_integer(unsigned(rt)));
