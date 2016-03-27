@@ -91,7 +91,7 @@ BEGIN
 
 		REPORT "FULL WORD IS " & STD_LOGIC'image(data(31)) & STD_LOGIC'image(data(30)) & STD_LOGIC'image(data(29)) & STD_LOGIC'image(data(28)) & STD_LOGIC'image(data(27)) & STD_LOGIC'image(data(26)) & STD_LOGIC'image(data(25)) & STD_LOGIC'image(data(24)) & STD_LOGIC'image(data(23)) & STD_LOGIC'image(data(22)) & STD_LOGIC'image(data(21)) & STD_LOGIC'image(data(20)) & STD_LOGIC'image(data(19)) & STD_LOGIC'image(data(18)) & STD_LOGIC'image(data(17)) & STD_LOGIC'image(data(16)) & STD_LOGIC'image(data(15)) & STD_LOGIC'image(data(14)) & STD_LOGIC'image(data(13)) & STD_LOGIC'image(data(12)) & STD_LOGIC'image(data(11)) & STD_LOGIC'image(data(10)) & STD_LOGIC'image(data(9)) & STD_LOGIC'image(data(8)) & STD_LOGIC'image(data(7)) & STD_LOGIC'image(data(6)) & STD_LOGIC'image(data(5)) & STD_LOGIC'image(data(4)) & STD_LOGIC'image(data(3)) & STD_LOGIC'image(data(2)) & STD_LOGIC'image(data(1)) & STD_LOGIC'image(data(0));
 
-		Word_Byte <= '0';
+		Word_Byte <= '1';
 		we <= '0';
 		re <= '1';
 		address <= 0;
@@ -108,10 +108,10 @@ BEGIN
 		re <= '0';
 		WAIT FOR 1 * clk_period;
 
-		Word_Byte <= '0';
+		Word_Byte <= '1';
 		we <= '0';
 		re <= '1';
-		address <= 1;
+		address <= 4;
 		data <= ZERO_BYTE_32;
 
 		WAIT FOR 1 * clk_period;
@@ -125,10 +125,10 @@ BEGIN
 		re <= '0';
 		WAIT FOR 1 * clk_period;
 
-		Word_Byte <= '0';
+		Word_Byte <= '1';
 		we <= '0';
 		re <= '1';
-		address <= 2;
+		address <= 8;
 		data <= ZERO_BYTE_32;
 
 		WAIT FOR 1 * clk_period;

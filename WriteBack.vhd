@@ -40,11 +40,14 @@ begin
 		if reset = '1' then
 			registers(0) <= (others => '0');
 			registers(1) <= (others => '0');
-			registers(2) <= "00000000000000000000000000000010";--(others => '0');
-			registers(3) <= "00000000000000000000000000011111";--(others => '0');
+			registers(2) <= STD_LOGIC_VECTOR(TO_UNSIGNED(2, 32));--(others => '0');
+			registers(3) <= STD_LOGIC_VECTOR(TO_UNSIGNED(31, 32));--(others => '0');
 			registers(4) <= (others => '0');
 			registers(5) <= (others => '0');
 			registers(6) <= (others => '0');
+			registers(7) <= (others => '0');
+			registers(8) <= (others => '0');
+			registers(9) <= (others => '0');
 			registers(10) <= (others => '0');
 			registers(11) <= (others => '0');
 			registers(12) <= (others => '0');
@@ -58,7 +61,7 @@ begin
 			registers(20) <= (others => '0');
 			registers(21) <= (others => '0');
 			registers(22) <= (others => '0');
-			registers(23) <= "00000000000000000000000000000100";--(others => '0');
+			registers(23) <= STD_LOGIC_VECTOR(TO_UNSIGNED(4, 32));--(others => '0');
 			registers(24) <= (others => '0');
 			registers(25) <= (others => '0');
 			registers(26) <= (others => '0');
@@ -79,8 +82,7 @@ begin
 						when HI_AS_SOURCE =>
 							registers(to_integer(unsigned(mem_writeback_register))) <= STD_LOGIC_VECTOR(hi_reg);
 						when ALU_AS_SOURCE =>
-							REPORT "Here alu output " & integer'image(to_integer(signed(alu_output)));
-							REPORT "Here mem_writeback_register " & integer'image(to_integer(unsigned(mem_writeback_register)));
+							SHOW_TWO("Here alu output " & integer'image(to_integer(signed(alu_output))), "and mem_writeback_register " & integer'image(to_integer(unsigned(mem_writeback_register))));
 							registers(to_integer(unsigned(mem_writeback_register))) <= STD_LOGIC_VECTOR(alu_output);
 						when MEM_AS_SOURCE | MEM_BYTE_AS_SOURCE =>
 							if mem_stage_busy = '0' then
@@ -89,6 +91,7 @@ begin
 								current_state <= MEM_WAIT;
 							end if;
 						when NO_WRITE_BACK =>
+							--SHOW("NO WRITE BACK");
 						when others =>
 					end case ;
 

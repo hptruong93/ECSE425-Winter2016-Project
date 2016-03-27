@@ -1,6 +1,7 @@
 library IEEE;
 USE ieee.STD_LOGIC_1164.all;
 USE ieee.numeric_std.all;
+USE std.textio.all;
 
 package register_array is
 	type register_array is array(0 to 31) of STD_LOGIC_VECTOR(32-1 downto 0);
@@ -36,5 +37,30 @@ package register_array is
 	CONSTANT SECOND_BYTE_32 :	 STD_LOGIC_VECTOR(32-1 downto 0) := "ZZZZZZZZZZZZZZZZ00000110ZZZZZZZZ";
 	CONSTANT THIRD_BYTE_32 :	 STD_LOGIC_VECTOR(32-1 downto 0) := "ZZZZZZZZ00001101ZZZZZZZZZZZZZZZZ";
 	CONSTANT FOURTH_BYTE_32 :	 STD_LOGIC_VECTOR(32-1 downto 0) := "00011001ZZZZZZZZZZZZZZZZZZZZZZZZ";
+
+	procedure SHOW (msg : IN String);
+	procedure SHOW_TWO (msg1 : IN String; msg2 : IN String);
+	
 end register_array;
 
+package body register_array is	
+	procedure SHOW (msg : IN String) is
+		variable my_line : line;
+	begin
+		write(my_line, string("" & time'image(now)));
+		write(my_line, string'(" --> "));
+		write(my_line, msg);
+		writeline(OUTPUT, my_line);
+	end SHOW;
+
+	procedure SHOW_TWO (msg1 : IN String; msg2 : IN String) is
+		variable my_line : line;
+	begin
+		write(my_line, string("" & time'image(now)));
+		write(my_line, string'(" --> "));
+		write(my_line, msg1);
+		write(my_line, string'(" "));
+		write(my_line, msg2);
+		writeline(OUTPUT, my_line);
+	end SHOW_TWO;
+end register_array;

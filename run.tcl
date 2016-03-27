@@ -1,15 +1,22 @@
-#Hours spent on this project, increment as you go: 50
+#Hours spent on this project, increment as you go: 80
+
 proc AddWaves {} {
 
 	;#Add the following signals to the Waves window
-	add wave -position end  -radix binary sim:/masterpipeline_tb/clk
-	add wave -position end  -radix binary sim:/masterpipeline_tb/reset
+	add wave -label clock -position end  -radix binary sim:/masterpipeline_instance/clk
+	add wave -label reset -position end  -radix binary sim:/masterpipeline_instance/reset
+
+	add wave -label re1 -position end  -radix binary sim:/masterpipeline_instance/re1
+	add wave -label busy1 -position end  -radix binary sim:/masterpipeline_instance/busy1
+	add wave -label mm_re -position end  -radix binary sim:/memory_arbiter_instance/mm_re
+	add wave -label mm_rd_ready -position end  -radix binary sim:/memory_arbiter_instance/mm_rd_ready
+	add wave -label mm_address -position end  -radix decimal sim:/memory_arbiter_instance/mm_address
+
+	add wave -label alu_data1 -position end  -radix decimal sim:/masterpipeline_instance/data1
+	add wave -label alu_data2 -position end  -radix decimal sim:/masterpipeline_instance/data2
+	add wave -label alu_output -position end  -radix decimal sim:/masterpipeline_instance/result
   
-  ;#These signals will be contained in a group named "Port 1"
-	add wave -group "Port 1"  -radix hex sim:/masterpipeline_tb/masterpipeline_instance/do_stall\
-                            -radix hex sim:/masterpipeline_tb/masterpipeline_instance/writeback_source\
-                            -radix hex sim:/masterpipeline_tb/masterpipeline_instance/mem_writeback_register
-                            
+
   ;#Set some formating options to make the Waves window more legible
 	configure wave -namecolwidth 250
 	WaveRestoreZoom {0 ns} {8 ns}
@@ -19,8 +26,8 @@ proc AddWaves {} {
 vlib work
 
 ;#Compile everything
-vcom Memory_in_Byte.vhd
-vcom Main_Memory.vhd
+# vcom Memory_in_Byte.vhd
+# vcom Main_Memory.vhd
 vcom memory_arbiter_lib.vhd
 vcom memory_arbiter.vhd
 
@@ -32,14 +39,14 @@ vcom MemStage.vhd
 vcom WriteBack.vhd
 vcom MasterPipeline.vhd
 
-#Testing files
-vcom test_mainmemory.vhd
-vcom test_instructionfetch.vhd
-vcom test_alu.vhd
-vcom test_memstage.vhd
-vcom test_writeback.vhd
-vcom test_memarbiter.vhd
-vcom test_masterpipeline.vhd
+# #Testing files
+# vcom test_mainmemory.vhd
+# vcom test_instructionfetch.vhd
+# vcom test_alu.vhd
+# vcom test_memstage.vhd
+# vcom test_writeback.vhd
+# vcom test_memarbiter.vhd
+# vcom test_masterpipeline.vhd
 vcom test_thewholething.vhd
 
 #Start a simulation session with the fsm_tb component
@@ -62,7 +69,7 @@ vcom test_thewholething.vhd
 
 # vsim -t ps memarbiter_tb
 # force -deposit clk 0 0 ns, 1 0.5 ns -repeat 1 ns
-# run 1000 ns
+# run 10 ns
 
 # vsim -t ps mainmemory_tb
 # force -deposit clk 0 0 ns, 1 0.5 ns -repeat 1 ns
@@ -74,5 +81,6 @@ force -deposit clk 0 0 ns, 1 0.5 ns -repeat 1 ns
 run 15 ns
 
 # vsim -t ps thewholething_tb
+# AddWaves
 # force -deposit clk 0 0 ns, 1 0.5 ns -repeat 1 ns
-# run 10 ns
+# run 20 ns

@@ -2,7 +2,7 @@
 library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
-
+use work.register_array.all;
 
 
 entity ALU is
@@ -33,10 +33,10 @@ begin
 		elsif (rising_edge(clk)) then
 			case( operation ) is
 				when "100000" => --add
-					REPORT "Adding two shits " & integer'image(to_integer(data1)) & integer'image(to_integer(data2));
+					SHOW("Adding two shits " & integer'image(to_integer(data1)) & integer'image(to_integer(data2)));
 					result <= data1 + data2;
 				when "100010" => --sub
-					REPORT "Subing two shits " & integer'image(to_integer(data1)) & integer'image(to_integer(data2));
+					SHOW("Subing two shits " & integer'image(to_integer(data1)) & integer'image(to_integer(data2)));
 					result <= data1 - data2; --Add overflow
 				when "011000" => --mult
 					mult_result <= data1 * data2;
