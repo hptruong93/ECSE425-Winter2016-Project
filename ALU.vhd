@@ -23,8 +23,8 @@ end ALU;
 
 architecture behavioral of ALU is
 
-signal hi_reg_internal, lo_reg_internal : signed (32-1 downto 0);
-signal mult_result : signed (64-1 downto 0);
+signal hi_reg_internal, lo_reg_internal : signed (32-1 downto 0) := (others => '0');
+signal mult_result : signed (64-1 downto 0) := (others => '0');
 signal internal_buffered_result : previous_alu_array;
 
 begin
@@ -54,14 +54,15 @@ begin
 
 			case( operation ) is
 				when "100000" => --add
-					SHOW("Adding two shits " & integer'image(to_integer(data1)) & integer'image(to_integer(data2)));
+					SHOW("Adding two things " & integer'image(to_integer(data1)) & integer'image(to_integer(data2)));
 					internal_buffered_result(2) <= data1 + data2;
 					result <= data1 + data2;
 				when "100010" => --sub
-					SHOW("Subing two shits " & integer'image(to_integer(data1)) & integer'image(to_integer(data2)));
+					SHOW("Subing two things " & integer'image(to_integer(data1)) & integer'image(to_integer(data2)));
 					internal_buffered_result(2) <= data1 - data2;
 					result <= data1 - data2; --Add overflow
 				when "011000" => --mult
+					SHOW("Multing two things " & integer'image(to_integer(data1)) & integer'image(to_integer(data2)));
 					mult_result <= data1 * data2;
 					--hi_reg <= mult_result(64-1 downto 32);
 					--lo_reg <= mult_result(32-1 downto 0);

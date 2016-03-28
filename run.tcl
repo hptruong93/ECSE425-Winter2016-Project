@@ -15,6 +15,9 @@ proc AddWaves {} {
 	# add wave -label alu_data1 -position end  -radix decimal sim:/masterpipeline_instance/data1
 	# add wave -label alu_data2 -position end  -radix decimal sim:/masterpipeline_instance/data2
 	# add wave -label alu_output -position end  -radix decimal sim:/masterpipeline_instance/result
+	add wave -label lo_reg -position end  -radix decimal sim:/masterpipeline_instance/lo_reg
+	add wave -label hi_reg_internal -position end  -radix decimal sim:/masterpipeline_instance/alu_instance/hi_reg_internal
+	add wave -label lo_reg_internal -position end  -radix decimal sim:/masterpipeline_instance/alu_instance/lo_reg_internal
 
   ;#Set some formating options to make the Waves window more legible
 	configure wave -namecolwidth 250
@@ -80,7 +83,7 @@ vcom test_masterpipeline.vhd
 vsim -t ps masterpipeline_tb
 AddWaves
 force -deposit clk 0 0 ns, 1 0.5 ns -repeat 1 ns
-run 10 ns
+run 15 ns
 
 # vsim -t ps thewholething_tb
 # AddWaves

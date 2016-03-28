@@ -17,7 +17,7 @@ port (	clk 	: in STD_LOGIC;
 			mem_stage_output : in STD_LOGIC_VECTOR(32-1 downto 0);
 			mem_writeback_register : in STD_LOGIC_VECTOR(5-1 downto 0); --sent from decoder
 
-			
+			--Testing code
 			registers : out register_array
 	);
 end WriteBack;
@@ -78,13 +78,16 @@ begin
 				when IDLE =>
 					case( writeback_source ) is
 						when LO_AS_SOURCE =>
+							SHOW_TWO("Here lo as source " & integer'image(to_integer(unsigned(alu_output))), "and mem_writeback_register " & integer'image(to_integer(unsigned(mem_writeback_register))));
 							registers(to_integer(unsigned(mem_writeback_register))) <= STD_LOGIC_VECTOR(lo_reg);
 						when HI_AS_SOURCE =>
+							SHOW_TWO("Here high as source " & integer'image(to_integer(unsigned(alu_output))), "and mem_writeback_register " & integer'image(to_integer(unsigned(mem_writeback_register))));
 							registers(to_integer(unsigned(mem_writeback_register))) <= STD_LOGIC_VECTOR(hi_reg);
 						when ALU_AS_SOURCE =>
-							SHOW_TWO("Here alu output " & integer'image(to_integer(signed(alu_output))), "and mem_writeback_register " & integer'image(to_integer(unsigned(mem_writeback_register))));
+							SHOW_TWO("Here alu output " & integer'image(to_integer(unsigned(alu_output))), "and mem_writeback_register " & integer'image(to_integer(unsigned(mem_writeback_register))));
 							registers(to_integer(unsigned(mem_writeback_register))) <= STD_LOGIC_VECTOR(alu_output);
 						when MEM_AS_SOURCE | MEM_BYTE_AS_SOURCE =>
+							SHOW_TWO("Here mem as source " & integer'image(to_integer(unsigned(alu_output))), "and mem_writeback_register " & integer'image(to_integer(unsigned(mem_writeback_register))));
 							if mem_stage_busy = '0' then
 								registers(to_integer(unsigned(mem_writeback_register))) <= STD_LOGIC_VECTOR(signed(mem_stage_output));
 							else
