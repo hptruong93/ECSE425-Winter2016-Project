@@ -23,6 +23,9 @@ port (	clk 	: in STD_LOGIC;
 
 			data1 : out STD_LOGIC_VECTOR(32-1 downto 0); --send to ALU
 			data2 : out STD_LOGIC_VECTOR(32-1 downto 0); --send to ALU
+
+			do_stall : out STD_LOGIC;
+
 			--Forwarding
 			data1_register : out STD_LOGIC_VECTOR(5-1 downto 0); --send to ALU
 			data2_register : out STD_LOGIC_VECTOR(5-1 downto 0); --send to ALU
@@ -110,33 +113,62 @@ begin
 								data2 <= registers(to_integer(unsigned(rt)));
 								writeback_source <= ALU_AS_SOURCE;
 							when "011000" => --mult
+								previous_destinations(2) <= (others => '0');
+								previous_sources(2) <= FORWARD_SOURCE_ALU;
+
 								SHOW(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> MULT!!! " & integer'image(to_integer(unsigned(rs))) & integer'image(to_integer(unsigned(rt))));
 								data1 <= registers(to_integer(unsigned(rs)));
 								data2 <= registers(to_integer(unsigned(rt)));
 								writeback_source <= ALU_AS_SOURCE;
 							when "011010" => --div
+								previous_destinations(2) <= (others => '0');
+								previous_sources(2) <= FORWARD_SOURCE_ALU;
+
 								data1 <= registers(to_integer(unsigned(rs)));
 								data2 <= registers(to_integer(unsigned(rt)));
 								writeback_source <= ALU_AS_SOURCE;
 							when "100100" => --and
+								previous_destinations(2) <= rd;
+								previous_sources(2) <= FORWARD_SOURCE_ALU;
+								data1_register <= rs;
+								data2_register <= rt;
+
 								data1 <= registers(to_integer(unsigned(rs)));
 								data2 <= registers(to_integer(unsigned(rt)));
 								writeback_source <= ALU_AS_SOURCE;
 							when "100101" => --or
+								previous_destinations(2) <= rd;
+								previous_sources(2) <= FORWARD_SOURCE_ALU;
+								data1_register <= rs;
+								data2_register <= rt;
+
 								data1 <= registers(to_integer(unsigned(rs)));
 								data2 <= registers(to_integer(unsigned(rt)));
 								writeback_source <= ALU_AS_SOURCE;
 							when "100111" => --nor
+								previous_destinations(2) <= rd;
+								previous_sources(2) <= FORWARD_SOURCE_ALU;
+								data1_register <= rs;
+								data2_register <= rt;
+
 								data1 <= registers(to_integer(unsigned(rs)));
 								data2 <= registers(to_integer(unsigned(rt)));
 								writeback_source <= ALU_AS_SOURCE;
 							when "100110" => --xor
+								previous_destinations(2) <= rd;
+								previous_sources(2) <= FORWARD_SOURCE_ALU;
+								data1_register <= rs;
+								data2_register <= rt;
+
 								data1 <= registers(to_integer(unsigned(rs)));
 								data2 <= registers(to_integer(unsigned(rt)));
 								writeback_source <= ALU_AS_SOURCE;
 
 							--A wild jr appears
 							when "001000" => --jr
+								previous_destinations(2) <= (others => '0');
+								previous_sources(2) <= FORWARD_SOURCE_ALU;
+
 								SHOW("Handling a wild jr at register " & integer'image(to_integer(unsigned(rs))));
 								operation <= "100000"; --Tell ALU to not do anything
 								data1 <= (others => '0');
@@ -150,25 +182,49 @@ begin
 	-------------------------------------------------SHIFTS OPERATIONS-------------------------------------------------------------------
 	-------------------------------------------------------------------------------------------------------------------------------------
 							when "101010" => --slt
+								previous_destinations(2) <= rd;
+								previous_sources(2) <= FORWARD_SOURCE_ALU;
+								data1_register <= rs;
+								data2_register <= rt;
+
 								data1 <= registers(to_integer(unsigned(rs)));
 								data2 <= registers(to_integer(unsigned(rt)));
 								writeback_source <= ALU_AS_SOURCE;
 							when "000000" => --sll
+								previous_destinations(2) <= rd;
+								previous_sources(2) <= FORWARD_SOURCE_ALU;
+								data1_register <= rs;
+								data2_register <= rt;
+
 								data1 <= registers(to_integer(unsigned(rs)));
 								data2 <= STD_LOGIC_VECTOR(resize(signed(sa), data2'length));
 								writeback_source <= ALU_AS_SOURCE;
 							when "000010" => --srl
+								previous_destinations(2) <= rd;
+								previous_sources(2) <= FORWARD_SOURCE_ALU;
+								data1_register <= rs;
+								data2_register <= rt;
+
 								data1 <= registers(to_integer(unsigned(rs)));
 								data2 <= STD_LOGIC_VECTOR(resize(signed(sa), data2'length));
 								writeback_source <= ALU_AS_SOURCE;
 							when "000011" => --sra
+								previous_destinations(2) <= rd;
+								previous_sources(2) <= FORWARD_SOURCE_ALU;
+								data1_register <= rs;
+								data2_register <= rt;
+
 								data1 <= registers(to_integer(unsigned(rs)));
 								data2 <= STD_LOGIC_VECTOR(resize(signed(sa), data2'length));
 								writeback_source <= ALU_AS_SOURCE;
 
 							when "010000" => --mfhi
+								previous_destinations(2) <= (others => '0');
+								previous_sources(2) <= FORWARD_SOURCE_ALU;
 								writeback_source <= HI_AS_SOURCE;
 							when "010010" => --mflo
+								previous_destinations(2) <= (others => '0');
+								previous_sources(2) <= FORWARD_SOURCE_ALU;
 								writeback_source <= LO_AS_SOURCE;
 							
 							when others =>
