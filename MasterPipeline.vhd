@@ -38,6 +38,7 @@ port (	clk 	: in STD_LOGIC;
 			branch_address : in STD_LOGIC_VECTOR(32-1 downto 0); --from decoder
 			data : in STD_LOGIC_VECTOR(32-1 downto 0); --from memory
 
+			do_stall : in STD_LOGIC;
 			is_mem_busy : in STD_LOGIC;
 
 			pc_reg : out STD_LOGIC_VECTOR(32-1 downto 0); --send to decoder
@@ -66,6 +67,8 @@ port (	clk 	: in STD_LOGIC;
 
 			data1 : out STD_LOGIC_VECTOR(32-1 downto 0); --send to ALU
 			data2 : out STD_LOGIC_VECTOR(32-1 downto 0); --send to ALU
+
+			do_stall : out STD_LOGIC;
 
 			--Forwarding
 			data1_register : out STD_LOGIC_VECTOR(5-1 downto 0); --send to ALU
@@ -99,7 +102,7 @@ end COMPONENT;
 COMPONENT ALU IS
 	port (	clk 	: in STD_LOGIC;
 			reset : in STD_LOGIC;
-			
+
 			data1	:	in signed(32-1 downto 0);
 			data2	:	in signed(32-1 downto 0);
 
@@ -137,7 +140,7 @@ end COMPONENT;
 COMPONENT WriteBack is
 port (	clk 	: in STD_LOGIC;
 			reset : in STD_LOGIC;
-			
+
 			lo_reg : in signed (32-1 downto 0);
 			hi_reg : in signed (32-1 downto 0);
 
@@ -152,6 +155,7 @@ port (	clk 	: in STD_LOGIC;
 end COMPONENT;
 
 signal operation : STD_LOGIC_VECTOR(6-1 downto 0); -- Decoder => ALU
+signal do_stall : STD_LOGIC; -- Decoder ==> IF
 signal instruction : STD_LOGIC_VECTOR(32-1 downto 0); -- Fetch unit ==> Decoder
 signal data1 : STD_LOGIC_VECTOR(32-1 downto 0); -- Decoder ==> ALU
 signal data2 : STD_LOGIC_VECTOR(32-1 downto 0); -- Decoder ==> ALU
@@ -162,6 +166,7 @@ signal data1_register : STD_LOGIC_VECTOR(5-1 downto 0); --Decoder to forwarding 
 signal data2_register : STD_LOGIC_VECTOR(5-1 downto 0); --Decoder to forwarding unit
 signal alu_source1, alu_source2 : SIGNED(32-1 downto 0);
 signal buffered_result : previous_alu_array;
+--End Forwarding
 
 signal lo_reg : signed (32-1 downto 0); -- ALU ==> Mem unit
 signal hi_reg : signed (32-1 downto 0); -- ALU ==> Mem unit
@@ -195,6 +200,7 @@ begin
 		branch_address => branch_address,
 		data => fetched_instruction,
 
+		do_stall => do_stall,
  		is_mem_busy => busy1,
 
  		pc_reg => pc_reg,
@@ -218,6 +224,8 @@ begin
 		branch_address => branch_address,
 		data1 => data1,
 		data2 => data2,
+
+		do_stall => do_stall,
 		data1_register => data1_register,
 		data2_register => data2_register,
 		previous_destinations_output => previous_destinations_output,
@@ -275,7 +283,7 @@ begin
 	);
 
 	writeback_instance : WriteBack port map (
-		clk => clk, 
+		clk => clk,
 		reset => reset,
 
 		lo_reg => lo_reg,
@@ -293,7 +301,7 @@ begin
 	testa : process(clk, reset)
 	begin
 		if reset = '1' then
-			
+
 		elsif (rising_edge(clk)) then
 			temp_writeback_source <= writeback_source;
 			temp_mem_writeback_register <= mem_writeback_register;
@@ -303,12 +311,12 @@ begin
 	synced_clock : process(clk, reset)
 	begin
 		if reset = '1' then
-			
+
 		elsif (rising_edge(clk)) then
 			--REPORT "++++++++++++++++++++++++++++++++++++Writing back to " & integer'image(to_integer(unsigned(mem_writeback_register)));
-			
+
 		end if;
 	end process ; -- synced_clock
-	
+
 
 end behavioral;

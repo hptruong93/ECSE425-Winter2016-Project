@@ -37,6 +37,8 @@ vcom memory_arbiter.vhd
 vcom CPU.vhd
 vcom ForwardingUtil.vhd
 vcom Forwarding.vhd
+vcom StallUtil.vhd
+
 vcom InstructionFetch.vhd
 vcom decoder.vhd
 vcom ALU.vhd
@@ -81,9 +83,9 @@ vcom test_masterpipeline.vhd
 # run 200 ns
 
 vsim -t ps masterpipeline_tb
-AddWaves
+# AddWaves
 force -deposit clk 0 0 ns, 1 0.5 ns -repeat 1 ns
-run 15 ns
+run 11 ns
 
 # vsim -t ps thewholething_tb
 # AddWaves

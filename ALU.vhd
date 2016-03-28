@@ -9,7 +9,7 @@ use work.ForwardingUtil.all;
 entity ALU is
 port (	clk 	: in STD_LOGIC;
 			reset : in STD_LOGIC;
-			
+
 			data1	:	in signed(32-1 downto 0);
 			data2	:	in signed(32-1 downto 0);
 
@@ -24,25 +24,13 @@ end ALU;
 architecture behavioral of ALU is
 
 signal hi_reg_internal, lo_reg_internal : signed (32-1 downto 0) := (others => '0');
-signal mult_result : signed (64-1 downto 0) := (others => '0');
 signal internal_buffered_result : previous_alu_array;
 
 begin
-
-	hi_reg_internal <= 	mult_result(64-1 downto 32) when operation = "011000" else
-								data1 mod data2 when operation = "011010" else
-								hi_reg_internal;
-
-	lo_reg_internal <= 	mult_result(32-1 downto 0) when operation = "011000" else
-								data1 / data2 when operation = "011010" else
-								lo_reg_internal;
-
-	hi_reg <= hi_reg_internal;
-	lo_reg <= lo_reg_internal;
-
 	buffered_result <= internal_buffered_result;
 
 	synced_clock : process(clk, reset)
+		variable mult_result : signed (64-1 downto 0) := (others => '0');
 	begin
 		if reset = '1' then
 			for i in internal_buffered_result'range loop
@@ -63,12 +51,12 @@ begin
 					result <= data1 - data2; --Add overflow
 				when "011000" => --mult
 					SHOW("Multing two things " & integer'image(to_integer(data1)) & integer'image(to_integer(data2)));
-					mult_result <= data1 * data2;
-					--hi_reg <= mult_result(64-1 downto 32);
-					--lo_reg <= mult_result(32-1 downto 0);
+					mult_result := data1 * data2;
+					hi_reg <= mult_result(64-1 downto 32);
+					lo_reg <= mult_result(32-1 downto 0);
 				when "011010" => --div
-					--lo_reg <= data1 / data2;
-					--hi_reg <= data1 mod data2;
+					lo_reg <= data1 / data2;
+					hi_reg <= data1 mod data2;
 				when "101010" => --slt
 					if data1 < data2 then
 						internal_buffered_result(2) <= to_signed(1, 32);
@@ -102,6 +90,6 @@ begin
 			end case ;
 		end if;
 	end process ; -- synced_clock
-	
+
 
 end behavioral;

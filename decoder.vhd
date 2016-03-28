@@ -1,9 +1,9 @@
-
 library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 use work.register_array.all;
 use work.ForwardingUtil.all;
+use work.StallUtil.all;
 
 entity Decoder is
 port (	clk 	: in STD_LOGIC;
@@ -14,40 +14,41 @@ port (	clk 	: in STD_LOGIC;
 			registers : in register_array;
 
 			operation : out STD_LOGIC_VECTOR(6-1 downto 0);
-			mem_writeback_register : out STD_LOGIC_VECTOR(5-1 downto 0); --send to memstage or writeback
+			mem_writeback_register : out STD_LOGIC_VECTOR(5-1 downto 0); --sEND to memstage or writeback
 			-- for store, this represents the register that we're storing. For load, this represents the register getting the value from memory.
-			signal_to_mem : out STD_LOGIC_VECTOR(3-1 downto 0); --send to mem stage
-			writeback_source : out STD_LOGIC_VECTOR(3-1 downto 0); --send to writeback
-			branch_signal : out STD_LOGIC_VECTOR(2-1 downto 0); --send to branch
+			signal_to_mem : out STD_LOGIC_VECTOR(3-1 downto 0); --sEND to mem stage
+			writeback_source : out STD_LOGIC_VECTOR(3-1 downto 0); --sEND to writeback
+			branch_signal : out STD_LOGIC_VECTOR(2-1 downto 0); --sEND to branch
 			branch_address : out STD_LOGIC_VECTOR(32-1 downto 0);
 
-			data1 : out STD_LOGIC_VECTOR(32-1 downto 0); --send to ALU
-			data2 : out STD_LOGIC_VECTOR(32-1 downto 0); --send to ALU
+			data1 : out STD_LOGIC_VECTOR(32-1 downto 0); --sEND to ALU
+			data2 : out STD_LOGIC_VECTOR(32-1 downto 0); --sEND to ALU
 
 			do_stall : out STD_LOGIC;
 
 			--Forwarding
-			data1_register : out STD_LOGIC_VECTOR(5-1 downto 0); --send to ALU
-			data2_register : out STD_LOGIC_VECTOR(5-1 downto 0); --send to ALU
+			data1_register : out STD_LOGIC_VECTOR(5-1 downto 0); --sEND to ALU
+			data2_register : out STD_LOGIC_VECTOR(5-1 downto 0); --sEND to ALU
 
 			previous_destinations_output : out previous_destination_array;
 			previous_sources_output : out previous_source_arrray
 	);
-end Decoder;
-
-
+END Decoder;
 
 architecture behavioral of Decoder is
 
 signal previous_destinations : previous_destination_array; --biggest index is latest
 signal previous_sources : previous_source_arrray; --biggest index is latest
 
+signal ZERO_REGISTER : REGISTER_INDEX := (others => '0');
+
 signal op_code, funct : STD_LOGIC_VECTOR(6-1 downto 0);
-signal rs, rt, rd ,sa : STD_LOGIC_VECTOR(5-1 downto 0);
+signal rs, rt, rd : REGISTER_INDEX;
+signal sa : STD_LOGIC_VECTOR(5-1 downto 0);
 signal immediate : STD_LOGIC_VECTOR(16-1 downto 0);
 signal target : STD_LOGIC_VECTOR(26-1 downto 0);
 
-begin
+BEGIN
 	previous_destinations_output <= previous_destinations;
 	previous_sources_output <= previous_sources;
 
@@ -61,12 +62,44 @@ begin
 	target <= instruction(25 downto 0);
 
 	synced_clock : process(clk, reset)
-	begin
+
+		PROCEDURE update_history (--Forwarding logic
+				signal register_destination : in REGISTER_INDEX;
+				CONSTANT source : in STD_LOGIC;
+				signal data1_source : in REGISTER_INDEX;
+				signal data2_source : in REGISTER_INDEX
+			) is
+		BEGIN
+			previous_destinations(2) <= register_destination;
+			previous_sources(2) <= FORWARD_SOURCE_ALU;
+			data1_register <= data1_source;
+			data2_register <= data2_source;
+		END update_history;
+
+		PROCEDURE stall_decoder is
+		BEGIN
+			SHOW("Decoder STALLING");
+			operation <= "100000"; --add
+			data1 <= (others => '0');
+			data2 <= (others => '0');
+			mem_writeback_register <= (others => '0');
+			writeback_source <= NO_WRITE_BACK;
+
+			do_stall <= '1';
+			update_history(ZERO_REGISTER, FORWARD_SOURCE_ALU, ZERO_REGISTER, ZERO_REGISTER);
+		END stall_decoder;
+
+		IMPURE FUNCTION check_stall(destination_register : in REGISTER_INDEX) RETURN STD_LOGIC is
+		BEGIN
+			RETURN SHOULD_STALL(destination_register, previous_destinations, previous_sources);
+		END check_stall;
+
+	BEGIN
 		if reset = '1' then
 			for i in previous_destinations'range loop
 				previous_destinations(i) <= "00000";
 				previous_sources(i) <= '0';
-			end loop;
+			END loop;
 		elsif (rising_edge(clk)) then
 			previous_destinations(0) <= previous_destinations(1);
 			previous_destinations(1) <= previous_destinations(2);
@@ -74,14 +107,8 @@ begin
 			previous_sources(1) <= previous_sources(2);
 
 			if instruction = STD_LOGIC_VECTOR(ALL_32_ZEROES) then
-				SHOW("Decoder STALLING");
-				operation <= "100000";
-				data1 <= (others => '0');
-				data2 <= (others => '0');
-				mem_writeback_register <= (others => '0');
-				writeback_source <= NO_WRITE_BACK;
-				previous_destinations(2) <= (others => '0');
-				previous_sources(2) <= '0';
+				stall_decoder;
+				do_stall <= '0'; --This will overwrite the value in stall_decoder procedure
 			else
 				branch_signal <= BRANCH_NOT;
 				SHOW("OP code is " & integer'image(to_integer(unsigned(op_code))));
@@ -93,259 +120,226 @@ begin
 
 						case( funct ) is
 							when "100000" => --add
-								--Forwarding logic
-								previous_destinations(2) <= rd;
-								previous_sources(2) <= FORWARD_SOURCE_ALU;
-								data1_register <= rs;
-								data2_register <= rt;
-								--End forwarding logic
+								if (check_stall(rd) = '1') then
+									stall_decoder;
+								else
+									update_history(rd, FORWARD_SOURCE_ALU, rs, rt);
 
-								SHOW(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ADD!!! " & integer'image(to_integer(unsigned(rs))) & integer'image(to_integer(unsigned(rt))));
-								data1 <= registers(to_integer(unsigned(rs)));
-								data2 <= registers(to_integer(unsigned(rt)));
-								writeback_source <= ALU_AS_SOURCE;
+									SHOW(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ADD!!! " & integer'image(to_integer(unsigned(rs))) & integer'image(to_integer(unsigned(rt))));
+									data1 <= registers(to_integer(unsigned(rs)));
+									data2 <= registers(to_integer(unsigned(rt)));
+									writeback_source <= ALU_AS_SOURCE;
+								end if;
 							when "100010" => --sub
-								--Forwarding logic
-								previous_destinations(2) <= rd;
-								previous_sources(2) <= FORWARD_SOURCE_ALU;
-								data1_register <= rs;
-								data2_register <= rt;
-								--End forwarding logic
+								if (check_stall(rd) = '1') then
+									stall_decoder;
+								else
+									update_history(rd, FORWARD_SOURCE_ALU, rs, rt);
 
-								SHOW(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> SUB!!! " & integer'image(to_integer(unsigned(rs))) & integer'image(to_integer(unsigned(rt))));
-								data1 <= registers(to_integer(unsigned(rs)));
-								data2 <= registers(to_integer(unsigned(rt)));
-								writeback_source <= ALU_AS_SOURCE;
+									SHOW(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> SUB!!! " & integer'image(to_integer(unsigned(rs))) & integer'image(to_integer(unsigned(rt))));
+									data1 <= registers(to_integer(unsigned(rs)));
+									data2 <= registers(to_integer(unsigned(rt)));
+									writeback_source <= ALU_AS_SOURCE;
+								end if;
 							when "011000" => --mult
-								--Forwarding logic
-								previous_destinations(2) <= (others => '0');
-								previous_sources(2) <= FORWARD_SOURCE_ALU;
-								data1_register <= rs;
-								data2_register <= rt;
-								--End forwarding logic
+								--Have to stall for three cycle instead of one
+								update_history(ZERO_REGISTER, FORWARD_SOURCE_ALU, rs, rt);
 
 								SHOW(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> MULT!!! " & integer'image(to_integer(unsigned(rs))) & integer'image(to_integer(unsigned(rt))));
 								data1 <= registers(to_integer(unsigned(rs)));
 								data2 <= registers(to_integer(unsigned(rt)));
 								writeback_source <= ALU_AS_SOURCE;
 							when "011010" => --div
-								--Forwarding logic
-								previous_destinations(2) <= (others => '0');
-								previous_sources(2) <= FORWARD_SOURCE_ALU;
-								--End forwarding logic
+								update_history(ZERO_REGISTER, FORWARD_SOURCE_ALU, rs, rt);
 
 								data1 <= registers(to_integer(unsigned(rs)));
 								data2 <= registers(to_integer(unsigned(rt)));
 								writeback_source <= ALU_AS_SOURCE;
 							when "100100" => --and
-								--Forwarding logic
-								previous_destinations(2) <= rd;
-								previous_sources(2) <= FORWARD_SOURCE_ALU;
-								data1_register <= rs;
-								data2_register <= rt;
-								--End forwarding logic
+								if (check_stall(rd) = '1') then
+									stall_decoder;
+								else
+									update_history(rd, FORWARD_SOURCE_ALU, rs, rt);
 
-								data1 <= registers(to_integer(unsigned(rs)));
-								data2 <= registers(to_integer(unsigned(rt)));
-								writeback_source <= ALU_AS_SOURCE;
+									data1 <= registers(to_integer(unsigned(rs)));
+									data2 <= registers(to_integer(unsigned(rt)));
+									writeback_source <= ALU_AS_SOURCE;
+								end if;
 							when "100101" => --or
-								--Forwarding logic
-								previous_destinations(2) <= rd;
-								previous_sources(2) <= FORWARD_SOURCE_ALU;
-								data1_register <= rs;
-								data2_register <= rt;
-								--End forwarding logic
+								if (check_stall(rd) = '1') then
+									stall_decoder;
+								else
+									update_history(rd, FORWARD_SOURCE_ALU, rs, rt);
 
-								data1 <= registers(to_integer(unsigned(rs)));
-								data2 <= registers(to_integer(unsigned(rt)));
-								writeback_source <= ALU_AS_SOURCE;
+									data1 <= registers(to_integer(unsigned(rs)));
+									data2 <= registers(to_integer(unsigned(rt)));
+									writeback_source <= ALU_AS_SOURCE;
+								end if;
 							when "100111" => --nor
-								--Forwarding logic
-								previous_destinations(2) <= rd;
-								previous_sources(2) <= FORWARD_SOURCE_ALU;
-								data1_register <= rs;
-								data2_register <= rt;
-								--End forwarding logic
+								if (check_stall(rd) = '1') then
+									stall_decoder;
+								else
+									update_history(rd, FORWARD_SOURCE_ALU, rs, rt);
 
-								data1 <= registers(to_integer(unsigned(rs)));
-								data2 <= registers(to_integer(unsigned(rt)));
-								writeback_source <= ALU_AS_SOURCE;
+									data1 <= registers(to_integer(unsigned(rs)));
+									data2 <= registers(to_integer(unsigned(rt)));
+									writeback_source <= ALU_AS_SOURCE;
+								end if;
 							when "100110" => --xor
-								--Forwarding logic
-								previous_destinations(2) <= rd;
-								previous_sources(2) <= FORWARD_SOURCE_ALU;
-								data1_register <= rs;
-								data2_register <= rt;
-								--End forwarding logic
+								if (check_stall(rd) = '1') then
+									stall_decoder;
+								else
+									update_history(rd, FORWARD_SOURCE_ALU, rs, rt);
 
-								data1 <= registers(to_integer(unsigned(rs)));
-								data2 <= registers(to_integer(unsigned(rt)));
-								writeback_source <= ALU_AS_SOURCE;
+									data1 <= registers(to_integer(unsigned(rs)));
+									data2 <= registers(to_integer(unsigned(rt)));
+									writeback_source <= ALU_AS_SOURCE;
+								end if;
 
 							--A wild jr appears
 							when "001000" => --jr
-								--Forwarding logic
-								previous_destinations(2) <= (others => '0');
-								previous_sources(2) <= FORWARD_SOURCE_ALU;
-								--End forwarding logic
+								if (check_stall(ZERO_REGISTER) = '1') then
+									stall_decoder;
+								else
+									update_history(ZERO_REGISTER, FORWARD_SOURCE_ALU, rs, rt);
 
-								SHOW("Handling a wild jr at register " & integer'image(to_integer(unsigned(rs))));
-								operation <= "100000"; --Tell ALU to not do anything
-								data1 <= (others => '0');
-								data2 <= (others => '0');
-								writeback_source <= NO_WRITE_BACK;
-								mem_writeback_register <= "00000"; --Don't write back
+									SHOW("Handling a wild jr at register " & integer'image(to_integer(unsigned(rs))));
+									operation <= "100000"; --Tell ALU to not do anything
+									data1 <= (others => '0');
+									data2 <= (others => '0');
+									writeback_source <= NO_WRITE_BACK;
+									mem_writeback_register <= "00000"; --Don't write back
 
-								branch_signal <= BRANCH_ALWAYS;
-								branch_address <= registers(to_integer(unsigned(rs)));
+									branch_signal <= BRANCH_ALWAYS;
+									branch_address <= registers(to_integer(unsigned(rs)));
+								end if;
 	-------------------------------------------------------------------------------------------------------------------------------------
 	-------------------------------------------------SHIFTS OPERATIONS-------------------------------------------------------------------
 	-------------------------------------------------------------------------------------------------------------------------------------
 							when "101010" => --slt
-								--Forwarding logic
-								previous_destinations(2) <= rd;
-								previous_sources(2) <= FORWARD_SOURCE_ALU;
-								data1_register <= rs;
-								data2_register <= rt;
-								--End forwarding logic
+								if (check_stall(rd) = '1') then
+									stall_decoder;
+								else
+									update_history(rd, FORWARD_SOURCE_ALU, rs, rt);
 
-								data1 <= registers(to_integer(unsigned(rs)));
-								data2 <= registers(to_integer(unsigned(rt)));
-								writeback_source <= ALU_AS_SOURCE;
+									data1 <= registers(to_integer(unsigned(rs)));
+									data2 <= registers(to_integer(unsigned(rt)));
+									writeback_source <= ALU_AS_SOURCE;
+								end if;
 							when "000000" => --sll
-								--Forwarding logic
-								previous_destinations(2) <= rd;
-								previous_sources(2) <= FORWARD_SOURCE_ALU;
-								data1_register <= rs;
-								data2_register <= rt;
-								--End forwarding logic
+								if (check_stall(rd) = '1') then
+									stall_decoder;
+								else
+									update_history(rd, FORWARD_SOURCE_ALU, rs, rt);
 
-								data1 <= registers(to_integer(unsigned(rs)));
-								data2 <= STD_LOGIC_VECTOR(resize(signed(sa), data2'length));
-								writeback_source <= ALU_AS_SOURCE;
+									data1 <= registers(to_integer(unsigned(rs)));
+									data2 <= STD_LOGIC_VECTOR(resize(signed(sa), data2'length));
+									writeback_source <= ALU_AS_SOURCE;
+								end if;
 							when "000010" => --srl
-								--Forwarding logic
-								previous_destinations(2) <= rd;
-								previous_sources(2) <= FORWARD_SOURCE_ALU;
-								data1_register <= rs;
-								data2_register <= rt;
-								--End forwarding logic
+								if (check_stall(rd) = '1') then
+									stall_decoder;
+								else
+									update_history(rd, FORWARD_SOURCE_ALU, rs, rt);
 
-								data1 <= registers(to_integer(unsigned(rs)));
-								data2 <= STD_LOGIC_VECTOR(resize(signed(sa), data2'length));
-								writeback_source <= ALU_AS_SOURCE;
+									data1 <= registers(to_integer(unsigned(rs)));
+									data2 <= STD_LOGIC_VECTOR(resize(signed(sa), data2'length));
+									writeback_source <= ALU_AS_SOURCE;
+								end if;
 							when "000011" => --sra
-								--Forwarding logic
-								previous_destinations(2) <= rd;
-								previous_sources(2) <= FORWARD_SOURCE_ALU;
-								data1_register <= rs;
-								data2_register <= rt;
-								--End forwarding logic
+								if (check_stall(rd) = '1') then
+									stall_decoder;
+								else
+									update_history(rd, FORWARD_SOURCE_ALU, rs, rt);
 
-								data1 <= registers(to_integer(unsigned(rs)));
-								data2 <= STD_LOGIC_VECTOR(resize(signed(sa), data2'length));
-								writeback_source <= ALU_AS_SOURCE;
-
+									data1 <= registers(to_integer(unsigned(rs)));
+									data2 <= STD_LOGIC_VECTOR(resize(signed(sa), data2'length));
+									writeback_source <= ALU_AS_SOURCE;
+								end if;
 							when "010000" => --mfhi
-								--Forwarding logic
-								previous_destinations(2) <= (others => '0'); --Don't use ALU here
-								previous_sources(2) <= FORWARD_SOURCE_ALU;
-								--End forwarding logic
+								update_history(rd, FORWARD_SOURCE_ALU, ZERO_REGISTER, ZERO_REGISTER);
 								writeback_source <= HI_AS_SOURCE;
 							when "010010" => --mflo
-								--Forwarding logic
-								previous_destinations(2) <= (others => '0'); --Don't use ALU here
-								previous_sources(2) <= FORWARD_SOURCE_ALU;
-								--End forwarding logic
+								update_history(rd, FORWARD_SOURCE_ALU, ZERO_REGISTER, ZERO_REGISTER);
 								writeback_source <= LO_AS_SOURCE;
-							
+
 							when others =>
-						
-						end case ;
+
+						END case ;
 -----------------------------------------------------------------------------------------------------------------------------------
 -----------------------------------------------IMMEDIATE OPERATIONS----------------------------------------------------------------
 -----------------------------------------------------------------------------------------------------------------------------------
 					when "001000" => -- addi
-						--Forwarding logic
-						previous_destinations(2) <= rt;
-						previous_sources(2) <= FORWARD_SOURCE_ALU;
-						data1_register <= rs;
-						data2_register <= (others => '0');
-						--End forwarding logic
+						if (check_stall(rt) = '1') then
+							stall_decoder;
+						else
+							update_history(rt, FORWARD_SOURCE_ALU, rs, ZERO_REGISTER);
 
-						SHOW(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ADDI!!! " & integer'image(to_integer(unsigned(rs))) & integer'image(to_integer(signed(immediate))));
-						operation <= "100000";
-						data1 <= registers(to_integer(unsigned(rs)));
-						data2 <= STD_LOGIC_VECTOR(resize(signed(immediate), data2'length));
-						mem_writeback_register <= rt;
-						writeback_source <= ALU_AS_SOURCE;
+							SHOW(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ADDI!!! " & integer'image(to_integer(unsigned(rs))) & integer'image(to_integer(signed(immediate))));
+							operation <= "100000";
+							data1 <= registers(to_integer(unsigned(rs)));
+							data2 <= STD_LOGIC_VECTOR(resize(signed(immediate), data2'length));
+							mem_writeback_register <= rt;
+							writeback_source <= ALU_AS_SOURCE;
+						end if;
 					when "001010" => -- slti
-						--Forwarding logic
-						previous_destinations(2) <= rt;
-						previous_sources(2) <= FORWARD_SOURCE_ALU;
-						data1_register <= rs;
-						data2_register <= (others => '0');
-						--End forwarding logic
+						if (check_stall(rt) = '1') then
+							stall_decoder;
+						else
+							update_history(rt, FORWARD_SOURCE_ALU, rs, ZERO_REGISTER);
 
-						SHOW("Here slti");
-						operation <= "101010";
-						data1 <= registers(to_integer(unsigned(rs)));
-						data2 <= STD_LOGIC_VECTOR(resize(signed(immediate), data2'length));
-						mem_writeback_register <= rt;
-						writeback_source <= ALU_AS_SOURCE;
+							SHOW("Here slti");
+							operation <= "101010";
+							data1 <= registers(to_integer(unsigned(rs)));
+							data2 <= STD_LOGIC_VECTOR(resize(signed(immediate), data2'length));
+							mem_writeback_register <= rt;
+							writeback_source <= ALU_AS_SOURCE;
+						end if;
 					when "001100" => -- andi
-						--Forwarding logic
-						previous_destinations(2) <= rt;
-						previous_sources(2) <= FORWARD_SOURCE_ALU;
-						data1_register <= rs;
-						data2_register <= (others => '0');
-						--End forwarding logic
+						if (check_stall(rt) = '1') then
+							stall_decoder;
+						else
+							update_history(rt, FORWARD_SOURCE_ALU, rs, ZERO_REGISTER);
 
-						SHOW("Here andi");
-						operation <= "100100";
-						data1 <= registers(to_integer(unsigned(rs)));
-						data2 <= STD_LOGIC_VECTOR(resize(signed(immediate), data2'length));
-						mem_writeback_register <= rt;
-						writeback_source <= ALU_AS_SOURCE;
+							SHOW("Here andi");
+							operation <= "100100";
+							data1 <= registers(to_integer(unsigned(rs)));
+							data2 <= STD_LOGIC_VECTOR(resize(signed(immediate), data2'length));
+							mem_writeback_register <= rt;
+							writeback_source <= ALU_AS_SOURCE;
+						end if;
 					when "001101" => -- ori
-						--Forwarding logic
-						previous_destinations(2) <= rt;
-						previous_sources(2) <= FORWARD_SOURCE_ALU;
-						data1_register <= rs;
-						data2_register <= (others => '0');
-						--End forwarding logic
+						if (check_stall(rt) = '1') then
+							stall_decoder;
+						else
+							update_history(rt, FORWARD_SOURCE_ALU, rs, ZERO_REGISTER);
 
-						SHOW("Here ori");
-						operation <= "100101";
-						data1 <= registers(to_integer(unsigned(rs)));
-						data2 <= STD_LOGIC_VECTOR(resize(signed(immediate), data2'length));
-						mem_writeback_register <= rt;
-						writeback_source <= ALU_AS_SOURCE;
+							SHOW("Here ori");
+							operation <= "100101";
+							data1 <= registers(to_integer(unsigned(rs)));
+							data2 <= STD_LOGIC_VECTOR(resize(signed(immediate), data2'length));
+							mem_writeback_register <= rt;
+							writeback_source <= ALU_AS_SOURCE;
+						end if;
 					when "001110" => -- xori
-						--Forwarding logic
-						previous_destinations(2) <= rt;
-						previous_sources(2) <= FORWARD_SOURCE_ALU;
-						data1_register <= rs;
-						data2_register <= (others => '0');
-						--End forwarding logic
+						if (check_stall(rt) = '1') then
+							stall_decoder;
+						else
+							update_history(rt, FORWARD_SOURCE_ALU, rs, ZERO_REGISTER);
 
-						SHOW("Here xori");
-						operation <= "100110";
-						data1 <= registers(to_integer(unsigned(rs)));
-						data2 <= STD_LOGIC_VECTOR(resize(signed(immediate), data2'length));
-						mem_writeback_register <= rt;
-						writeback_source <= ALU_AS_SOURCE;
+							SHOW("Here xori");
+							operation <= "100110";
+							data1 <= registers(to_integer(unsigned(rs)));
+							data2 <= STD_LOGIC_VECTOR(resize(signed(immediate), data2'length));
+							mem_writeback_register <= rt;
+							writeback_source <= ALU_AS_SOURCE;
+						end if;
 
 -----------------------------------------------------------------------------------------------------------------------------------
 -----------------------------------------------MEMORY OPERATIONS-------------------------------------------------------------------
 -----------------------------------------------------------------------------------------------------------------------------------
 					when "001111" => --lui --We shift the immediate value by 16 using the ALU
-						--Forwarding logic --Cannot use forwarding here
-						previous_destinations(2) <= rt;
-						previous_sources(2) <= FORWARD_SOURCE_ALU;
-						data1_register <= (others => '0');
-						data2_register <= (others => '0');
-						--End forwarding logic
+						update_history(rt, FORWARD_SOURCE_ALU, ZERO_REGISTER, ZERO_REGISTER);
 
 						SHOW("Here lui");
 						operation <= "000000"; --sll
@@ -354,12 +348,7 @@ begin
 						mem_writeback_register <= rt;
 						writeback_source <= ALU_AS_SOURCE;
 					when "100011" => --lw
-						--Forwarding logic
-						previous_destinations(2) <= rt;
-						previous_sources(2) <= FORWARD_SOURCE_MEM;
-						data1_register <= rs;
-						data2_register <= (others => '0');
-						--End forwarding logic
+						update_history(rt, FORWARD_SOURCE_MEM, rs, ZERO_REGISTER);
 
 						SHOW("Here lw");
 						operation <= "100000"; --add
@@ -369,12 +358,7 @@ begin
 						writeback_source <= MEM_AS_SOURCE;
 						signal_to_mem <= LOAD_WORD;
 					when "101011" => --sw
-						--Forwarding logic
-						previous_destinations(2) <= (others => '0'); --There is no writeback
-						previous_sources(2) <= FORWARD_SOURCE_MEM;
-						data1_register <= rs;
-						data2_register <= (others => '0');
-						--End forwarding logic
+						update_history(ZERO_REGISTER, FORWARD_SOURCE_MEM, rs, ZERO_REGISTER);
 
 						SHOW("Here sw");
 						operation <= "100000"; --add
@@ -384,12 +368,7 @@ begin
 						writeback_source <= NO_WRITE_BACK;
 						signal_to_mem <= STORE_WORD;
 					when "100000" => --lb
-						--Forwarding logic
-						previous_destinations(2) <= rt;
-						previous_sources(2) <= FORWARD_SOURCE_MEM;
-						data1_register <= rs;
-						data2_register <= (others => '0');
-						--End forwarding logic
+						update_history(rt, FORWARD_SOURCE_MEM, rs, ZERO_REGISTER);
 
 						SHOW("Here lb");
 						operation <= "100000"; --add
@@ -399,12 +378,7 @@ begin
 						writeback_source <= MEM_AS_SOURCE;
 						signal_to_mem <= LOAD_BYTE;
 					when "101000" => --sb
-						--Forwarding logic
-						previous_destinations(2) <= (others => '0'); --There is no writeback
-						previous_sources(2) <= FORWARD_SOURCE_MEM;
-						data1_register <= rs;
-						data2_register <= (others => '0');
-						--End forwarding logic
+						update_history(ZERO_REGISTER, FORWARD_SOURCE_MEM, rs, ZERO_REGISTER);
 
 						SHOW("Here sb");
 						operation <= "100000"; --add
@@ -418,13 +392,8 @@ begin
 -----------------------------------------------Assume resolved in Decode-----------------------------------------------------------
 -----------------------------------------------------------------------------------------------------------------------------------
 					when "000100" => --beq
-						--Forwarding logic
-						previous_destinations(2) <= (others => '0'); --There is no writeback
-						previous_sources(2) <= FORWARD_SOURCE_ALU;
-						--TODO: forwarding here? Or stall?
-						data1_register <= (others => '0');
-						data2_register <= (others => '0');
-						--End forwarding logic
+						--Stall here until result is forwarded actually
+						update_history(ZERO_REGISTER, FORWARD_SOURCE_ALU, rs, rt);
 
 						SHOW("Here beq");
 						operation <= "100000"; --Tell ALU to not do anything
@@ -440,13 +409,8 @@ begin
 							branch_signal <= BRANCH_NOT;
 						end if;
 					when "000101" => --bne
-						--Forwarding logic
-						previous_destinations(2) <= (others => '0'); --There is no writeback
-						previous_sources(2) <= FORWARD_SOURCE_ALU;
-						--TODO: forwarding here? Or stall?
-						data1_register <= (others => '0');
-						data2_register <= (others => '0');
-						--End forwarding logic
+						--Stall here until result is forwarded actually
+						update_history(ZERO_REGISTER, FORWARD_SOURCE_ALU, rs, rt);
 
 						SHOW("Here bne");
 						operation <= "100000"; --Tell ALU to not do anything
@@ -462,13 +426,7 @@ begin
 							branch_signal <= BRANCH_NOT;
 						end if;
 					when "000010" => --j
-						--Forwarding logic
-						previous_destinations(2) <= (others => '0'); --There is no writeback
-						previous_sources(2) <= FORWARD_SOURCE_ALU;
-						--TODO: forwarding here? Or stall?
-						data1_register <= (others => '0');
-						data2_register <= (others => '0');
-						--End forwarding logic
+						update_history(ZERO_REGISTER, FORWARD_SOURCE_ALU, ZERO_REGISTER, ZERO_REGISTER);
 
 						SHOW("--------------------------------------------------------Here j");
 						operation <= "100000"; --Tell ALU to not do anything
@@ -479,13 +437,7 @@ begin
 						branch_signal <= BRANCH_ALWAYS;
 						branch_address <= std_logic_vector(resize(unsigned(target), branch_address'length));
 					when "000011" => --jal --> $31 = $PC + 8, jump
-						--Forwarding logic
-						previous_destinations(2) <= (others => '0'); --There is no writeback
-						previous_sources(2) <= FORWARD_SOURCE_ALU;
-						--TODO: forwarding here? Or stall?
-						data1_register <= (others => '0');
-						data2_register <= (others => '0');
-						--End forwarding logic
+						update_history(ZERO_REGISTER, FORWARD_SOURCE_ALU, ZERO_REGISTER, ZERO_REGISTER);
 
 						SHOW("Here jal");
 						--The address in $ra is really PC+8. The instruction immediately following the jal instruction is in the "branch delay slot"
@@ -498,11 +450,11 @@ begin
 						branch_address <= std_logic_vector(resize(unsigned(target), branch_address'length));
 					--when => --jr (see above)
 					when others =>
-				
-				end case ;
+
+				END case ;
 			end if ;
 		end if;
-	end process ; -- synced_clock
-	
+	END process ; -- synced_clock
 
-end behavioral;
+
+END behavioral;
