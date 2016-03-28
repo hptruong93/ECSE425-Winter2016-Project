@@ -82,7 +82,7 @@ COMPONENT Forwarding IS
 			previous_destinations : previous_destination_array;
 			previous_sources : previous_source_arrray;
 
-			alu_output : in SIGNED(32-1 downto 0);
+			alu_buffered_output : in previous_alu_array;
 			mem_output : in STD_LOGIC_VECTOR(32-1 downto 0);
 
 			data1_decoder : in SIGNED(32-1 downto 0);
@@ -106,6 +106,8 @@ COMPONENT ALU IS
 			operation : in STD_LOGIC_VECTOR(6-1 downto 0);
 			lo_reg : out signed (32-1 downto 0);
 			hi_reg : out signed (32-1 downto 0);
+
+			buffered_result : out previous_alu_array;
 			result : out signed(32-1 downto 0)
 	);
 end COMPONENT;
@@ -159,10 +161,11 @@ signal previous_sources_output : previous_source_arrray;
 signal data1_register : STD_LOGIC_VECTOR(5-1 downto 0); --Decoder to forwarding unit
 signal data2_register : STD_LOGIC_VECTOR(5-1 downto 0); --Decoder to forwarding unit
 signal alu_source1, alu_source2 : SIGNED(32-1 downto 0);
+signal buffered_result : previous_alu_array;
 
 signal lo_reg : signed (32-1 downto 0); -- ALU ==> Mem unit
 signal hi_reg : signed (32-1 downto 0); -- ALU ==> Mem unit
-signal result, temp_result : signed(32-1 downto 0); -- ALU ==> Mem unit
+signal result : signed(32-1 downto 0); -- ALU ==> Mem unit
 signal registers : register_array;
 signal pc_reg : STD_LOGIC_VECTOR(32-1 downto 0); -- Fetch ==> Decode
 signal instruction_address_output : STD_LOGIC_VECTOR(32-1 downto 0);
@@ -226,7 +229,7 @@ begin
 		previous_destinations => previous_destinations_output,
 		previous_sources => previous_sources_output,
 
-		alu_output => temp_result,
+		alu_buffered_output => buffered_result,
 		mem_output => mem_stage_output,
 
 		data1_decoder => signed(data1),
@@ -247,9 +250,9 @@ begin
 		operation => operation,
 		lo_reg => lo_reg,
 		hi_reg => hi_reg,
+		buffered_result => buffered_result,
 		result => result
 	);
-
 
 	mem_stage_instance : MemStage port map (
 		clk => clk,
@@ -294,7 +297,6 @@ begin
 		elsif (rising_edge(clk)) then
 			temp_writeback_source <= writeback_source;
 			temp_mem_writeback_register <= mem_writeback_register;
-			temp_result <= result;			
 		end if;
 	end process ; -- synced_clock
 
