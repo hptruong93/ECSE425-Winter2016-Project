@@ -56,9 +56,10 @@ port (	clk 	: in STD_LOGIC;
 
 			pc_reg : in STD_LOGIC_VECTOR(32-1 downto 0);
 			registers : in register_array;
+			mem_stage_busy : in STD_LOGIC;
 
 			operation : out STD_LOGIC_VECTOR(6-1 downto 0);
-			mem_writeback_register : out STD_LOGIC_VECTOR(5-1 downto 0); --send to memstage or writeback
+			mem_writeback_register : out REGISTER_INDEX; --send to memstage or writeback
 			-- for store, this represents the register that we're storing. For load, this represents the register getting the value from memory.
 			signal_to_mem : out STD_LOGIC_VECTOR(3-1 downto 0); --send to mem stage (mem operation)
 			writeback_source : out STD_LOGIC_VECTOR(3-1 downto 0); --send to writeback
@@ -216,6 +217,7 @@ begin
 		instruction => instruction,
 		pc_reg => pc_reg,
 		registers => registers,
+		mem_stage_busy => mem_stage_busy,
 		operation => operation,
 		mem_writeback_register => mem_writeback_register,
 		signal_to_mem => signal_to_mem,

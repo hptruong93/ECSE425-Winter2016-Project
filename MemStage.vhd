@@ -38,7 +38,7 @@ begin
 	synced_clock : process(clk, reset)
 	begin
 		if reset = '1' then
-			
+
 		elsif (rising_edge(clk)) then
 			current_state <= current_state;
 			do_read <= '0';
@@ -121,12 +121,13 @@ begin
 							end if;
 					end case;
 				when MEM_IDLE =>
+					is_busy <= '0';
 					current_state <= MEM_WAIT;
 				when others =>
-			
+
 			end case ;
 		end if;
 	end process ; -- synced_clock
-	
+
 
 end behavioral;

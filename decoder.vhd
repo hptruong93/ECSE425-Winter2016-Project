@@ -12,23 +12,24 @@ port (	clk 	: in STD_LOGIC;
 
 			pc_reg : in STD_LOGIC_VECTOR(32-1 downto 0);
 			registers : in register_array;
+			mem_stage_busy : in STD_LOGIC;
 
 			operation : out STD_LOGIC_VECTOR(6-1 downto 0);
-			mem_writeback_register : out STD_LOGIC_VECTOR(5-1 downto 0); --sEND to memstage or writeback
+			mem_writeback_register : out STD_LOGIC_VECTOR(5-1 downto 0); --send to memstage or writeback
 			-- for store, this represents the register that we're storing. For load, this represents the register getting the value from memory.
-			signal_to_mem : out STD_LOGIC_VECTOR(3-1 downto 0); --sEND to mem stage
-			writeback_source : out STD_LOGIC_VECTOR(3-1 downto 0); --sEND to writeback
-			branch_signal : out STD_LOGIC_VECTOR(2-1 downto 0); --sEND to branch
+			signal_to_mem : out STD_LOGIC_VECTOR(3-1 downto 0); --send to mem stage
+			writeback_source : out STD_LOGIC_VECTOR(3-1 downto 0); --send to writeback
+			branch_signal : out STD_LOGIC_VECTOR(2-1 downto 0); --send to branch
 			branch_address : out STD_LOGIC_VECTOR(32-1 downto 0);
 
-			data1 : out STD_LOGIC_VECTOR(32-1 downto 0); --sEND to ALU
-			data2 : out STD_LOGIC_VECTOR(32-1 downto 0); --sEND to ALU
+			data1 : out STD_LOGIC_VECTOR(32-1 downto 0); --send to ALU
+			data2 : out STD_LOGIC_VECTOR(32-1 downto 0); --send to ALU
 
 			do_stall : out STD_LOGIC;
 
 			--Forwarding
-			data1_register : out STD_LOGIC_VECTOR(5-1 downto 0); --sEND to ALU
-			data2_register : out STD_LOGIC_VECTOR(5-1 downto 0); --sEND to ALU
+			data1_register : out STD_LOGIC_VECTOR(5-1 downto 0); --send to ALU
+			data2_register : out STD_LOGIC_VECTOR(5-1 downto 0); --send to ALU
 
 			previous_destinations_output : out previous_destination_array;
 			previous_sources_output : out previous_source_arrray
@@ -109,6 +110,8 @@ BEGIN
 			if instruction = STD_LOGIC_VECTOR(ALL_32_ZEROES) then
 				stall_decoder;
 				do_stall <= '0'; --This will overwrite the value in stall_decoder procedure
+			elsif mem_stage_busy = '1' then
+				stall_decoder;
 			else
 				branch_signal <= BRANCH_NOT;
 				SHOW("OP code is " & integer'image(to_integer(unsigned(op_code))));
