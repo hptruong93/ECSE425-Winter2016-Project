@@ -29,7 +29,7 @@ COMPONENT MasterPipeline is
                 output_memory_data : out STD_LOGIC_VECTOR(MEM_DATA_WIDTH-1 downto 0); -- for store
                 word_byte : out STD_LOGIC; -- send to arbiter to control whether we interact in bytes or words
                 re2 : out STD_LOGIC;
-                we2 : out STD_LOGIC;
+                we1 : out STD_LOGIC;
                 busy2 : in STD_LOGIC
     );
 end COMPONENT;
@@ -70,7 +70,7 @@ signal input_memory_data   : STD_LOGIC_VECTOR(MEM_DATA_WIDTH-1 downto 0); -- for
 signal output_memory_data : STD_LOGIC_VECTOR(MEM_DATA_WIDTH-1 downto 0); -- for store
 signal word_byte : STD_LOGIC; -- send to arbiter to control whether we interact in bytes or words
 signal re2         : STD_LOGIC;
-signal we2         : STD_LOGIC;
+signal we1         : STD_LOGIC;
 signal busy2       : STD_LOGIC;
 signal destination_reg : NATURAL;
 signal count : STD_LOGIC := '0';
@@ -92,7 +92,7 @@ BEGIN
         output_memory_data => output_memory_data, -- for store
         word_byte => word_byte, -- send to arbiter to control whether we interact in bytes or words
         re2 => re2,
-        we2 => we2,
+        we1 => we1,
         busy2 => busy2   
     );
 
@@ -103,19 +103,19 @@ BEGIN
         Word_Byte   => '1',
 
         --Memory port 1
-        addr1 => instruction_address,
-        data1_in => (others => 'Z'),
-        data1_out => fetched_instruction,
+        addr1 => store_load_address,
+        data1_in => output_memory_data,
+        data1_out => input_memory_data,
         re1 => re1,
-        we1 => '0',
+        we1 => we1,
         busy1 => busy1,
 
         --Memory port 2
-        addr2 => store_load_address,
-        data2_in => output_memory_data,
-        data2_out => input_memory_data,
+        addr2 => instruction_address, 
+        data2_in => (others => 'Z'),
+        data2_out => fetched_instruction,
         re2 => re2,
-        we2 => we2,
+        we2 => '0',
         busy2 => busy2 
     );
 
@@ -142,21 +142,33 @@ BEGIN
 
             SHOW(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>START TEST");
             WAIT FOR 1 * clk_period;
-            destination_reg <= 6;
+            destination_reg <= 1;
     -----------------------------------------------------------------------------------------------------------------------     
             WAIT FOR 5 * clk_period;
-            SHOW_LOVE("EXPECTING 14", observed_registers(destination_reg));
+            --SHOW_LOVE("STORING VALUE TO", observed_registers(destination_reg));
 
-            destination_reg <= 3;
+            destination_reg <= 1;
             WAIT FOR 3 * clk_period;
             
-            SHOW_LOVE("EXPECTING 4", observed_registers(destination_reg));
-            destination_reg <= 5;
+            SHOW_LOVE("EXPECTING 2", observed_registers(destination_reg));
+            destination_reg <= 1;
 
             WAIT FOR 1 * clk_period;
             SHOW_LOVE("EXPECTING 14", observed_registers(destination_reg));
+            WAIT FOR 1 * clk_period;
+            SHOW_LOVE("EXPECTING 14", observed_registers(destination_reg));
+            WAIT FOR 1 * clk_period;
+            SHOW_LOVE("EXPECTING 14", observed_registers(destination_reg));
+            WAIT FOR 1 * clk_period;
+            SHOW_LOVE("EXPECTING 14", observed_registers(destination_reg));
+            WAIT FOR 1 * clk_period;
+            SHOW_LOVE("EXPECTING 14", observed_registers(destination_reg));
+            WAIT FOR 1 * clk_period;
+            SHOW_LOVE("EXPECTING 14", observed_registers(destination_reg));
+            WAIT FOR 1 * clk_period;
+            SHOW_LOVE("EXPECTING 14", observed_registers(destination_reg));
 
-            WAIT FOR 10 * clk_period;
+            WAIT FOR 1 * clk_period;
 
             SHOW("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<END TEST");
         else

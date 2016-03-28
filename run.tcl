@@ -5,29 +5,66 @@ proc AddWaves {} {
 	;#Add the following signals to the Waves window
 	add wave -label clock -position end  -radix binary sim:/masterpipeline_instance/clk
 	add wave -label reset -position end  -radix binary sim:/masterpipeline_instance/reset
-
+	add wave -label we1 -position end  -radix binary sim:/masterpipeline_instance/we1
 	add wave -label re1 -position end  -radix binary sim:/masterpipeline_instance/re1
+	add wave -label re2 -position end  -radix binary sim:/masterpipeline_instance/re2
+	add wave -label busy2 -position end  -radix binary sim:/masterpipeline_instance/busy2
 	add wave -label busy1 -position end  -radix binary sim:/masterpipeline_instance/busy1
+	
+	add wave -label do_read -position end  -radix binary sim:/masterpipeline_instance/mem_stage_instance/do_read
+	add wave -label do_write -position end  -radix binary sim:/masterpipeline_instance/mem_stage_instance/do_write
+
 	add wave -label mm_re -position end  -radix binary sim:/memory_arbiter_instance/mm_re
 	add wave -label mm_rd_ready -position end  -radix binary sim:/memory_arbiter_instance/mm_rd_ready
 	add wave -label mm_address -position end  -radix decimal sim:/memory_arbiter_instance/mm_address
+	add wave -label joud_s_fault -position end  -radix decimal sim:/memory_arbiter_instance/mm_data
+	add wave -label hp_s_fault -position end  -radix decimal sim:/masterpipeline_instance/mem_stage_instance/input_data_line
 
-	add wave -label alu_data1 -position end  -radix decimal sim:/masterpipeline_instance/data1
-	add wave -label alu_data2 -position end  -radix decimal sim:/masterpipeline_instance/data2
-	add wave -label alu_output -position end  -radix decimal sim:/masterpipeline_instance/result
-  
+
+	add wave -label store_load_address -position end  -radix decimal sim:/masterpipeline_instance/store_load_address
+	add wave -label fetched_instruction -position end  -radix binary sim:/masterpipeline_instance/fetched_instruction
+	# add wave -label alu_data1 -position end  -radix decimal sim:/masterpipeline_instance/data1
+	# add wave -label alu_data2 -position end  -radix decimal sim:/masterpipeline_instance/data2
+	# add wave -label alu_output -position end  -radix decimal sim:/masterpipeline_instance/result
+ 	
 
   ;#Set some formating options to make the Waves window more legible
 	configure wave -namecolwidth 250
 	WaveRestoreZoom {0 ns} {8 ns}
 }
 
+# proc AddWaves {} {
+
+# 	;#Add the following signals to the Waves window
+# 	add wave -label clock -position end  -radix binary sim:/masterpipeline_instance/clk
+# 	add wave -label reset -position end  -radix binary sim:/masterpipeline_instance/reset
+# 	add wave -label we1 -position end  -radix binary sim:/masterpipeline_instance/we1
+# 	add wave -label re1 -position end  -radix binary sim:/masterpipeline_instance/re1
+# 	add wave -label re2 -position end  -radix binary sim:/masterpipeline_instance/re2
+# 	add wave -label busy2 -position end  -radix binary sim:/masterpipeline_instance/busy2
+# 	add wave -label busy1 -position end  -radix binary sim:/masterpipeline_instance/busy1
+	
+# 	add wave -label do_read -position end  -radix binary sim:/masterpipeline_instance/mem_stage_instance/do_read
+# 	add wave -label do_write -position end  -radix binary sim:/masterpipeline_instance/mem_stage_instance/do_write
+
+# 	add wave -label store_load_address -position end  -radix decimal sim:/masterpipeline_instance/store_load_address
+# 	# add wave -label fetched_instruction -position end  -radix binary sim:/masterpipeline_instance/fetched_instruction
+# 	# add wave -label alu_data1 -position end  -radix decimal sim:/masterpipeline_instance/data1
+# 	# add wave -label alu_data2 -position end  -radix decimal sim:/masterpipeline_instance/data2
+# 	# add wave -label alu_output -position end  -radix decimal sim:/masterpipeline_instance/result
+ 	
+
+#   ;#Set some formating options to make the Waves window more legible
+# 	configure wave -namecolwidth 250
+# 	WaveRestoreZoom {0 ns} {8 ns}
+# }
+
 ;#Create the work library, which is the default library used by ModelSim
 vlib work
 
 ;#Compile everything
-# vcom Memory_in_Byte.vhd
-# vcom Main_Memory.vhd
+vcom Memory_in_Byte.vhd
+vcom Main_Memory.vhd
 vcom memory_arbiter_lib.vhd
 vcom memory_arbiter.vhd
 
@@ -76,10 +113,11 @@ vcom test_thewholething.vhd
 # run 200 ns
 
 # vsim -t ps masterpipeline_tb
+# AddWaves
 # force -deposit clk 0 0 ns, 1 0.5 ns -repeat 1 ns
 # run 10 ns
 
 vsim -t ps thewholething_tb
-# AddWaves
+AddWaves
 force -deposit clk 0 0 ns, 1 0.5 ns -repeat 1 ns
 run 20 ns

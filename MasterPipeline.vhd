@@ -22,7 +22,7 @@ port (	clk 	: in STD_LOGIC;
 			output_memory_data : out STD_LOGIC_VECTOR(MEM_DATA_WIDTH-1 downto 0); -- for store
 			word_byte : out STD_LOGIC; -- send to arbiter to control whether we interact in bytes or words
 			re2			: out STD_LOGIC;
-			we2			: out STD_LOGIC;
+			we1			: out STD_LOGIC;
 			busy2 		: in STD_LOGIC
 	);
 end MasterPipeline;
@@ -160,10 +160,10 @@ begin
 		branch_address => branch_address,
 		data => fetched_instruction,
 
- 		is_mem_busy => busy1,
+ 		is_mem_busy => busy2,
 
  		pc_reg => pc_reg,
-		do_read => re1,
+		do_read => re2,
 		address => instruction_address_output,--STD_LOGIC_VECTOR(unsigned(instruction_address_output, 32)),
 		is_busy => instruction_fetch_busy, -- memory is busy, cannot fetch instruction
 		instruction => instruction
@@ -207,12 +207,12 @@ begin
 		mem_writeback_register => mem_writeback_register,
 		registers => registers,
 		signal_to_mem => signal_to_mem,
-		is_mem_busy => busy2, -- input from memory, check if channel 2 (for data) is busy
+		is_mem_busy => busy1, -- input from memory, check if channel 2 (for data) is busy
 
 
 		word_byte => word_byte,
-		do_read => re2,
-		do_write => we2,
+		do_read => re1,
+		do_write => we1,
 		is_busy => mem_stage_busy,
 		address_line => store_load_address,
 		input_data_line => input_memory_data,
