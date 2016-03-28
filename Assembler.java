@@ -326,10 +326,10 @@ private	static int n = 0;
 			result = toOpCode(op) + toReg(s) + toReg(t) + toImmediate(getLabelAddress(label));
 		} else if (memType.contains(op)) {
 			checkParam(2, command);
-			String s = command.get(1);
-			String d = command.get(2);
-
-			result = toOpCode(op) + toReg(s) + toOffsetAddress(d);
+			String t = command.get(1);
+			String s = command.get(2);
+			String [] offsetAddress =  toOffsetAddress(s);
+			result = toOpCode(op) +  offsetAddress[0] + toReg(t)  +  offsetAddress[1] ;
 		} else {
 			throw new IllegalArgumentException("Op code not found " + op);
 		}
@@ -409,13 +409,13 @@ private	static int n = 0;
 		}
 	}
 
-	private static String toOffsetAddress(String offsetAddress) {
+	private static String[] toOffsetAddress(String offsetAddress) {
 		String[] split = offsetAddress.split("\\(");
 		int offset = Integer.parseInt(split[0]);
 		String reg = split[1].substring(0, split[1].length() - 1);
 		reg = toReg(reg);
 
-		return reg + toBinary(offset, IMMEDIATE_LENGTH);
+		return new String[]{reg, toBinary(offset, IMMEDIATE_LENGTH)};
 	}
 
 	private static String toReg(String regName) {
