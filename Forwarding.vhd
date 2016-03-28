@@ -30,13 +30,14 @@ architecture behavioral of Forwarding is
 
 signal source1_result : INTEGER := 0;
 signal source2_result : INTEGER := 0;
+signal debug1 : STD_LOGIC;
 
 begin
 	alu_source1 <= alu_output when ((previous_destinations(1) = data1_register) and (previous_destinations(1) /= "00000") and (previous_sources(1) = FORWARD_SOURCE_ALU)) else
 						SIGNED(mem_output) when ((previous_destinations(0) = data1_register) and (previous_destinations(0) /= "00000") and (previous_sources(0) = FORWARD_SOURCE_MEM)) else
 						data1_decoder;
 
-	alu_source2 <= alu_output when ((previous_destinations(1) = data2_register) and (previous_destinations(1) /= "00000") and (previous_sources(1) = FORWARD_SOURCE_ALU)) else
+	alu_source2 <= alu_output when ((previous_destinations(0) = data2_register) and (previous_destinations(0) /= "00000") and (previous_sources(0) = FORWARD_SOURCE_ALU)) else
 						SIGNED(mem_output) when ((previous_destinations(0) = data2_register) and (previous_destinations(0) /= "00000") and (previous_sources(0) = FORWARD_SOURCE_MEM)) else
 						data2_decoder;
 
@@ -47,17 +48,22 @@ begin
 						7 when ((previous_destinations(0) = data1_register) and (previous_destinations(0) /= "00000") and (previous_sources(0) = FORWARD_SOURCE_MEM)) else
 						8;
 
+	debug1 <= '1' when (previous_destinations(0) = data2_register) and (previous_destinations(0) /= "00000") and (previous_sources(0) = FORWARD_SOURCE_ALU) else '0';
 
 	synced_clock : process(clk)
 	begin
-		if (rising_edge(clk)) then
-			SHOW("Source 1 result is " & INTEGER'image(source1_result));
-			SHOW("Source 1 reg is " & INTEGER'image(TO_INTEGER(UNSIGNED(data1_register))));
-			SHOW("Preivous 1 reg is " & INTEGER'image(TO_INTEGER(UNSIGNED(previous_destinations(1)))));
+		if (clk'event and clk = '0') then
+			--SHOW("Source 1 result is " & INTEGER'image(source1_result));
+			--SHOW("Source 1 reg is " & INTEGER'image(TO_INTEGER(UNSIGNED(data1_register))));
+			
+			--SHOW("Source 2 result is " & INTEGER'image(source2_result));
+			--SHOW("Source 2 reg is " & INTEGER'image(TO_INTEGER(UNSIGNED(data2_register))));
 
-			SHOW("Source 2 result is " & INTEGER'image(source2_result));
-			SHOW("Source 2 reg is " & INTEGER'image(TO_INTEGER(UNSIGNED(data2_register))));
-			SHOW("Preivous 2 reg is " & INTEGER'image(TO_INTEGER(UNSIGNED(previous_destinations(1)))));
+			--SHOW("++++Previouses are " & INTEGER'image(TO_INTEGER(UNSIGNED(previous_destinations(0)))) & INTEGER'image(TO_INTEGER(UNSIGNED(previous_destinations(1)))) & INTEGER'image(TO_INTEGER(UNSIGNED(previous_destinations(2)))));
+
+			--if ((previous_destinations(0) = data2_register) and (previous_destinations(0) /= "00000") and (previous_sources(0) = FORWARD_SOURCE_ALU)) then
+			--	SHOW("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+			--end if;
 		end if;
 	end process ; -- synced_clock
 

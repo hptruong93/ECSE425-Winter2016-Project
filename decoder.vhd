@@ -77,6 +77,8 @@ begin
 				data2 <= (others => '0');
 				mem_writeback_register <= (others => '0');
 				writeback_source <= NO_WRITE_BACK;
+				previous_destinations(2) <= (others => '0');
+				previous_sources(2) <= '0';
 			else
 				branch_signal <= BRANCH_NOT;
 				SHOW("OP code is " & integer'image(to_integer(unsigned(op_code))));
@@ -88,8 +90,8 @@ begin
 
 						case( funct ) is
 							when "100000" => --add
-								previous_destinations(1) <= rd;
-								previous_sources(1) <= FORWARD_SOURCE_ALU;
+								previous_destinations(2) <= rd;
+								previous_sources(2) <= FORWARD_SOURCE_ALU;
 								data1_register <= rs;
 								data2_register <= rt;
 
@@ -98,10 +100,11 @@ begin
 								data2 <= registers(to_integer(unsigned(rt)));
 								writeback_source <= ALU_AS_SOURCE;
 							when "100010" => --sub
-								previous_destinations(1) <= rd;
-								previous_sources(1) <= FORWARD_SOURCE_ALU;
+								previous_destinations(2) <= rd;
+								previous_sources(2) <= FORWARD_SOURCE_ALU;
 								data1_register <= rs;
 								data2_register <= rt;
+
 								SHOW(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> SUB!!! " & integer'image(to_integer(unsigned(rs))) & integer'image(to_integer(unsigned(rt))));
 								data1 <= registers(to_integer(unsigned(rs)));
 								data2 <= registers(to_integer(unsigned(rt)));

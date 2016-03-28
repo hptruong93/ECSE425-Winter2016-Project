@@ -153,8 +153,6 @@ signal operation : STD_LOGIC_VECTOR(6-1 downto 0); -- Decoder => ALU
 signal instruction : STD_LOGIC_VECTOR(32-1 downto 0); -- Fetch unit ==> Decoder
 signal data1 : STD_LOGIC_VECTOR(32-1 downto 0); -- Decoder ==> ALU
 signal data2 : STD_LOGIC_VECTOR(32-1 downto 0); -- Decoder ==> ALU
-signal signed_data1 : signed(32-1 downto 0); -- Decoder ==> ALU
-signal signed_data2 : signed(32-1 downto 0); -- Decoder ==> ALU
 --Forwarding
 signal previous_destinations_output : previous_destination_array;
 signal previous_sources_output : previous_source_arrray;
@@ -164,7 +162,7 @@ signal alu_source1, alu_source2 : SIGNED(32-1 downto 0);
 
 signal lo_reg : signed (32-1 downto 0); -- ALU ==> Mem unit
 signal hi_reg : signed (32-1 downto 0); -- ALU ==> Mem unit
-signal result : signed(32-1 downto 0); -- ALU ==> Mem unit
+signal result, temp_result : signed(32-1 downto 0); -- ALU ==> Mem unit
 signal registers : register_array;
 signal pc_reg : STD_LOGIC_VECTOR(32-1 downto 0); -- Fetch ==> Decode
 signal instruction_address_output : STD_LOGIC_VECTOR(32-1 downto 0);
@@ -228,11 +226,11 @@ begin
 		previous_destinations => previous_destinations_output,
 		previous_sources => previous_sources_output,
 
-		alu_output => result,
+		alu_output => temp_result,
 		mem_output => mem_stage_output,
 
-		data1_decoder => signed_data1,
-		data2_decoder => signed_data2,
+		data1_decoder => signed(data1),
+		data2_decoder => signed(data2),
 
 		data1_register => data1_register,
 		data2_register => data2_register,
@@ -241,13 +239,11 @@ begin
 		alu_source2 => alu_source2
 	);
 
-	signed_data1 <= signed(data1);
-	signed_data2 <= signed(data2);
 	ALU_instance: ALU port map (
 		clk => clk,
 		reset => reset,
-		data1 => signed_data1,
-		data2 => signed_data2,
+		data1 => alu_source1,
+		data2 => alu_source2,
 		operation => operation,
 		lo_reg => lo_reg,
 		hi_reg => hi_reg,
@@ -297,7 +293,8 @@ begin
 			
 		elsif (rising_edge(clk)) then
 			temp_writeback_source <= writeback_source;
-			temp_mem_writeback_register <= mem_writeback_register;			
+			temp_mem_writeback_register <= mem_writeback_register;
+			temp_result <= result;			
 		end if;
 	end process ; -- synced_clock
 

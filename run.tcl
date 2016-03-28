@@ -6,15 +6,21 @@ proc AddWaves {} {
 	add wave -label clock -position end  -radix binary sim:/masterpipeline_instance/clk
 	add wave -label reset -position end  -radix binary sim:/masterpipeline_instance/reset
 
-	add wave -label re1 -position end  -radix binary sim:/masterpipeline_instance/re1
-	add wave -label busy1 -position end  -radix binary sim:/masterpipeline_instance/busy1
-	add wave -label mm_re -position end  -radix binary sim:/memory_arbiter_instance/mm_re
-	add wave -label mm_rd_ready -position end  -radix binary sim:/memory_arbiter_instance/mm_rd_ready
-	add wave -label mm_address -position end  -radix decimal sim:/memory_arbiter_instance/mm_address
+	# add wave -label re1 -position end  -radix binary sim:/masterpipeline_instance/re1
+	# add wave -label busy1 -position end  -radix binary sim:/masterpipeline_instance/busy1
+	# add wave -label mm_re -position end  -radix binary sim:/memory_arbiter_instance/mm_re
+	# add wave -label mm_rd_ready -position end  -radix binary sim:/memory_arbiter_instance/mm_rd_ready
+	# add wave -label mm_address -position end  -radix decimal sim:/memory_arbiter_instance/mm_address
 
-	add wave -label alu_data1 -position end  -radix decimal sim:/masterpipeline_instance/data1
-	add wave -label alu_data2 -position end  -radix decimal sim:/masterpipeline_instance/data2
-	add wave -label alu_output -position end  -radix decimal sim:/masterpipeline_instance/result
+	# add wave -label alu_data1 -position end  -radix decimal sim:/masterpipeline_instance/data1
+	# add wave -label alu_data2 -position end  -radix decimal sim:/masterpipeline_instance/data2
+	# add wave -label alu_output -position end  -radix decimal sim:/masterpipeline_instance/result
+
+	add wave -label forwarding1 -position end  -radix decimal sim:/masterpipeline_instance/forwarding_instance/source2_result
+	add wave -label forwarding2 -position end  -radix decimal sim:/masterpipeline_instance/forwarding_instance/source2_result
+	add wave -label db1 -position end  -radix decimal sim:/masterpipeline_instance/forwarding_instance/debug1
+	add wave -label forwarding3 -position end  -radix decimal sim:/masterpipeline_instance/forwarding_instance/alu_source1
+	add wave -label forwarding4 -position end  -radix decimal sim:/masterpipeline_instance/forwarding_instance/alu_source2
   
 
   ;#Set some formating options to make the Waves window more legible
@@ -79,6 +85,7 @@ vcom test_masterpipeline.vhd
 # run 200 ns
 
 vsim -t ps masterpipeline_tb
+AddWaves
 force -deposit clk 0 0 ns, 1 0.5 ns -repeat 1 ns
 run 10 ns
 
