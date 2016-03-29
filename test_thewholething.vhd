@@ -145,36 +145,35 @@ BEGIN
 
             SHOW(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>START TEST");
             WAIT FOR 1 * clk_period;
-            destination_reg <= 3;
-            --interested_reg := 1;
+            destination_reg <= 1;
+            interested_reg := 1;
     -----------------------------------------------------------------------------------------------------------------------
             WAIT FOR 5 * clk_period;
-            SHOW_LOVE("STORING VALUE TO", observed_registers(destination_reg));
+            --SHOW_LOVE("STORING VALUE TO", observed_registers(destination_reg));
 
-            destination_reg <= 5;
+            destination_reg <= 1;
+            WAIT FOR 4 * clk_period;
+
+            SHOW_LOVE("RESULT IS ", observed_registers(interested_reg));
+            destination_reg <= 4;
+            interested_reg := 4;
+
             WAIT FOR 1 * clk_period;
-            SHOW_LOVE("STORING VALUE TO", observed_registers(destination_reg));
+            SHOW_LOVE("RESULT IS", observed_registers(interested_reg));
+            WAIT FOR 1 * clk_period;
+            SHOW_LOVE("RESULT IS", observed_registers(interested_reg));
+            WAIT FOR 1 * clk_period;
+            SHOW_LOVE("RESULT IS", observed_registers(interested_reg));
+            WAIT FOR 1 * clk_period;
+            SHOW_LOVE("RESULT IS", observed_registers(interested_reg));
+            WAIT FOR 1 * clk_period;
+            SHOW_LOVE("RESULT IS", observed_registers(interested_reg));
+            WAIT FOR 1 * clk_period;
+            SHOW_LOVE("RESULT IS", observed_registers(interested_reg));
+            WAIT FOR 1 * clk_period;
+            SHOW_LOVE("RESULT IS", observed_registers(interested_reg));
 
-            --SHOW_LOVE("RESULT IS ", observed_registers(interested_reg));
-            --destination_reg <= 4;
-            --interested_reg := 4;
-
-            --WAIT FOR 1 * clk_period;
-            --SHOW_LOVE("RESULT IS", observed_registers(interested_reg));
-            --WAIT FOR 1 * clk_period;
-            --SHOW_LOVE("RESULT IS", observed_registers(interested_reg));
-            --WAIT FOR 1 * clk_period;
-            --SHOW_LOVE("RESULT IS", observed_registers(interested_reg));
-            --WAIT FOR 1 * clk_period;
-            --SHOW_LOVE("RESULT IS", observed_registers(interested_reg));
-            --WAIT FOR 1 * clk_period;
-            --SHOW_LOVE("RESULT IS", observed_registers(interested_reg));
-            --WAIT FOR 1 * clk_period;
-            --SHOW_LOVE("RESULT IS", observed_registers(interested_reg));
-            --WAIT FOR 1 * clk_period;
-            --SHOW_LOVE("RESULT IS", observed_registers(interested_reg));
-
-            --WAIT FOR 1 * clk_period;
+            WAIT FOR 1 * clk_period;
 
             SHOW("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<END TEST");
         else
