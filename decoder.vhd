@@ -353,7 +353,7 @@ BEGIN
 					when "100011" => --lw
 						update_history(rt, FORWARD_SOURCE_MEM, rs, ZERO_REGISTER);
 
-						SHOW("Here lw");
+						SHOW_TWO("Here lw with rs " & integer'image(to_integer(unsigned(rs))), "and immediate " & INTEGER'image(TO_INTEGER(signed(immediate))));
 						operation <= "100000"; --add
 						data1	<= registers(to_integer(unsigned(rs)));
 						data2	<= STD_LOGIC_VECTOR(resize(signed(immediate), data2'length));

@@ -42,6 +42,18 @@ signal last_instruction : STD_LOGIC_VECTOR(32-1 downto 0);
 begin
 	--instruction <= data;
 	synced_clock : process(clk, reset)
+
+	PROCEDURE update_instruction(signal new_instruction : STD_LOGIC_VECTOR(32-1 downto 0)) IS
+	BEGIN
+		if (new_instruction = Z_BYTE_32) then
+			instruction <= (others => '0');
+			last_instruction <= (others => '0');
+		else
+			instruction <= new_instruction;
+			last_instruction <= new_instruction;
+		end if;
+	END update_instruction;
+
 	begin
 		if reset = '1' then
 			instruction <= (others => '0');
@@ -73,8 +85,7 @@ begin
 									address <= program_counter + 4;
 									do_read <= '1';
 									is_busy <= '0';
-									instruction <= data;
-									last_instruction <= data;
+									update_instruction(data);
 									current_state <= INSTRUCTION_RECEIVED;
 								else
 									do_read <= '1';
@@ -124,9 +135,9 @@ begin
 							program_counter <= program_counter + 4;
 							address <= program_counter + 4;
 							do_read <= '0';
-							instruction <= data;
-							last_instruction <= data;
 							is_busy <= '0';
+							update_instruction(data);
+							last_instruction <= data;
 							current_state <= BRANCHED_INSTRUCTION_RECEIVED;
 						else
 							do_read <= '1';

@@ -6,9 +6,9 @@ use ieee.numeric_std_unsigned.all;
 
 ENTITY memarbiter_tb IS
 END memarbiter_tb;
- 
+
 ARCHITECTURE behaviour OF memarbiter_tb IS
- 
+
 SIGNAL clk, reset: STD_LOGIC := '0';
 CONSTANT clk_period : time := 1 ns;
 
@@ -17,7 +17,7 @@ COMPONENT memory_arbiter IS
 				port (
 						clk  : in STD_LOGIC;
 						reset : in STD_LOGIC;
-					
+
 						Word_Byte   : in STD_LOGIC;
 
 						--Memory port #1
@@ -55,14 +55,14 @@ signal data2_out    : STD_LOGIC_VECTOR(32-1 downto 0);
 signal re2          : STD_LOGIC;
 signal we2          : STD_LOGIC;
 signal busy2        : STD_LOGIC;
- 
+
 signal count : std_logic := '0';
 
 BEGIN
 	test_bench: memory_arbiter PORT MAP (
 					clk  => clk,
 					reset => reset,
-			  
+
 					Word_Byte   => Word_Byte,
 
 					--Memory port 1
@@ -79,9 +79,9 @@ BEGIN
 					data2_out   => data2_out,
 					re2         => re2,
 					we2         => we2,
-					busy2       => busy2 
+					busy2       => busy2
 				);
- 
+
 	 --clock process
 	clk_process : PROCESS
 	BEGIN
@@ -90,8 +90,8 @@ BEGIN
 		clk <= '0';
 		WAIT FOR clk_period/2;
 	END PROCESS;
-   
- 
+
+
 	--TODO: Thoroughly test the crap
 	stim_process: PROCESS
 	BEGIN
@@ -112,7 +112,7 @@ BEGIN
 		we1 <= '0';
 		re1 <= '1';
 		addr1 <= 0;
-		data1_in <= ZERO_BYTE_32;
+		data1_in <= Z_BYTE_32;
 
 		WAIT FOR 1 * clk_period;
 		while (busy1 = '1') loop
@@ -125,7 +125,7 @@ BEGIN
 		we1 <= '0';
 		re1 <= '1';
 		addr1 <= 0;
-		data1_in <= ZERO_BYTE_32;
+		data1_in <= Z_BYTE_32;
 
 		WAIT FOR 1 * clk_period;
 		while (busy1 = '1') loop
@@ -142,7 +142,7 @@ BEGIN
 		we1 <= '0';
 		re1 <= '1';
 		addr1 <= 1;
-		data1_in <= ZERO_BYTE_32;
+		data1_in <= Z_BYTE_32;
 
 		WAIT FOR 1 * clk_period;
 		while (busy1 = '1') loop
@@ -158,7 +158,7 @@ BEGIN
 		we1 <= '0';
 		re1 <= '1';
 		addr1 <= 2;
-		data1_in <= ZERO_BYTE_32;
+		data1_in <= Z_BYTE_32;
 
 		WAIT FOR 1 * clk_period;
 		while (busy1 = '1') loop
@@ -174,7 +174,7 @@ BEGIN
 		we1 <= '0';
 		re1 <= '1';
 		addr1 <= 3;
-		data1_in <= ZERO_BYTE_32;
+		data1_in <= Z_BYTE_32;
 
 		WAIT FOR 1 * clk_period;
 		while (busy1 = '1') loop
@@ -206,7 +206,7 @@ BEGIN
 		Word_Byte <= '0';
 		we1 <= '1';
 		re1 <= '0';
-		
+
 		addr1 <= 1;
 		WAIT FOR 1 * clk_period;
 		data1_in <= FIRST_BYTE_32;
@@ -243,7 +243,7 @@ BEGIN
 		we1 <= '0';
 		re1 <= '1';
 		addr1 <= 0;
-		data1_in <= ZERO_BYTE_32;
+		data1_in <= Z_BYTE_32;
 
 		WAIT FOR 1 * clk_period;
 		while (busy1 = '1') loop

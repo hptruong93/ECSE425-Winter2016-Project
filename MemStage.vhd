@@ -34,7 +34,6 @@ type state is (
 signal current_state : state;
 
 begin
-	address_line <= to_integer(mem_address);
 	synced_clock : process(clk, reset)
 	begin
 		if reset = '1' then
@@ -48,20 +47,20 @@ begin
 				when LOAD_WORD =>
 					case( current_state ) is
 						when MEM_WAIT =>
-							SHOW("ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc MEM WAIT");
+							SHOW("MEM LOAD WORD WAIT WITH ADDRESS " & integer'image(to_integer(mem_address)));
 							is_busy <= '1';
 							if (is_mem_busy = '0') then
-								SHOW("ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc initiating LOAD");
+								--SHOW("ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc initiating LOAD");
 								word_byte <= '1'; -- interact with mem in word
 								do_read <= '1';
-								--address_line <= to_integer(mem_address); -- where to load from
+								address_line <= to_integer(mem_address); -- where to load from
 								current_state <= MEM_ACCESS;
 							end if;
 						when MEM_ACCESS =>
-							SHOW("ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc MEM ACCESS");
+							--SHOW("MEM STATE IS ACCESS");
 
 							if (is_mem_busy = '0') then
-								SHOW_LOVE("ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc finish LOAD with value ", input_data_line);
+								SHOW_LOVE("MEM finish LOAD with value ", input_data_line);
 								is_busy <= '0';
 								mem_stage_output <= input_data_line;
 								current_state <= MEM_WAIT;
@@ -71,15 +70,15 @@ begin
 					end case ;
 
 				when STORE_WORD =>
-					SHOW("ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc STORE_WORD");
+					--SHOW("ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc STORE_WORD");
 					case( current_state ) is
 						when MEM_WAIT =>
 							is_busy <= '1';
 
 							if (is_mem_busy = '0') then
-								SHOW("SW: IN MEM_WAIT >>>>>>>>>>>>>>>>" & INTEGER'image(TO_INTEGER(mem_address)));
+								SHOW("MEM STORE_WORD WAIT WITH ADDRESS " & INTEGER'image(TO_INTEGER(mem_address)));
 								word_byte <= '1'; -- interact with mem in word
-								--address_line <= to_integer(mem_address);  -- where to store
+								address_line <= to_integer(mem_address);  -- where to store
 								output_data_line <= registers(to_integer(unsigned(mem_writeback_register)));
 								do_write <= '1';
 								current_state <= MEM_ACCESS;
@@ -87,7 +86,7 @@ begin
 						when MEM_ACCESS =>
 
 							if (is_mem_busy = '0') then
-								SHOW("SW: IN MEM_ACESS >>>>>>>>>>>>>>>>" & INTEGER'image(TO_INTEGER(mem_address)));
+								SHOW("MEM finish STORE_WORD into value " & INTEGER'image(TO_INTEGER(mem_address)));
 								is_busy <= '0';
 								current_state <= MEM_WAIT;
 							else
@@ -101,7 +100,7 @@ begin
 							if (is_mem_busy = '0') then
 								word_byte <= '0'; -- interact with mem in byte
 								do_read <= '1';
-								--address_line <= to_integer(mem_address);  -- where to load from
+								address_line <= to_integer(mem_address);  -- where to load from
 								current_state <= MEM_ACCESS;
 							end if;
 						when MEM_ACCESS =>
@@ -125,7 +124,7 @@ begin
 								word_byte <= '0'; -- interact with mem in byte
 								output_data_line <= registers(to_integer(unsigned(mem_writeback_register)));
 								do_write <= '1';
-								--address_line <= to_integer(mem_address);  -- where to store
+								address_line <= to_integer(mem_address);  -- where to store
 								current_state <= MEM_ACCESS;
 							end if;
 						when MEM_ACCESS =>
@@ -136,7 +135,7 @@ begin
 					end case;
 				when MEM_IDLE =>
 					is_busy <= '0';
-					SHOW("ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc MEM IDLE");
+					SHOW("MEM IDLE");
 					current_state <= MEM_WAIT;
 				when others =>
 

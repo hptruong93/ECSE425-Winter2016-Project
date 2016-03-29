@@ -176,11 +176,12 @@ signal registers : register_array;
 signal pc_reg : STD_LOGIC_VECTOR(32-1 downto 0); -- Fetch ==> Decode
 signal instruction_address_output : STD_LOGIC_VECTOR(32-1 downto 0);
 signal mem_writeback_register : STD_LOGIC_VECTOR(5-1 downto 0); -- Decoder ==> Write back unit
-signal temp_mem_writeback_register : STD_LOGIC_VECTOR(5-1 downto 0); -- Decoder ==> Write back unit
+signal delayed_mem_writeback_register : STD_LOGIC_VECTOR(5-1 downto 0); -- Decoder ==> Write back unit
 
 signal signal_to_mem : STD_LOGIC_VECTOR(3-1 downto 0);
+signal delayed_signal_to_mem : STD_LOGIC_VECTOR(3-1 downto 0);
 signal writeback_source : STD_LOGIC_VECTOR(3-1 downto 0);
-signal temp_writeback_source : STD_LOGIC_VECTOR(3-1 downto 0);
+signal delayed_writeback_source : STD_LOGIC_VECTOR(3-1 downto 0);
 
 signal branch_signal : STD_LOGIC_VECTOR(2-1 downto 0); --send to branch
 signal branch_address : STD_LOGIC_VECTOR(32-1 downto 0);
@@ -270,7 +271,7 @@ begin
 		mem_address => result, -- coming from alu
 		mem_writeback_register => mem_writeback_register,
 		registers => registers,
-		signal_to_mem => signal_to_mem,
+		signal_to_mem => delayed_signal_to_mem,
 		is_mem_busy => busy1, -- input from memory, check if channel 2 (for data) is busy
 
 
@@ -291,11 +292,11 @@ begin
 		lo_reg => lo_reg,
 		hi_reg => hi_reg,
 
-		writeback_source => temp_writeback_source,
+		writeback_source => delayed_writeback_source,
 		alu_output => result,
 		mem_stage_busy => mem_stage_busy,
 		mem_stage_output => mem_stage_output,
-		mem_writeback_register => temp_mem_writeback_register,
+		mem_writeback_register => delayed_mem_writeback_register,
 
 		registers => registers
 	);
@@ -305,8 +306,9 @@ begin
 		if reset = '1' then
 
 		elsif (rising_edge(clk)) then
-			temp_writeback_source <= writeback_source;
-			temp_mem_writeback_register <= mem_writeback_register;
+			delayed_writeback_source <= writeback_source;
+			delayed_mem_writeback_register <= mem_writeback_register;
+			delayed_signal_to_mem <= signal_to_mem;
 		end if;
 	end process ; -- synced_clock
 
