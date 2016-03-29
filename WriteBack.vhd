@@ -39,7 +39,7 @@ begin
 	begin
 		if reset = '1' then
 			registers(0) <= (others => '0');
-			registers(1) <= (others => '0');
+			registers(1) <= STD_LOGIC_VECTOR(TO_UNSIGNED(1, 32));
 			registers(2) <= STD_LOGIC_VECTOR(TO_UNSIGNED(2, 32));--(others => '0');
 			registers(3) <= STD_LOGIC_VECTOR(TO_UNSIGNED(3, 32));--(others => '0');
 			registers(4) <= (others => '0');
@@ -87,18 +87,20 @@ begin
 							SHOW_TWO("Here alu output " & integer'image(to_integer(signed(alu_output))), "and mem_writeback_register " & integer'image(to_integer(unsigned(mem_writeback_register))));
 							registers(to_integer(unsigned(mem_writeback_register))) <= STD_LOGIC_VECTOR(alu_output);
 						when MEM_AS_SOURCE | MEM_BYTE_AS_SOURCE =>
-							SHOW_TWO("Here mem as source " & integer'image(to_integer(signed(alu_output))), "and mem_writeback_register " & integer'image(to_integer(unsigned(mem_writeback_register))));
+							SHOW_TWO("Here mem output " & integer'image(to_integer(signed(mem_stage_output))), "and mem_writeback_register " & integer'image(to_integer(unsigned(mem_writeback_register))));
 							if mem_stage_busy = '0' then
 								registers(to_integer(unsigned(mem_writeback_register))) <= STD_LOGIC_VECTOR(signed(mem_stage_output));
 							else
 								current_state <= MEM_WAIT;
 							end if;
 						when NO_WRITE_BACK =>
-							--SHOW("NO WRITE BACK");
+							SHOW("NO WRITE BACK");
 						when others =>
+							SHOW("WRITE BACK UNKOWN STATE");
 					end case ;
 
 				when MEM_WAIT =>
+					SHOW("WRITE BACK WAITING FOR MEM");
 					if mem_stage_busy = '0' then
 						current_state <= IDLE;
 					end if;
