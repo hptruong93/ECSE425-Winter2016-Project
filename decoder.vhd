@@ -72,14 +72,14 @@ BEGIN
 			) is
 		BEGIN
 			previous_destinations(2) <= register_destination;
-			previous_sources(2) <= FORWARD_SOURCE_ALU;
+			previous_sources(2) <= source;
 			data1_register <= data1_source;
 			data2_register <= data2_source;
 		END update_history;
 
-		PROCEDURE stall_decoder is
+		PROCEDURE stall_decoder(msg : in String) is
 		BEGIN
-			SHOW("Decoder STALLING");
+			SHOW(msg);
 			operation <= "100000"; --add
 			data1 <= (others => '0');
 			data2 <= (others => '0');
@@ -88,6 +88,11 @@ BEGIN
 
 			do_stall <= '1';
 			update_history(ZERO_REGISTER, FORWARD_SOURCE_ALU, ZERO_REGISTER, ZERO_REGISTER);
+		END stall_decoder;
+
+		PROCEDURE stall_decoder is
+		BEGIN
+			stall_decoder("Decoder STALLING DUE TO PREVIOUS INSTRUCTION");
 		END stall_decoder;
 
 		IMPURE FUNCTION check_stall(destination_register : in REGISTER_INDEX) RETURN STD_LOGIC is
@@ -106,12 +111,13 @@ BEGIN
 			previous_destinations(1) <= previous_destinations(2);
 			previous_sources(0) <= previous_sources(1);
 			previous_sources(1) <= previous_sources(2);
+			--SHOW("previouses are " & std_logic'image(previous_sources(2)) & std_logic'image(previous_sources(1)) & std_logic'image(previous_sources(0)));
 
 			if instruction = STD_LOGIC_VECTOR(ALL_32_ZEROES) then
-				stall_decoder;
+				stall_decoder("DECODER STALL DUE TO NO OP");
 				do_stall <= '0'; --This will overwrite the value in stall_decoder procedure
 			elsif mem_stage_busy = '1' then
-				stall_decoder;
+				stall_decoder("DECODER STALL DUE TO MEM BUSY");
 			else
 				branch_signal <= BRANCH_NOT;
 				SHOW("OP code is " & integer'image(to_integer(unsigned(op_code))));
