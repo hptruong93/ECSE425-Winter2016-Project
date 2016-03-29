@@ -101,7 +101,7 @@ BEGIN
 			 
 		
 		-- if not initializing nor dumping
-		elsif(clk'event and clk='1') then
+		elsif(clk'event) then--clk'event and clk='1'
 
 			data <= (others=>'Z'); --Since the data port is an INOUT 
 			if (re='1' and we='0') then
