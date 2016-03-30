@@ -151,19 +151,18 @@ BEGIN
 									writeback_source <= ALU_AS_SOURCE;
 								end if;
 							when "011000" => --mult
-								--Have to stall for three cycle instead of one
 								update_history(ZERO_REGISTER, FORWARD_SOURCE_ALU, rs, rt);
 
 								SHOW(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> MULT!!! " & integer'image(to_integer(unsigned(rs))) & integer'image(to_integer(unsigned(rt))));
 								data1 <= registers(to_integer(unsigned(rs)));
 								data2 <= registers(to_integer(unsigned(rt)));
-								writeback_source <= ALU_AS_SOURCE;
+								writeback_source <= NO_WRITE_BACK; --ALU will write back for us
 							when "011010" => --div
 								update_history(ZERO_REGISTER, FORWARD_SOURCE_ALU, rs, rt);
 
 								data1 <= registers(to_integer(unsigned(rs)));
 								data2 <= registers(to_integer(unsigned(rt)));
-								writeback_source <= ALU_AS_SOURCE;
+								writeback_source <= NO_WRITE_BACK; --ALU will write back for us
 							when "100100" => --and
 								if (check_stall(rd) = '1') then
 									stall_decoder;
