@@ -28,6 +28,7 @@ end MemStage;
 architecture behavioral of MemStage is
 
 type state is (
+	MEM_IGNORE,
 	MEM_WAIT,
 	MEM_ACCESS
 	);
@@ -42,6 +43,8 @@ begin
 			current_state <= current_state;
 			do_read <= '0';
 			do_write <= '0';
+
+
 
 			case( signal_to_mem ) is
 				when LOAD_WORD =>
@@ -58,15 +61,16 @@ begin
 							end if;
 						when MEM_ACCESS =>
 							--SHOW("MEM STATE IS ACCESS");
-
 							if (is_mem_busy = '0') then
 								SHOW_LOVE("MEM finish LOAD with value ", input_data_line);
 								is_busy <= '0';
 								mem_stage_output <= input_data_line;
-								current_state <= MEM_WAIT;
+								current_state <= MEM_IGNORE;
 							else
 								do_read <= '1';
 							end if;
+						when MEM_IGNORE => --Enter this stage after mem operation to wait for decode to change its signal
+							current_state <= MEM_WAIT;
 					end case ;
 
 				when STORE_WORD =>
@@ -84,14 +88,15 @@ begin
 								current_state <= MEM_ACCESS;
 							end if;
 						when MEM_ACCESS =>
-
 							if (is_mem_busy = '0') then
 								SHOW("MEM finish STORE_WORD into value " & INTEGER'image(TO_INTEGER(mem_address)));
 								is_busy <= '0';
-								current_state <= MEM_WAIT;
+								current_state <= MEM_IGNORE;
 							else
 								do_write <= '1';
 							end if;
+						when MEM_IGNORE => --Enter this stage after mem operation to wait for decode to change its signal
+							current_state <= MEM_WAIT;
 					end case;
 				when LOAD_BYTE =>
 					case( current_state ) is
@@ -113,8 +118,10 @@ begin
 									mem_stage_output(31 downto 8) <= "000000000000000000000000";
 								end if;
 								mem_stage_output(7 downto 0) <= input_data_line(7 downto 0);
-								current_state <= MEM_WAIT;
+								current_state <= MEM_IGNORE;
 							end if;
+						when MEM_IGNORE => --Enter this stage after mem operation to wait for decode to change its signal
+							current_state <= MEM_WAIT;
 					end case;
 				when STORE_BYTE => -- preserve all words. TODO
 					case( current_state ) is
@@ -130,8 +137,10 @@ begin
 						when MEM_ACCESS =>
 							if (is_mem_busy = '0') then
 								is_busy <= '0';
-								current_state <= MEM_WAIT;
+								current_state <= MEM_IGNORE;
 							end if;
+						when MEM_IGNORE => --Enter this stage after mem operation to wait for decode to change its signal
+							current_state <= MEM_WAIT;
 					end case;
 				when MEM_IDLE =>
 					is_busy <= '0';

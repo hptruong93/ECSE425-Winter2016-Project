@@ -92,7 +92,7 @@ begin
 							--one cycle
 
 							--if mem_stage_busy = '0' then
-							--	registers(to_integer(unsigned(mem_writeback_register))) <= STD_LOGIC_VECTOR(signed(mem_stage_output));
+								--registers(to_integer(unsigned(mem_writeback_register))) <= STD_LOGIC_VECTOR(signed(mem_stage_output));
 							--else
 							destination_reg <= mem_writeback_register;
 							current_state <= MEM_WAIT;

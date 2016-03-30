@@ -31,15 +31,19 @@ port (	clk 	: in STD_LOGIC;
 			data1_register : out STD_LOGIC_VECTOR(5-1 downto 0); --send to ALU
 			data2_register : out STD_LOGIC_VECTOR(5-1 downto 0); --send to ALU
 
-			previous_destinations_output : out previous_destination_array;
-			previous_sources_output : out previous_source_arrray
+			previous_stall_destinations_output : out previous_destination_array;
+			previous_stall_sources_output : out previous_source_arrray;
+			previous_forwarding_destinations_output : out previous_destination_array;
+			previous_forwarding_sources_output : out previous_source_arrray
 	);
 END Decoder;
 
 architecture behavioral of Decoder is
 
-signal previous_destinations : previous_destination_array; --biggest index is latest
-signal previous_sources : previous_source_arrray; --biggest index is latest
+signal previous_stall_destinations : previous_destination_array; --biggest index is latest
+signal previous_stall_sources : previous_source_arrray; --biggest index is latest
+signal previous_forwarding_destinations : previous_destination_array; --biggest index is latest
+signal previous_forwarding_sources : previous_source_arrray; --biggest index is latest
 
 signal ZERO_REGISTER : REGISTER_INDEX := (others => '0');
 
@@ -50,8 +54,10 @@ signal immediate : STD_LOGIC_VECTOR(16-1 downto 0);
 signal target : STD_LOGIC_VECTOR(26-1 downto 0);
 
 BEGIN
-	previous_destinations_output <= previous_destinations;
-	previous_sources_output <= previous_sources;
+	previous_stall_destinations_output <= previous_stall_destinations;
+	previous_stall_sources_output <= previous_stall_sources;
+	previous_forwarding_destinations_output <= previous_forwarding_destinations;
+	previous_forwarding_sources_output <= previous_forwarding_sources;
 
 	op_code <= instruction(32-1 downto 26);
 	rs <= instruction(25 downto 21);
@@ -68,14 +74,44 @@ BEGIN
 				signal register_destination : in REGISTER_INDEX;
 				CONSTANT source : in STD_LOGIC;
 				signal data1_source : in REGISTER_INDEX;
-				signal data2_source : in REGISTER_INDEX
+				signal data2_source : in REGISTER_INDEX;
+				CONSTANT is_stalling : STD_LOGIC
 			) is
 		BEGIN
-			previous_destinations(2) <= register_destination;
-			previous_sources(2) <= source;
+			previous_stall_destinations(2) <= register_destination;
+			previous_stall_sources(2) <= source;
+
+			if (is_stalling = '0') then
+				previous_forwarding_destinations(2) <= register_destination;
+				previous_forwarding_sources(2) <= source;
+
+				previous_forwarding_destinations(0) <= previous_forwarding_destinations(1);
+				previous_forwarding_destinations(1) <= previous_forwarding_destinations(2);
+				previous_forwarding_sources(0) <= previous_forwarding_sources(1);
+				previous_forwarding_sources(1) <= previous_forwarding_sources(2);
+			end if;
+
 			data1_register <= data1_source;
 			data2_register <= data2_source;
 		END update_history;
+
+		PROCEDURE update_history (--Forwarding logic
+				signal register_destination : in REGISTER_INDEX;
+				CONSTANT source : in STD_LOGIC;
+				signal data1_source : in REGISTER_INDEX;
+				signal data2_source : in REGISTER_INDEX
+			) is
+		BEGIN
+			update_history(register_destination, source, data1_source, data2_source, '0');
+		END update_history;
+
+		PROCEDURE shift_stall_history IS
+		BEGIN
+			previous_stall_destinations(0) <= previous_stall_destinations(1);
+			previous_stall_destinations(1) <= previous_stall_destinations(2);
+			previous_stall_sources(0) <= previous_stall_sources(1);
+			previous_stall_sources(1) <= previous_stall_sources(2);
+		END shift_stall_history;
 
 		PROCEDURE stall_decoder(msg : in String) is
 		BEGIN
@@ -87,7 +123,7 @@ BEGIN
 			writeback_source <= NO_WRITE_BACK;
 
 			do_stall <= '1';
-			update_history(ZERO_REGISTER, FORWARD_SOURCE_ALU, ZERO_REGISTER, ZERO_REGISTER);
+			update_history(ZERO_REGISTER, FORWARD_SOURCE_ALU, ZERO_REGISTER, ZERO_REGISTER, '1');
 		END stall_decoder;
 
 		PROCEDURE stall_decoder is
@@ -97,20 +133,20 @@ BEGIN
 
 		IMPURE FUNCTION check_stall(destination_register : in REGISTER_INDEX) RETURN STD_LOGIC is
 		BEGIN
-			RETURN SHOULD_STALL(destination_register, previous_destinations, previous_sources);
+			RETURN SHOULD_STALL(destination_register, previous_stall_destinations, previous_stall_sources);
 		END check_stall;
 
 	BEGIN
 		if reset = '1' then
-			for i in previous_destinations'range loop
-				previous_destinations(i) <= "00000";
-				previous_sources(i) <= '0';
+			for i in previous_stall_destinations'range loop
+				previous_stall_destinations(i) <= "00000";
+				previous_stall_sources(i) <= '0';
+
+				previous_forwarding_destinations(i) <= "00000";
+				previous_forwarding_sources(i) <= '0';
 			END loop;
 		elsif (rising_edge(clk)) then
-			previous_destinations(0) <= previous_destinations(1);
-			previous_destinations(1) <= previous_destinations(2);
-			previous_sources(0) <= previous_sources(1);
-			previous_sources(1) <= previous_sources(2);
+			shift_stall_history;
 			--SHOW("previouses are " & std_logic'image(previous_sources(2)) & std_logic'image(previous_sources(1)) & std_logic'image(previous_sources(0)));
 
 			if instruction = STD_LOGIC_VECTOR(ALL_32_ZEROES) then
@@ -120,6 +156,7 @@ BEGIN
 				stall_decoder("DECODER STALL DUE TO MEM BUSY");
 			else
 				branch_signal <= BRANCH_NOT;
+				signal_to_mem <= MEM_IDLE;
 				SHOW("OP code is " & integer'image(to_integer(unsigned(op_code))));
 
 				case( op_code ) is

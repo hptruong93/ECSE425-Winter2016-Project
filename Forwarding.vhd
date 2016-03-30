@@ -37,12 +37,12 @@ begin
 	--Therefore, alu_buffered_output(n) will be forwarded to the previous_destinations(n - 1)
 	alu_source1 <= alu_buffered_output(2) when ((previous_destinations(1) = data1_register) and (previous_destinations(1) /= "00000") and (previous_sources(1) = FORWARD_SOURCE_ALU)) else
 						alu_buffered_output(1) when ((previous_destinations(0) = data1_register) and (previous_destinations(0) /= "00000") and (previous_sources(0) = FORWARD_SOURCE_ALU)) else
-						SIGNED(mem_output) when ((previous_destinations(0) = data1_register) and (previous_destinations(0) /= "00000") and (previous_sources(0) = FORWARD_SOURCE_MEM)) else
+						SIGNED(mem_output) when ((previous_destinations(1) = data1_register) and (previous_destinations(1) /= "00000") and (previous_sources(1) = FORWARD_SOURCE_MEM)) else
 						data1_decoder;
 
 	alu_source2 <= alu_buffered_output(2) when ((previous_destinations(1) = data2_register) and (previous_destinations(1) /= "00000") and (previous_sources(1) = FORWARD_SOURCE_ALU)) else
 						alu_buffered_output(1) when ((previous_destinations(0) = data2_register) and (previous_destinations(0) /= "00000") and (previous_sources(0) = FORWARD_SOURCE_ALU)) else
-						SIGNED(mem_output) when ((previous_destinations(0) = data2_register) and (previous_destinations(0) /= "00000") and (previous_sources(0) = FORWARD_SOURCE_MEM)) else
+						SIGNED(mem_output) when ((previous_destinations(1) = data2_register) and (previous_destinations(1) /= "00000") and (previous_sources(1) = FORWARD_SOURCE_MEM)) else
 						data2_decoder;
 
 	--Testing
@@ -67,7 +67,8 @@ begin
 			--SHOW("Source 2 result is " & INTEGER'image(source2_result));
 			--SHOW("Source 2 reg is " & INTEGER'image(TO_INTEGER(UNSIGNED(data2_register))));
 
-			--SHOW("++++++Previouses are " & INTEGER'image(TO_INTEGER(UNSIGNED(previous_destinations(0)))) & INTEGER'image(TO_INTEGER(UNSIGNED(previous_destinations(1)))) & INTEGER'image(TO_INTEGER(UNSIGNED(previous_destinations(2)))));
+			SHOW("++++++Destinations are " & INTEGER'image(TO_INTEGER(UNSIGNED(previous_destinations(0)))) & INTEGER'image(TO_INTEGER(UNSIGNED(previous_destinations(1)))) & INTEGER'image(TO_INTEGER(UNSIGNED(previous_destinations(2)))));
+			SHOW("++++++Sources are " & STD_LOGIC'image(previous_sources(0)) & STD_LOGIC'image(previous_sources(1)) & STD_LOGIC'image(previous_sources(2)));
 			--SHOW("=====Previouses are " & INTEGER'image(TO_INTEGER(SIGNED(alu_buffered_output(0)))) & INTEGER'image(TO_INTEGER(SIGNED(alu_buffered_output(1)))) & INTEGER'image(TO_INTEGER(SIGNED(alu_buffered_output(2)))));
 
 			--if ((previous_destinations(0) = data2_register) and (previous_destinations(0) /= "00000") and (previous_sources(0) = FORWARD_SOURCE_ALU)) then

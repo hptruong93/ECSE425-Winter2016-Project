@@ -143,7 +143,7 @@ BEGIN
             WAIT FOR 1 * clk_period;
             reset <= '0';
 
-            SHOW(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>START TEST");
+            SHOW(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>START TEST");
             WAIT FOR 1 * clk_period;
             destination_reg <= 1;
             interested_reg := 1;
@@ -175,7 +175,7 @@ BEGIN
 
             WAIT FOR 1 * clk_period;
 
-            SHOW("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<END TEST");
+            SHOW("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<END TEST");
         else
             count <= '1';
             WAIT FOR 1000 * clk_period;

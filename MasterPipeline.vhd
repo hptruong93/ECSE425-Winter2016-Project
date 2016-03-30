@@ -75,8 +75,10 @@ port (	clk 	: in STD_LOGIC;
 			data1_register : out STD_LOGIC_VECTOR(5-1 downto 0); --send to ALU
 			data2_register : out STD_LOGIC_VECTOR(5-1 downto 0); --send to ALU
 
-			previous_destinations_output : out previous_destination_array;
-			previous_sources_output : out previous_source_arrray
+			previous_stall_destinations_output : out previous_destination_array;
+			previous_stall_sources_output : out previous_source_arrray;
+			previous_forwarding_destinations_output : out previous_destination_array;
+			previous_forwarding_sources_output : out previous_source_arrray
 	);
 end COMPONENT;
 
@@ -161,8 +163,10 @@ signal instruction : STD_LOGIC_VECTOR(32-1 downto 0); -- Fetch unit ==> Decoder
 signal data1 : STD_LOGIC_VECTOR(32-1 downto 0); -- Decoder ==> ALU
 signal data2 : STD_LOGIC_VECTOR(32-1 downto 0); -- Decoder ==> ALU
 --Forwarding
-signal previous_destinations_output : previous_destination_array;
-signal previous_sources_output : previous_source_arrray;
+signal previous_stall_destinations_output : previous_destination_array;
+signal previous_stall_sources_output : previous_source_arrray;
+signal previous_forwarding_destinations_output : previous_destination_array;
+signal previous_forwarding_sources_output : previous_source_arrray;
 signal data1_register : STD_LOGIC_VECTOR(5-1 downto 0); --Decoder to forwarding unit
 signal data2_register : STD_LOGIC_VECTOR(5-1 downto 0); --Decoder to forwarding unit
 signal alu_source1, alu_source2 : SIGNED(32-1 downto 0);
@@ -231,14 +235,16 @@ begin
 		do_stall => do_stall,
 		data1_register => data1_register,
 		data2_register => data2_register,
-		previous_destinations_output => previous_destinations_output,
-		previous_sources_output => previous_sources_output
+		previous_stall_destinations_output => previous_stall_destinations_output,
+		previous_stall_sources_output => previous_stall_sources_output,
+		previous_forwarding_destinations_output => previous_forwarding_destinations_output,
+		previous_forwarding_sources_output => previous_forwarding_sources_output
 	);
 
 	forwarding_instance : Forwarding port map (
 		clk => clk,
-		previous_destinations => previous_destinations_output,
-		previous_sources => previous_sources_output,
+		previous_destinations => previous_forwarding_destinations_output,
+		previous_sources => previous_forwarding_sources_output,
 
 		alu_buffered_output => buffered_result,
 		mem_output => mem_stage_output,
@@ -301,14 +307,23 @@ begin
 		registers => registers
 	);
 
+	--delayed_signal_to_mem <= delayed_signal_to_mem when mem_stage_busy = '1' else
+	--									signal_to_mem;
+
 	testa : process(clk, reset)
 	begin
 		if reset = '1' then
 
 		elsif (rising_edge(clk)) then
-			delayed_writeback_source <= writeback_source;
-			delayed_mem_writeback_register <= mem_writeback_register;
-			delayed_signal_to_mem <= signal_to_mem;
+			if mem_stage_busy = '1' then
+				delayed_writeback_source <= delayed_writeback_source;
+				delayed_mem_writeback_register <= delayed_mem_writeback_register;
+				delayed_signal_to_mem <= delayed_signal_to_mem;
+			else
+				delayed_writeback_source <= writeback_source;
+				delayed_mem_writeback_register <= mem_writeback_register;
+				delayed_signal_to_mem <= signal_to_mem;
+			end if;
 		end if;
 	end process ; -- synced_clock
 
