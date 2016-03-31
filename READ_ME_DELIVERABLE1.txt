@@ -38,4 +38,18 @@ the output of the java program by using unix redirect symbol.
 7. Type source run.tcl in the transcript window.
 8. Watch the registers in Wave window. Registers values are displayed at the bottom.
 
+****************************************************
+* WHERE TO START (IF CODE INSPECTION IS NECESSARY) *
+****************************************************
+
+1. run.tcl contains all compilation, wave form and simulation initialization
+2. main test process lies within test_thewholething.vhd
+3. Almost all custom types are defined in CPU.vhd. Others can be found in ForwardingUtil.vhd
+4. Pipelined processor main wiring lies within MasterPipeline.vhd
+5. All stages are in the according file names: InstructionFetch.vhd, decoder.vhd, ALU.vhd, MemStage.vhd, and WriteBack.vhd
+6. Additional features:
+ a) Branch resolution is performed in decoder.vhd (search for bne or beq)
+ b) Forwarding logic is implemented in Forwarding.vhd and ForwardingUtil.vhd
+ c) Stall logic is implemented in StallUtil.vhd. Decoder uses this stall logic heavily to determine stalling
+
 Thank you. :)

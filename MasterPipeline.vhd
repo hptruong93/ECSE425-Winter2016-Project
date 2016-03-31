@@ -319,6 +319,8 @@ begin
 		if reset = '1' then
 
 		elsif (rising_edge(clk)) then
+			--This is registers for stalling purpose. They will maintain the state for the instruction in case
+			--of stall caused by memory only.
 			if mem_stage_busy = '1' then
 				delayed_writeback_source <= delayed_writeback_source;
 				delayed_mem_writeback_register <= delayed_mem_writeback_register;

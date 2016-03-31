@@ -17,7 +17,7 @@ port (	clk 	: in STD_LOGIC;
 			mem_stage_output : in STD_LOGIC_VECTOR(32-1 downto 0);
 			mem_writeback_register : in STD_LOGIC_VECTOR(5-1 downto 0); --sent from decoder
 
-			--Testing code
+			--Testing and observing purpose. Not supposed to expose this
 			registers : out register_array
 	);
 end WriteBack;
@@ -106,7 +106,7 @@ begin
 				when MEM_WAIT =>
 					if mem_stage_busy = '0' then
 						current_state <= IDLE;
-						
+
 						if writeback_source /= NO_WRITE_BACK then
 							SHOW_LOVE("Writing back the value ", STD_LOGIC_VECTOR(signed(mem_stage_output)));
 							SHOW("WRITE BACK FROM MEM TO REGISTER " & integer'image(to_integer(unsigned(destination_reg))));

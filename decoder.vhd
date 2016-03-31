@@ -56,11 +56,13 @@ signal immediate : STD_LOGIC_VECTOR(16-1 downto 0);
 signal target : STD_LOGIC_VECTOR(26-1 downto 0);
 
 BEGIN
+	--Instruction history, used for forwarding and stalling
 	previous_stall_destinations_output <= previous_stall_destinations;
 	previous_stall_sources_output <= previous_stall_sources;
 	previous_forwarding_destinations_output <= previous_forwarding_destinations;
 	previous_forwarding_sources_output <= previous_forwarding_sources;
 
+	--Precalculate useful quantities for convenience
 	op_code <= instruction(32-1 downto 26);
 	rs <= instruction(25 downto 21);
 	rt <= instruction(20 downto 16);
@@ -83,6 +85,10 @@ BEGIN
 			previous_stall_destinations(2) <= register_destination;
 			previous_stall_sources(2) <= source;
 
+			--Instruction history used for forwarding here.
+			--It is important to NOT update instruction history used for forwarding during memory stalls.
+			--When memory stalls, instructions are stopped and therefore results from ALU/MEM can be forwarded
+			--to the next instruction in case of hazard.
 			if (is_stalling = '0') then
 				previous_forwarding_destinations(2) <= register_destination;
 				previous_forwarding_sources(2) <= source;
@@ -107,7 +113,7 @@ BEGIN
 			update_history(register_destination, source, data1_source, data2_source, '0');
 		END update_history;
 
-		PROCEDURE shift_stall_history IS
+		PROCEDURE shift_stall_history IS --Shift instruction history. This history is updated regardless of stalls
 		BEGIN
 			--SHOW("SHIFTING STALL HISTORY");
 			--SHOW("STALL PREVIOUSES ARE " & STD_LOGIC'IMAGE(previous_stall_sources(2)) & STD_LOGIC'IMAGE(previous_stall_sources(1)) & STD_LOGIC'IMAGE(previous_stall_sources(0)));
@@ -118,7 +124,7 @@ BEGIN
 			previous_stall_sources(1) <= previous_stall_sources(2);
 		END shift_stall_history;
 
-		PROCEDURE stall_decoder(msg : in String) is
+		PROCEDURE stall_decoder(msg : in String) is --Stall decoder and thereby stalling ALU as well
 		BEGIN
 			SHOW(msg);
 			operation <= "100000"; --add
@@ -154,12 +160,12 @@ BEGIN
 			shift_stall_history;
 			--SHOW("previouses are " & std_logic'image(previous_sources(2)) & std_logic'image(previous_sources(1)) & std_logic'image(previous_sources(0)));
 
-			if instruction = STD_LOGIC_VECTOR(ALL_32_ZEROES) then
+			if instruction = STD_LOGIC_VECTOR(ALL_32_ZEROES) then --This happens when instruction fetch stages is stalled due to memory access
 				stall_decoder("DECODER STALL DUE TO NO OP");
 				do_stall <= '0'; --This will overwrite the value in stall_decoder procedure
-			elsif mem_stage_busy = '1' then
+			elsif mem_stage_busy = '1' then --When memory is busy, we cannot issue new instruction to ALU (otherwise might happen in out of order execution)
 				stall_decoder("DECODER STALL DUE TO MEM BUSY");
-			else
+			else --categorize instructions using its op code and relevant informations
 				branch_signal <= BRANCH_NOT;
 				signal_to_mem <= MEM_IDLE;
 				SHOW("OP code is " & integer'image(to_integer(unsigned(op_code))));

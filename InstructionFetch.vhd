@@ -1,4 +1,12 @@
-
+------------------------------------------------------------------------------------------
+-----This file implements the logic for Instruction Fetch stage of the pipelined processor
+-----The instruction fetch operates using the following logic:----------------------------
+--------Continuously fetches new instruction from memory----------------------------------
+--------If a branch signal is detected (from decoder), cancel the current fetch and-------
+------------switches to fetching the new instruction at the branch target-----------------
+--------Once instruction is fetched, lower the busy signal for one cycle, but still keep--
+------------the read request signal high to fetch the next instruction--------------------
+------------------------------------------------------------------------------------------
 library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
@@ -40,7 +48,6 @@ signal program_counter : STD_LOGIC_VECTOR(32-1 downto 0)  := (others => '0');
 signal last_instruction : STD_LOGIC_VECTOR(32-1 downto 0);
 
 begin
-	--instruction <= data;
 	synced_clock : process(clk, reset)
 
 	PROCEDURE update_instruction(signal new_instruction : STD_LOGIC_VECTOR(32-1 downto 0)) IS
