@@ -122,17 +122,22 @@ public class Assembler {
 	public static StringBuffer loopTwice(String input) {
 		StringBuffer output = new StringBuffer();
 		String[] lines = input.split("\n");
+				int count = 0;
                 for (int i = 0; i < lines.length; i++) {
                         String line = lines[i];
                         try {
-                                process(i, line, true);
+                                String kk = process(count, line, true);
+                                if (kk.isEmpty()) {
+                                	continue;
+                                }
+                                count++;
                         } catch (Exception e) {
                                 System.out.println("Exception encountered on line " + i);
                                 System.out.println(line);
                                 throw e;
                         }
                 }
-				int count = 0;
+				count = 0;
                 for (int i = 0; i < lines.length; i++) {
                         String line = lines[i];
                         try {
@@ -185,7 +190,7 @@ private	static int n = 0;
 		//	System.out.println(Integer.parseInt(result, 2));
 		//n++;
 		}
-		return "";
+		return "Processed";
 	}
 
 	private static String generate(List<String> command) {
@@ -327,8 +332,8 @@ private	static int n = 0;
 	 * @return the address at which the label is at
 	 */
 	private static int getLabelAddress(String name) {
-                Integer line = labels.get(name);
-                if (line != null) {
+        Integer line = labels.get(name);
+        if (line != null) {
 			return 4 * labels.get(name);
 		} else {
 			return 4 * Integer.parseInt(name);

@@ -1,4 +1,4 @@
-#Hours spent on this project, increment as you go: 80
+#Hours spent on this project, increment as you go: 100
 
 proc AddWaves {} {
 
@@ -54,7 +54,7 @@ proc AddWaves {} {
 
 	add wave -noupdate -divider -height 16 Memory
 
-	add wave -label alu_data1 -position end  -radix decimal sim:/masterpipeline_instance/writeback_instance/registers
+	add wave -label registers -position end  -radix decimal sim:/masterpipeline_instance/writeback_instance/registers
 
   ;#Set some formating options to make the Waves window more legible
 	configure wave -namecolwidth 250
@@ -153,4 +153,4 @@ vcom test_thewholething.vhd
 vsim -t ps thewholething_tb
 AddWaves
 force -deposit clk 0 0 ns, 1 0.5 ns -repeat 1 ns
-run 35 ns
+run 200 ns

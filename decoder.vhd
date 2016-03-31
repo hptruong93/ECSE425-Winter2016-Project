@@ -109,6 +109,9 @@ BEGIN
 
 		PROCEDURE shift_stall_history IS
 		BEGIN
+			--SHOW("SHIFTING STALL HISTORY");
+			--SHOW("STALL PREVIOUSES ARE " & STD_LOGIC'IMAGE(previous_stall_sources(2)) & STD_LOGIC'IMAGE(previous_stall_sources(1)) & STD_LOGIC'IMAGE(previous_stall_sources(0)));
+			--SHOW("STALL REGVIOUSES ARE " & INTEGER'image(TO_INTEGER(UNSIGNED(previous_stall_destinations(2)))) & INTEGER'image(TO_INTEGER(UNSIGNED(previous_stall_destinations(1)))) & INTEGER'image(TO_INTEGER(UNSIGNED(previous_stall_destinations(0)))));
 			previous_stall_destinations(0) <= previous_stall_destinations(1);
 			previous_stall_destinations(1) <= previous_stall_destinations(2);
 			previous_stall_sources(0) <= previous_stall_sources(1);
@@ -467,7 +470,7 @@ BEGIN
 						else
 							update_history(ZERO_REGISTER, FORWARD_SOURCE_ALU, rs, rt);
 
-							SHOW("Here beq");
+							SHOW("Here beq comparing two registers " & INTEGER'image(to_integer(unsigned(rs))) & INTEGER'image(to_integer(unsigned(rt))));
 							operation <= "100000"; --Tell ALU to not do anything
 							data1 <= (others => '0');
 							data2 <= (others => '0');
@@ -475,9 +478,11 @@ BEGIN
 							mem_writeback_register <= "00000"; --Don't write back
 
 							if registers(to_integer(unsigned(rs))) = registers(to_integer(unsigned(rt))) then --Do branch
+								SHOW("DECODER TAKEN BRANCH");
 								branch_signal <= BRANCH_ALWAYS;
 								branch_address <= std_logic_vector(resize(unsigned(immediate), branch_address'length));
 							else
+								SHOW("DECODER NOT TAKEN BRANCH");
 								branch_signal <= BRANCH_NOT;
 							end if;
 						end if;
@@ -488,7 +493,7 @@ BEGIN
 						else
 							update_history(ZERO_REGISTER, FORWARD_SOURCE_ALU, rs, rt);
 
-							SHOW("Here bne");
+							SHOW("Here bne comparing two registers " & INTEGER'image(to_integer(unsigned(rs))) & INTEGER'image(to_integer(unsigned(rt))));
 							operation <= "100000"; --Tell ALU to not do anything
 							data1 <= (others => '0');
 							data2 <= (others => '0');
@@ -496,9 +501,11 @@ BEGIN
 							mem_writeback_register <= "00000"; --Don't write back
 
 							if registers(to_integer(unsigned(rs))) /= registers(to_integer(unsigned(rt))) then --Do branch
+								SHOW("DECODER TAKEN BRANCH");
 								branch_signal <= BRANCH_ALWAYS;
 								branch_address <= std_logic_vector(resize(unsigned(immediate), branch_address'length));
 							else
+								SHOW("DECODER NOT TAKEN BRANCH");
 								branch_signal <= BRANCH_NOT;
 							end if;
 						end if;
