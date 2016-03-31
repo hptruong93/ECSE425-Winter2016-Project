@@ -9,7 +9,7 @@ port (	clk 	: in STD_LOGIC;
 
 			mem_address : in SIGNED(32-1 downto 0); -- coming from ALU
 			--operation : out STD_LOGIC_VECTOR(6-1 downto 0);
-			mem_writeback_register : in STD_LOGIC_VECTOR(5-1 downto 0); -- used for store, tells which register to read from.
+			stored_register : in STD_LOGIC_VECTOR(5-1 downto 0); -- used for store, tells which register to read from.
 			registers : in register_array;
 			signal_to_mem : in STD_LOGIC_VECTOR(3-1 downto 0);
 			is_mem_busy : in STD_LOGIC;
@@ -33,6 +33,7 @@ type state is (
 	MEM_ACCESS
 	);
 signal current_state : state;
+signal current_mem_address : SIGNED(32-1 downto 0) := (others => '0'); --Test purpose
 
 begin
 	synced_clock : process(clk, reset)
@@ -57,6 +58,7 @@ begin
 								word_byte <= '1'; -- interact with mem in word
 								do_read <= '1';
 								address_line <= to_integer(mem_address); -- where to load from
+								current_mem_address <= mem_address;
 								current_state <= MEM_ACCESS;
 							end if;
 						when MEM_ACCESS =>
@@ -80,16 +82,17 @@ begin
 							is_busy <= '1';
 
 							if (is_mem_busy = '0') then
-								SHOW("MEM STORE_WORD WAIT WITH ADDRESS " & INTEGER'image(TO_INTEGER(mem_address)));
+								SHOW_LOVE("MEM STORE_WORD WAIT WITH ADDRESS AND DATA " & INTEGER'image(TO_INTEGER(mem_address)) & INTEGER'image(to_integer(unsigned(stored_register))), registers(to_integer(unsigned(stored_register))));
 								word_byte <= '1'; -- interact with mem in word
 								address_line <= to_integer(mem_address);  -- where to store
-								output_data_line <= registers(to_integer(unsigned(mem_writeback_register)));
+								output_data_line <= registers(to_integer(unsigned(stored_register)));
 								do_write <= '1';
+								current_mem_address <= mem_address;
 								current_state <= MEM_ACCESS;
 							end if;
 						when MEM_ACCESS =>
 							if (is_mem_busy = '0') then
-								SHOW("MEM finish STORE_WORD into value " & INTEGER'image(TO_INTEGER(mem_address)));
+								SHOW("MEM finish STORE_WORD into value " & INTEGER'image(TO_INTEGER(current_mem_address)));
 								is_busy <= '0';
 								current_state <= MEM_IGNORE;
 							else
@@ -129,7 +132,7 @@ begin
 							is_busy <= '1';
 							if (is_mem_busy = '0') then
 								word_byte <= '0'; -- interact with mem in byte
-								output_data_line <= registers(to_integer(unsigned(mem_writeback_register)));
+								output_data_line <= registers(to_integer(unsigned(stored_register)));
 								do_write <= '1';
 								address_line <= to_integer(mem_address);  -- where to store
 								current_state <= MEM_ACCESS;

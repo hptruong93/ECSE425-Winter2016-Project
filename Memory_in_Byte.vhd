@@ -6,7 +6,7 @@ ENTITY Memory_in_Byte IS
 	generic (
 			File_Address_Read : string :="Init.dat";
 			File_Address_Write : string :="MemCon.dat";
-			Mem_Size : integer:=256;
+			Mem_Size : integer:=4000;
 			Num_Bits_in_Byte: integer:=8;
 			Read_Delay: integer:=0; 
 			Write_Delay:integer:=0

@@ -79,8 +79,7 @@ begin
 		case y is
 			when idle =>
 				if re1 = '1' then
-					--SHOW("Goinggggggggggggggggg to read 1");
-					SHOW("Memory Arbiter started 1 reading address " & integer'image(addr1));
+					--SHOW("Memory Arbiter started 1 reading address " & integer'image(addr1));
 					mm_address <= addr1;
 					mm_re <= re1;
 					mm_we <= we1;
@@ -114,7 +113,7 @@ begin
 				busy1 <= '1';
 				mm_address <= addr1;
 				mm_re <= re1;
-				mm_we <= we1;
+				mm_we <= '0';
 				--SHOW("Here Leonardo DiCaprio" & STD_LOGIC'image(mm_re));
 				if (re2 = '1' or we2 = '1') then
 					busy2 <= '1';
@@ -143,7 +142,7 @@ begin
 				mm_address <= addr1;
 				mm_data <= data1_in;
 				mm_we <= we1;
-				mm_re <= re1;
+				mm_re <= '0';
 				if (re2 = '1' or we2 = '1') then
 					busy2 <= '1';
 				else
@@ -151,6 +150,7 @@ begin
 				end if;
 				if (mm_wr_done = '1') then
 					busy1 <= '0';
+					mm_data <= (others => 'Z');
 					y <= idle;
 				else
 					y <= write1;
@@ -161,7 +161,7 @@ begin
 				mm_address <= addr2;
 				--mm_data <= data2;
 				mm_re <= re2;
-				mm_we <= we2;
+				mm_we <= '0';
 				if (re1 = '1' or we1 = '1') then
 					busy1 <= '1';
 				else
@@ -189,7 +189,7 @@ begin
 				mm_address <= addr2;
 				mm_data <= data2_in;
 				mm_we <= we2;
-				mm_re <= re2;
+				mm_re <= '0';
 				if (re1 = '1' or we1 = '1') then
 					busy1 <= '1';
 				else

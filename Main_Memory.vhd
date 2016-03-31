@@ -6,7 +6,7 @@ ENTITY Main_Memory IS
 	generic (
 			File_Address_Read : string :="Init.dat";
 			File_Address_Write : string :="MemCon.dat";
-			Mem_Size_in_Word : integer:=256;
+			Mem_Size_in_Word : integer:=4000;
 			Num_Bytes_in_Word: integer:=4;
 			Num_Bits_in_Byte: integer := 8; 
 			Read_Delay: integer:=0; 
@@ -44,7 +44,7 @@ ARCHITECTURE Behavioural OF Main_Memory IS
 	 generic (
 				File_Address_Read : string :="Init.dat";
 				File_Address_Write : string :="MemCon.dat";
-				Mem_Size : integer:=256;
+				Mem_Size : integer:=4000;
 				Num_Bits_in_Byte: integer:=8;
 				Read_Delay: integer:=0;
 				Write_Delay:integer:=0
@@ -203,17 +203,6 @@ rd_ready <= '1' when rd_ready0='1' or rd_ready1='1' or rd_ready2='1' or rd_ready
 wr_done <= '1' when wr_done0='1' or wr_done1='1' or wr_done2='1' or wr_done3='1' else
 			'0';
 		 
-	--magic : process( clk )
-	--begin
-	--	REPORT "YOLOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO0 " & std_logic'image(re);
-	--	REPORT "YOLOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO1 " & std_logic'image(re0);
-	--	REPORT "YOLOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO2 " & std_logic'image(re1);
-	--	REPORT "YOLOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO3 " & std_logic'image(re2);
-	--	REPORT "YOLOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO4 " & std_logic'image(re3);
-	--	REPORT "YOLOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO5 " & std_logic'image(Word_Byte);
-
-	--end process ; -- magic
-
 	process (initialize, dump, clk) 
 			file file_pointer : text;
 			file file_write_pointer0,file_write_pointer1,file_write_pointer2,file_write_pointer3 : text;

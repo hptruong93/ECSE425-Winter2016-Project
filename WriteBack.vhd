@@ -37,9 +37,9 @@ begin
 	begin
 		if reset = '1' then
 			registers(0) <= (others => '0');
-			registers(1) <= STD_LOGIC_VECTOR(TO_UNSIGNED(1, 32));
-			registers(2) <= STD_LOGIC_VECTOR(TO_UNSIGNED(2, 32));--(others => '0');
-			registers(3) <= STD_LOGIC_VECTOR(TO_UNSIGNED(3, 32));--(others => '0');
+			registers(1) <= (others => '0');--STD_LOGIC_VECTOR(TO_UNSIGNED(1, 32));
+			registers(2) <= (others => '0');--STD_LOGIC_VECTOR(TO_UNSIGNED(2, 32));--(others => '0');
+			registers(3) <= (others => '0');--STD_LOGIC_VECTOR(TO_UNSIGNED(3, 32));--(others => '0');
 			registers(4) <= (others => '0');
 			registers(5) <= (others => '0');
 			registers(6) <= (others => '0');
@@ -59,8 +59,8 @@ begin
 			registers(20) <= (others => '0');
 			registers(21) <= (others => '0');
 			registers(22) <= (others => '0');
-			registers(23) <= STD_LOGIC_VECTOR(TO_UNSIGNED(23, 32));--(others => '0');
-			registers(24) <= STD_LOGIC_VECTOR(TO_UNSIGNED(24, 32));
+			registers(23) <= (others => '0');--STD_LOGIC_VECTOR(TO_UNSIGNED(23, 32));--(others => '0');
+			registers(24) <= (others => '0');--STD_LOGIC_VECTOR(TO_UNSIGNED(24, 32));
 			registers(25) <= (others => '0');
 			registers(26) <= (others => '0');
 			registers(27) <= (others => '0');
@@ -106,9 +106,14 @@ begin
 				when MEM_WAIT =>
 					if mem_stage_busy = '0' then
 						current_state <= IDLE;
-						SHOW_LOVE("Writing back the value ", STD_LOGIC_VECTOR(signed(mem_stage_output)));
-						SHOW("WRITE BACK FROM MEM TO REGISTER " & integer'image(to_integer(unsigned(destination_reg))));
-						registers(to_integer(unsigned(destination_reg))) <= STD_LOGIC_VECTOR(signed(mem_stage_output));
+						
+						if writeback_source /= NO_WRITE_BACK then
+							SHOW_LOVE("Writing back the value ", STD_LOGIC_VECTOR(signed(mem_stage_output)));
+							SHOW("WRITE BACK FROM MEM TO REGISTER " & integer'image(to_integer(unsigned(destination_reg))));
+							registers(to_integer(unsigned(destination_reg))) <= STD_LOGIC_VECTOR(signed(mem_stage_output));
+						else
+							SHOW("WRITE BACK SKIP BECAUSE OF STORE.");
+						end if;
 					else
 						SHOW("WRITE BACK WAITING FOR MEM");
 					end if;

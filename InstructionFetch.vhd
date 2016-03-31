@@ -124,7 +124,7 @@ begin
 						is_busy <= '1';
 						current_state <= FETCHING;
 					when FETCH_BRANCH_SET =>
-						SHOW("<><><><><><><><><><><>><><><><><><><><>><><><><<><> Doing BRANCH");
+						SHOW("InstructionFetch Doing BRANCH");
 						do_read <= '1';
 						is_busy <= '1';
 						current_state <= FETCH_BRANCH;
@@ -134,7 +134,7 @@ begin
 							SHOW("GOT BRANCH FETCH " & INTEGER'image(TO_INTEGER(UNSIGNED(program_counter))) & STD_LOGIC'image(data(31)) & STD_LOGIC'image(data(30)) & STD_LOGIC'image(data(29)) & STD_LOGIC'image(data(28)) & STD_LOGIC'image(data(27)) & STD_LOGIC'image(data(26)) & STD_LOGIC'image(data(25)) & STD_LOGIC'image(data(24)) & STD_LOGIC'image(data(23)) & STD_LOGIC'image(data(22)) & STD_LOGIC'image(data(21)) & STD_LOGIC'image(data(20)) & STD_LOGIC'image(data(19)) & STD_LOGIC'image(data(18)) & STD_LOGIC'image(data(17)) & STD_LOGIC'image(data(16)) & STD_LOGIC'image(data(15)) & STD_LOGIC'image(data(14)) & STD_LOGIC'image(data(13)) & STD_LOGIC'image(data(12)) & STD_LOGIC'image(data(11)) & STD_LOGIC'image(data(10)) & STD_LOGIC'image(data(9)) & STD_LOGIC'image(data(8)) & STD_LOGIC'image(data(7)) & STD_LOGIC'image(data(6)) & STD_LOGIC'image(data(5)) & STD_LOGIC'image(data(4)) & STD_LOGIC'image(data(3)) & STD_LOGIC'image(data(2)) & STD_LOGIC'image(data(1)) & STD_LOGIC'image(data(0)));
 							program_counter <= program_counter + 4;
 							address <= program_counter + 4;
-							do_read <= '0';
+							do_read <= '1';
 							is_busy <= '0';
 							update_instruction(data);
 							last_instruction <= data;

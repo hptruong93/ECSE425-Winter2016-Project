@@ -115,7 +115,7 @@ public class Assembler {
 	}
 
 	public static void main(String[] args) {
-		String data = readFromFile(new File("H:\\ECSE425-Winter2016-Project\\assembly.asm")).toString();
+		String data = readFromFile(new File("assembler.asm")).toString();
 		System.out.println(loopTwice(data).toString());
 	}
 

@@ -119,7 +119,7 @@ BEGIN
         busy2 => busy2
     );
 
-     -- HOW DO WE DO THIS SHIT
+     -- HOW DO WE DO THIS?
     clk_process : PROCESS
     BEGIN
         clk <= '1';
@@ -154,26 +154,11 @@ BEGIN
             destination_reg <= 1;
             WAIT FOR 4 * clk_period;
 
-            SHOW_LOVE("RESULT IS ", observed_registers(interested_reg));
+            --SHOW_LOVE("RESULT IS ", observed_registers(interested_reg));
             destination_reg <= 4;
             interested_reg := 4;
 
-            WAIT FOR 1 * clk_period;
-            SHOW_LOVE("RESULT IS", observed_registers(interested_reg));
-            WAIT FOR 1 * clk_period;
-            SHOW_LOVE("RESULT IS", observed_registers(interested_reg));
-            WAIT FOR 1 * clk_period;
-            SHOW_LOVE("RESULT IS", observed_registers(interested_reg));
-            WAIT FOR 1 * clk_period;
-            SHOW_LOVE("RESULT IS", observed_registers(interested_reg));
-            WAIT FOR 1 * clk_period;
-            SHOW_LOVE("RESULT IS", observed_registers(interested_reg));
-            WAIT FOR 1 * clk_period;
-            SHOW_LOVE("RESULT IS", observed_registers(interested_reg));
-            WAIT FOR 1 * clk_period;
-            SHOW_LOVE("RESULT IS", observed_registers(interested_reg));
-
-            WAIT FOR 1 * clk_period;
+            WAIT FOR 100 * clk_period;
 
             SHOW("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<END TEST");
         else

@@ -204,13 +204,25 @@ BEGIN
 			WAIT FOR 1 * clk_period;
 		end loop;
 
+		Word_Byte <= '1';
+		we <= '1';
+		re <= '0';
+		address <= 100;
+		--WAIT FOR 1 * clk_period;
+		data <= "00000000000000000000000000010001";
+
+		WAIT FOR 1 * clk_period;
+		while (wr_done = '0') loop
+			WAIT FOR 1 * clk_period;
+		end loop;
+
 -------------------------------------------------------------------------------------------
 -------------------------------------------------------------------------------------------
 
 		Word_Byte <= '1';
 		we <= '0';
 		re <= '1';
-		address <= 0;
+		address <= 100;
 		data <= Z_BYTE_32;
 		WAIT FOR 1 * clk_period;
 		while (rd_ready = '0') loop

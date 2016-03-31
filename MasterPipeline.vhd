@@ -59,7 +59,8 @@ port (	clk 	: in STD_LOGIC;
 			mem_stage_busy : in STD_LOGIC;
 
 			operation : out STD_LOGIC_VECTOR(6-1 downto 0);
-			mem_writeback_register : out REGISTER_INDEX; --send to memstage or writeback
+			mem_writeback_register : out REGISTER_INDEX; --send to writeback
+			stored_register : out REGISTER_INDEX; --send to mem stage
 			-- for store, this represents the register that we're storing. For load, this represents the register getting the value from memory.
 			signal_to_mem : out STD_LOGIC_VECTOR(3-1 downto 0); --send to mem stage (mem operation)
 			writeback_source : out STD_LOGIC_VECTOR(3-1 downto 0); --send to writeback
@@ -124,7 +125,7 @@ port (	clk 	: in STD_LOGIC;
 			reset : in STD_LOGIC;
 
 			mem_address : in SIGNED(32-1 downto 0); -- coming from ALU
-			mem_writeback_register : in STD_LOGIC_VECTOR(5-1 downto 0); -- used for store, tells which register to read from.
+			stored_register : in STD_LOGIC_VECTOR(5-1 downto 0); -- used for store, tells which register to read from.
 			registers : in register_array;
 			signal_to_mem : in STD_LOGIC_VECTOR(3-1 downto 0);
 			is_mem_busy : in STD_LOGIC;
@@ -181,6 +182,8 @@ signal pc_reg : STD_LOGIC_VECTOR(32-1 downto 0); -- Fetch ==> Decode
 signal instruction_address_output : STD_LOGIC_VECTOR(32-1 downto 0);
 signal mem_writeback_register : STD_LOGIC_VECTOR(5-1 downto 0); -- Decoder ==> Write back unit
 signal delayed_mem_writeback_register : STD_LOGIC_VECTOR(5-1 downto 0); -- Decoder ==> Write back unit
+signal stored_register : STD_LOGIC_VECTOR(5-1 downto 0); -- Decoder ==> Mem unit
+signal delayed_stored_register : STD_LOGIC_VECTOR(5-1 downto 0); -- Decoder ==> Mem unit
 
 signal signal_to_mem : STD_LOGIC_VECTOR(3-1 downto 0);
 signal delayed_signal_to_mem : STD_LOGIC_VECTOR(3-1 downto 0);
@@ -225,6 +228,7 @@ begin
 		mem_stage_busy => mem_stage_busy,
 		operation => operation,
 		mem_writeback_register => mem_writeback_register,
+		stored_register => stored_register,
 		signal_to_mem => signal_to_mem,
 		writeback_source => writeback_source,
 		branch_signal => branch_signal,
@@ -275,7 +279,7 @@ begin
 		clk => clk,
 		reset => reset,
 		mem_address => result, -- coming from alu
-		mem_writeback_register => mem_writeback_register,
+		stored_register => delayed_stored_register,
 		registers => registers,
 		signal_to_mem => delayed_signal_to_mem,
 		is_mem_busy => busy1, -- input from memory, check if channel 2 (for data) is busy
@@ -319,10 +323,12 @@ begin
 				delayed_writeback_source <= delayed_writeback_source;
 				delayed_mem_writeback_register <= delayed_mem_writeback_register;
 				delayed_signal_to_mem <= delayed_signal_to_mem;
+				delayed_stored_register <= delayed_stored_register;
 			else
 				delayed_writeback_source <= writeback_source;
 				delayed_mem_writeback_register <= mem_writeback_register;
 				delayed_signal_to_mem <= signal_to_mem;
+				delayed_stored_register <= stored_register;
 			end if;
 		end if;
 	end process ; -- synced_clock

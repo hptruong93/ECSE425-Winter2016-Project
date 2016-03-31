@@ -15,7 +15,9 @@ port (	clk 	: in STD_LOGIC;
 			mem_stage_busy : in STD_LOGIC;
 
 			operation : out STD_LOGIC_VECTOR(6-1 downto 0);
-			mem_writeback_register : out STD_LOGIC_VECTOR(5-1 downto 0); --send to memstage or writeback
+			mem_writeback_register : out STD_LOGIC_VECTOR(5-1 downto 0); --send to writeback
+			stored_register : out STD_LOGIC_VECTOR(5-1 downto 0); --send to memstage
+
 			-- for store, this represents the register that we're storing. For load, this represents the register getting the value from memory.
 			signal_to_mem : out STD_LOGIC_VECTOR(3-1 downto 0); --send to mem stage
 			writeback_source : out STD_LOGIC_VECTOR(3-1 downto 0); --send to writeback
@@ -384,91 +386,121 @@ BEGIN
 -----------------------------------------------MEMORY OPERATIONS-------------------------------------------------------------------
 -----------------------------------------------------------------------------------------------------------------------------------
 					when "001111" => --lui --We shift the immediate value by 16 using the ALU
-						update_history(rt, FORWARD_SOURCE_ALU, ZERO_REGISTER, ZERO_REGISTER);
+						if (check_stall(rt) = '1') then
+							stall_decoder;
+						else
+							update_history(rt, FORWARD_SOURCE_ALU, ZERO_REGISTER, ZERO_REGISTER);
 
-						SHOW("Here lui");
-						operation <= "000000"; --sll
-						data1	<= STD_LOGIC_VECTOR(resize(signed(immediate), data1'length));
-						data2	<= STD_LOGIC_VECTOR(to_unsigned(16, data2'length));
-						mem_writeback_register <= rt;
-						writeback_source <= ALU_AS_SOURCE;
+							SHOW("Here lui");
+							operation <= "000000"; --sll
+							data1	<= STD_LOGIC_VECTOR(resize(signed(immediate), data1'length));
+							data2	<= STD_LOGIC_VECTOR(to_unsigned(16, data2'length));
+							mem_writeback_register <= rt;
+							writeback_source <= ALU_AS_SOURCE;
+						end if;
 					when "100011" => --lw
-						update_history(rt, FORWARD_SOURCE_MEM, rs, ZERO_REGISTER);
+						if (check_stall(rt) = '1') then
+							stall_decoder;
+						else
+							update_history(rt, FORWARD_SOURCE_MEM, rs, ZERO_REGISTER);
 
-						SHOW_TWO("Here lw with rs " & integer'image(to_integer(unsigned(rs))), "and immediate " & INTEGER'image(TO_INTEGER(signed(immediate))));
-						operation <= "100000"; --add
-						data1	<= registers(to_integer(unsigned(rs)));
-						data2	<= STD_LOGIC_VECTOR(resize(signed(immediate), data2'length));
-						mem_writeback_register <= rt;
-						writeback_source <= MEM_AS_SOURCE;
-						signal_to_mem <= LOAD_WORD;
+							SHOW_TWO("Here lw with rs " & integer'image(to_integer(unsigned(rs))), "and immediate " & INTEGER'image(TO_INTEGER(signed(immediate))));
+							operation <= "100000"; --add
+							data1	<= registers(to_integer(unsigned(rs)));
+							data2	<= STD_LOGIC_VECTOR(resize(signed(immediate), data2'length));
+							mem_writeback_register <= rt;
+							writeback_source <= MEM_AS_SOURCE;
+							signal_to_mem <= LOAD_WORD;
+						end if;
 					when "101011" => --sw
-						update_history(ZERO_REGISTER, FORWARD_SOURCE_MEM, rs, ZERO_REGISTER);
+						if (check_stall(rt) = '1') then
+							stall_decoder;
+						else
+							update_history(ZERO_REGISTER, FORWARD_SOURCE_MEM, rs, ZERO_REGISTER);
 
-						SHOW("Here sw");
-						operation <= "100000"; --add
-						data1	<= registers(to_integer(unsigned(rs)));
-						data2	<= STD_LOGIC_VECTOR(resize(signed(immediate), data2'length));
-						mem_writeback_register <= rt; --Don't write back
-						writeback_source <= NO_WRITE_BACK;
-						signal_to_mem <= STORE_WORD;
+							SHOW("Here sw");
+							operation <= "100000"; --add
+							data1	<= registers(to_integer(unsigned(rs)));
+							data2	<= STD_LOGIC_VECTOR(resize(signed(immediate), data2'length));
+							stored_register <= rt;
+							mem_writeback_register <= ZERO_REGISTER; --Don't write back
+							writeback_source <= NO_WRITE_BACK;
+							signal_to_mem <= STORE_WORD;
+						end if;
 					when "100000" => --lb
-						update_history(rt, FORWARD_SOURCE_MEM, rs, ZERO_REGISTER);
+						if (check_stall(rt) = '1') then
+							stall_decoder;
+						else
+							update_history(rt, FORWARD_SOURCE_MEM, rs, ZERO_REGISTER);
 
-						SHOW("Here lb");
-						operation <= "100000"; --add
-						data1	<= registers(to_integer(unsigned(rs)));
-						data2	<= STD_LOGIC_VECTOR(resize(signed(immediate), data2'length));
-						mem_writeback_register <= rt;
-						writeback_source <= MEM_AS_SOURCE;
-						signal_to_mem <= LOAD_BYTE;
+							SHOW("Here lb");
+							operation <= "100000"; --add
+							data1	<= registers(to_integer(unsigned(rs)));
+							data2	<= STD_LOGIC_VECTOR(resize(signed(immediate), data2'length));
+							mem_writeback_register <= rt;
+							writeback_source <= MEM_AS_SOURCE;
+							signal_to_mem <= LOAD_BYTE;
+						end if;
 					when "101000" => --sb
-						update_history(ZERO_REGISTER, FORWARD_SOURCE_MEM, rs, ZERO_REGISTER);
+						if (check_stall(rt) = '1') then
+							stall_decoder;
+						else
+							update_history(ZERO_REGISTER, FORWARD_SOURCE_MEM, rs, ZERO_REGISTER);
 
-						SHOW("Here sb");
-						operation <= "100000"; --add
-						data1	<= registers(to_integer(unsigned(rs)));
-						data2	<= STD_LOGIC_VECTOR(resize(signed(immediate), data2'length));
-						mem_writeback_register <= rt; --Don't write back
-						writeback_source <= NO_WRITE_BACK;
-						signal_to_mem <= STORE_BYTE;
+							SHOW("Here sb");
+							operation <= "100000"; --add
+							data1	<= registers(to_integer(unsigned(rs)));
+							data2	<= STD_LOGIC_VECTOR(resize(signed(immediate), data2'length));
+							stored_register <= rt;
+							mem_writeback_register <= ZERO_REGISTER; --Don't write back
+							writeback_source <= NO_WRITE_BACK;
+							signal_to_mem <= STORE_BYTE;
+						end if;
 -----------------------------------------------------------------------------------------------------------------------------------
 -----------------------------------------------BRANCH AND JUMPS--------------------------------------------------------------------
 -----------------------------------------------Assume resolved in Decode-----------------------------------------------------------
 -----------------------------------------------------------------------------------------------------------------------------------
 					when "000100" => --beq
 						--Stall here until result is forwarded actually
-						update_history(ZERO_REGISTER, FORWARD_SOURCE_ALU, rs, rt);
-
-						SHOW("Here beq");
-						operation <= "100000"; --Tell ALU to not do anything
-						data1 <= (others => '0');
-						data2 <= (others => '0');
-						writeback_source <= NO_WRITE_BACK;
-						mem_writeback_register <= "00000"; --Don't write back
-
-						if registers(to_integer(unsigned(rs))) = registers(to_integer(unsigned(rt))) then --Do branch
-							branch_signal <= BRANCH_ALWAYS;
-							branch_address <= std_logic_vector(resize(unsigned(immediate), branch_address'length));
+						if (SHOULD_STALL_BRANCH(rs, rt, previous_stall_destinations, previous_stall_sources)) = '1' then
+							stall_decoder;
 						else
-							branch_signal <= BRANCH_NOT;
+							update_history(ZERO_REGISTER, FORWARD_SOURCE_ALU, rs, rt);
+
+							SHOW("Here beq");
+							operation <= "100000"; --Tell ALU to not do anything
+							data1 <= (others => '0');
+							data2 <= (others => '0');
+							writeback_source <= NO_WRITE_BACK;
+							mem_writeback_register <= "00000"; --Don't write back
+
+							if registers(to_integer(unsigned(rs))) = registers(to_integer(unsigned(rt))) then --Do branch
+								branch_signal <= BRANCH_ALWAYS;
+								branch_address <= std_logic_vector(resize(unsigned(immediate), branch_address'length));
+							else
+								branch_signal <= BRANCH_NOT;
+							end if;
 						end if;
 					when "000101" => --bne
 						--Stall here until result is forwarded actually
-						update_history(ZERO_REGISTER, FORWARD_SOURCE_ALU, rs, rt);
-
-						SHOW("Here bne");
-						operation <= "100000"; --Tell ALU to not do anything
-						data1 <= (others => '0');
-						data2 <= (others => '0');
-						writeback_source <= NO_WRITE_BACK;
-						mem_writeback_register <= "00000"; --Don't write back
-
-						if registers(to_integer(unsigned(rs))) /= registers(to_integer(unsigned(rt))) then --Do branch
-							branch_signal <= BRANCH_ALWAYS;
-							branch_address <= std_logic_vector(resize(unsigned(immediate), branch_address'length));
+						if (SHOULD_STALL_BRANCH(rs, rt, previous_stall_destinations, previous_stall_sources)) = '1' then
+							stall_decoder;
 						else
-							branch_signal <= BRANCH_NOT;
+							update_history(ZERO_REGISTER, FORWARD_SOURCE_ALU, rs, rt);
+
+							SHOW("Here bne");
+							operation <= "100000"; --Tell ALU to not do anything
+							data1 <= (others => '0');
+							data2 <= (others => '0');
+							writeback_source <= NO_WRITE_BACK;
+							mem_writeback_register <= "00000"; --Don't write back
+
+							if registers(to_integer(unsigned(rs))) /= registers(to_integer(unsigned(rt))) then --Do branch
+								branch_signal <= BRANCH_ALWAYS;
+								branch_address <= std_logic_vector(resize(unsigned(immediate), branch_address'length));
+							else
+								branch_signal <= BRANCH_NOT;
+							end if;
 						end if;
 					when "000010" => --j
 						update_history(ZERO_REGISTER, FORWARD_SOURCE_ALU, ZERO_REGISTER, ZERO_REGISTER);

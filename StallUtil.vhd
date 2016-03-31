@@ -10,6 +10,13 @@ PACKAGE StallUtil is
 			previous_destinations_output : in previous_destination_array;
 			previous_sources_output : in previous_source_arrray
 		) RETURN STD_LOGIC;
+
+	FUNCTION SHOULD_STALL_BRANCH (
+			destination_register_1 : in REGISTER_INDEX;
+			destination_register_2 : in REGISTER_INDEX;
+			previous_destinations_output : in previous_destination_array;
+			previous_sources_output : in previous_source_arrray
+		) RETURN STD_LOGIC;
 END PACKAGE;
 
 PACKAGE BODY StallUtil IS
@@ -33,4 +40,28 @@ PACKAGE BODY StallUtil IS
 
 		RETURN result;
 	END SHOULD_STALL;
+
+	FUNCTION SHOULD_STALL_BRANCH (
+			destination_register_1 : in REGISTER_INDEX;
+			destination_register_2 : in REGISTER_INDEX;
+			previous_destinations_output : in previous_destination_array;
+			previous_sources_output : in previous_source_arrray
+		) RETURN STD_LOGIC is
+		VARIABLE result : STD_LOGIC;
+	BEGIN
+		--SHOW("STALL PREVIOUSES ARE " & STD_LOGIC'IMAGE(previous_sources_output(2)) & STD_LOGIC'IMAGE(previous_sources_output(1)) & STD_LOGIC'IMAGE(previous_sources_output(0)));
+		--SHOW("STALL REGVIOUSES ARE " & INTEGER'image(TO_INTEGER(UNSIGNED(previous_destinations_output(2)))) & INTEGER'image(TO_INTEGER(UNSIGNED(previous_destinations_output(1)))) & INTEGER'image(TO_INTEGER(UNSIGNED(previous_destinations_output(0)))));
+
+		--Stall if destination_register_1 or destination_register_2 is the destination of the instruction right before us
+		if (destination_register_1 /= "00000" and destination_register_1 = previous_destinations_output(1) and previous_sources_output(1) = FORWARD_SOURCE_ALU) or
+			(destination_register_2 /= "00000" and destination_register_2 = previous_destinations_output(1) and previous_sources_output(1) = FORWARD_SOURCE_ALU) then
+			SHOW("DECODER STALL DUE TO BRANCH");
+			result := '1';
+		else
+			SHOW("DECODER NOT STALL DUE TO BRANCH");
+			result := '0';
+		end if;
+
+		RETURN result;
+	END SHOULD_STALL_BRANCH;
 END StallUtil;
