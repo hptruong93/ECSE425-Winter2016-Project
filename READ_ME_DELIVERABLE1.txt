@@ -14,11 +14,11 @@ but if we try to retrieve a value which we have stored programmatically (ie
 through a store command). We get a value of ZZZZZZZZZZZZZZ.
 2. Memory takes 2 cycles. This is not a problem per se. It is due to an 
 additional clock cycle introduced by the memory arbiter. We could have moved 
-the logic of the memory arbitter inside the the Memory stage of the pipeline 
+the logic of the memory arbitter inside the Memory stage of the pipeline 
 to fix this problem. However, we had not foreseen at the design phase and 
 decided to go with it instead. We modified our stall and forwarding logic 
-accordingly. An odd behavior that is due to this is the interleaving of "stall"
- instructions between every instruction we are fetching. 
+accordingly. An odd behavior that is due to this is the interleaving of "stall" 
+instructions between every instruction we are fetching. 
 
 All other aspects of our pipelines seem to work. We tested assembly programs we
 wrote and everything seems to be running smoothly and on time (accounting for
