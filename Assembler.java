@@ -17,7 +17,6 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.nio.charset.Charset;
 
-
 public class Assembler {
 
 	private static final int EMPTY = Integer.MIN_VALUE;
@@ -115,84 +114,13 @@ public class Assembler {
 		mapOpCode.put("div", 0x00);		mapFunction.put("div", 0x1A);
 	}
 
-	public static void main(String args[]) {
-		String input = readFromFile(new File("H:\\ECSE425\\assembly.asm")).toString();
-		loopTwice(input);
-
-		// input = "add $1 $2 $3 ####Some comments\n"
-		// 		+ "sub $1 $2 $3\n"
-		// 		+ "addi $1 0x123";
-		
-		// String[] lines = input.split("\n");
-		// /*for (int i = 0; i < lines.length; i++) {
-		// 	String line = lines[i];
-		// 	try {
-		// 		process(i, line);
-		// 	} catch (Exception e) {
-		// 		System.out.println("Exception encountered on line " + i);
-		// 		System.out.println(line);
-		// 		throw e;
-		// 	}
-		// }*/	
-		// input = "#####################testin individual instructions#######################\n"
-		// 	+"add 		$3 $0 $23		\n"
-		// 	+"sub 		$4 $3 $2 		\n"
-		// 	+"addi 		$1 $10 1000		\n"
-		// 	+"slt 		$1 $2 $10 		\n"
-		// 	+"slti 		$1 $2 230		\n"
-		// 	+"mult		$2 $3 			\n"
-		// 	+"div 		$2 $3			\n"
-		// 	+"mfhi          $1			\n"
-		// 	+"mflo		$1			\n"	
-		// 	+"lui 		$1 200			\n"
-		// 	+"and           $2 $3 $4		\n"
-		// 	+"or		$23 $24 $31		\n"
-		// 	+"andi		$23 $10 100		\n"
-		// 	+"ori		$1 	$2	4 	\n"
-		// 	+"nor		$1	$2	$3	\n"// wrong machine code output correct is 4392997
-		// 	+"xor		$1 	$2 	$3	\n"
-		// 	+"xori		$2	$5	6	\n"
-		// 	+"sll		$2 	$3	$7	\n"// way off correct value 200704
-		// 	+"srl		$2	$6	$8	\n"// wrong
-		// 	+"sra		$23	$5	$6	\n"
-		// 	+"lw 		$23	1000($5)	\n"// wrong register rs
-		// 	+"sw		$1	100($2)		\n"// wrong  
-		// 	+"lb		$3	23($4)		\n"
-		// 	+"sb		$1	23($3)		\n"
-		// 	+"beq		$5	$6	100	\n"/*Not handling constant value for BEQ-- Check line 364 */
-		// 	+"beq		$2	$10	END	\n"/* Can't find label same as bove */
-		// 	+"END:					\n"
-		// 	+"bne 		$1	$2	100	\n" /*same as above */
-		// 	+"j 		LABEL			\n"
-		// 	+"LABEL:				\n"
-		// 	+"jr		$31			\n"
-		// 	+"jal		12356			\n";
-
-		// loopTwice(input);
-
-/*		input = "#Fibonacci Sequence#\n" 
-			+ "xor $1 $1  $01 #set register #1 to 0\n" 
-			+ "xor $2 $02 $0002 #set register #2 to 0\n"
-			+ "xor $3 $3 $3 #output register\n"
-			+ "xor $6 $6 $6\n"
-			+ "addi $1 $1 10 #set n to 10\n"
-			+ "addi $3 $3 1\n"
-			+ "slti $4 $1 3\n"
-			+ "beq  $0 $4 End\n"
-			+ "Loop: add $4 $3 $0\n"
-			+ "add $5 $3 $2\n"
-			+ "add $3 $5 $0\n"
-			+ "add $2 $4 $0\n"
-			+ "addi $6 $6 1\n"
-			+ "beq $6 $1 End\n"
-			+ "j Loop\n"
-			+ "End:\n" 
-			+ "jr $31";
-		loopTwice(input);
-*/
+	public static void main(String[] args) {
+		String data = readFromFile(new File("H:\\ECSE425-Winter2016-Project\\assembly.asm")).toString();
+		System.out.println(loopTwice(data).toString());
 	}
 
-	private static void loopTwice(String input) {
+	public static StringBuffer loopTwice(String input) {
+		StringBuffer output = new StringBuffer();
 		String[] lines = input.split("\n");
                 for (int i = 0; i < lines.length; i++) {
                         String line = lines[i];
@@ -204,25 +132,30 @@ public class Assembler {
                                 throw e;
                         }
                 }
-
+				int count = 0;
                 for (int i = 0; i < lines.length; i++) {
                         String line = lines[i];
                         try {
-                                process(i, line, false);
+                                String kk = process(count, line, false);
+									if (kk.isEmpty()) {
+										continue;
+									}
+									count++;
+
+									output.append(kk);
+									output.append("\n");
                         } catch (Exception e) {
                                 System.out.println("Exception encountered on line " + i);
                                 System.out.println(line);
                                 throw e;
                         }
                 }
+		return output;
 	}
 
 private	static int n = 0;
-	private static void process(int lineNumber, String line, boolean labelingOnly) {
-		line = removeComments(line).trim();
-		if (line.isEmpty()) {
-				return;
-		}
+	private static String process(int lineNumber, String line, boolean labelingOnly) {
+		line = removeComments(line).replace(",", " ").trim();
 
 		String command, label;
 		if (line.contains(":")) {
@@ -244,11 +177,12 @@ private	static int n = 0;
 		if (!labelingOnly && !command.isEmpty()) {
 			List<String> split = split(command);
 			String result = generate(split);
-			System.out.println(result);
+			return result;
 		//System.out.print(n + ": " + result.substring(0,4) + " " + result.substring(4, 8) + " " + result.substring(8, 12) + " " +  result.substring(12, 16) + " " +  result.substring(16, 20) + " " + result.substring(20, 24) + " " + result.substring(24, 28) + " " +  result.substring(28, 32) + "  ----  " + command + "\n");
 		//	System.out.println(Integer.parseInt(result, 2));
-		n++;
+		//n++;
 		}
+		return "";
 	}
 
 	private static String generate(List<String> command) {
@@ -329,7 +263,8 @@ private	static int n = 0;
 			String t = command.get(1);
 			String s = command.get(2);
 			String [] offsetAddress =  toOffsetAddress(s);
-			result = toOpCode(op) +  offsetAddress[0] + toReg(t)  +  offsetAddress[1] ;
+			//System.out.println("Address is " + toReg(t));
+			result = toOpCode(op) +  offsetAddress[0]  +  toReg(t) + offsetAddress[1] ;
 		} else {
 			throw new IllegalArgumentException("Op code not found " + op);
 		}
@@ -446,11 +381,16 @@ private	static int n = 0;
 			return "";
 		}
 
+
 		String output = Integer.toBinaryString(input);
 		int missing = length - output.length();
 		while (missing > 0) {
 			output = "0" + output;
 			missing--;
+		}
+		if (missing < 0)
+		{
+			output = output.substring(output.length() - length, output.length());
 		}
 		return output;
 	}
