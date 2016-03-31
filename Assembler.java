@@ -33,7 +33,7 @@ public class Assembler {
 	private static String input;
 	private static Map<String, Integer> labels = new HashMap<>();
 	private static final Set<String> rtype = new HashSet<>(Arrays.asList(new String[]{
-			"add", "sub", "slt", "and", "or", "nor", "xor", "sll", "srl", "sra",
+			"add", "sub", "slt", "and", "or", "nor", "xor"
 	}));
 
 	private static final Set<String> shiftType = new HashSet<>(Arrays.asList(new String[]{
@@ -156,6 +156,9 @@ public class Assembler {
 private	static int n = 0;
 	private static String process(int lineNumber, String line, boolean labelingOnly) {
 		line = removeComments(line).replace(",", " ").trim();
+		if (line.isEmpty()) {
+			return "";
+		}
 
 		String command, label;
 		if (line.contains(":")) {
