@@ -39,7 +39,7 @@ architecture behavioral of memory_arbiter is
 	SIGNAL mm_rd_ready      : STD_LOGIC                                     := '0';
 	SIGNAL mm_data          : STD_LOGIC_VECTOR(MEM_DATA_WIDTH-1 downto 0)   := (others => 'Z');
 	SIGNAL mm_initialize    : STD_LOGIC                                     := '0';
-	type state is (idle, read1, read2, write1, write2);
+	type state is (idle, read1, read2, write1, write2, stall);
 	signal y : state;
 begin
 
@@ -77,6 +77,8 @@ begin
 	elsif (clk'event) then
 		mm_initialize <= '0';
 		case y is
+			when stall =>
+				y <= idle;
 			when idle =>
 				if re1 = '1' then
 					--SHOW("Memory Arbiter started 1 reading address " & integer'image(addr1));
@@ -91,6 +93,7 @@ begin
 					mm_re <= re1;
 					mm_we <= we1;
 					busy1 <= '1';
+					mm_data <= data1_in;
 					y <= write1;
 				elsif re2 = '1' then
 					--SHOW("iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiin memory_arbiter re2 = 1    >>>>" & INTEGER'image(addr2));
@@ -150,8 +153,9 @@ begin
 				end if;
 				if (mm_wr_done = '1') then
 					busy1 <= '0';
+					mm_we <= '0';
 					mm_data <= (others => 'Z');
-					y <= idle;
+					y <= stall; --We neeed to stall half a clk period so that clients running with rising edge will have time to react
 				else
 					y <= write1;
 				end if;

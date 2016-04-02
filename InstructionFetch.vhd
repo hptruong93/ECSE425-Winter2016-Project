@@ -40,26 +40,31 @@ type state is (
 	INSTRUCTION_RECEIVED,
 	BRANCHED_INSTRUCTION_RECEIVED,
 	FETCH_BRANCH_SET,
-	FETCH_BRANCH
+	FETCH_BRANCH,
+	IGNORE,
+	WAIT1,
+	WAIT2
 	);
 signal current_state : state;
 
 signal program_counter : STD_LOGIC_VECTOR(32-1 downto 0)  := (others => '0');
 signal last_instruction : STD_LOGIC_VECTOR(32-1 downto 0);
 
+
 begin
 	synced_clock : process(clk, reset)
+		variable test : natural := 0;
 
-	PROCEDURE update_instruction(signal new_instruction : STD_LOGIC_VECTOR(32-1 downto 0)) IS
-	BEGIN
-		if (new_instruction = Z_BYTE_32) then
-			instruction <= (others => '0');
-			last_instruction <= (others => '0');
-		else
-			instruction <= new_instruction;
-			last_instruction <= new_instruction;
-		end if;
-	END update_instruction;
+		PROCEDURE update_instruction(signal new_instruction : STD_LOGIC_VECTOR(32-1 downto 0)) IS
+		BEGIN
+			if (new_instruction = Z_BYTE_32) then
+				instruction <= (others => '0');
+				last_instruction <= (others => '0');
+			else
+				instruction <= new_instruction;
+				last_instruction <= new_instruction;
+			end if;
+		END update_instruction;
 
 	begin
 		if reset = '1' then
@@ -78,6 +83,18 @@ begin
 				SHOW("Fetching " & INTEGER'image(TO_INTEGER(UNSIGNED(program_counter))));
 
 				case( current_state ) is
+					when IGNORE =>
+						current_state <= IGNORE;
+						do_read <= '0';
+						is_busy <= '1';
+					when WAIT2 =>
+						current_state <= WAIT1;
+						do_read <= '0';
+						is_busy <= '1';
+					when WAIT1 =>
+						current_state <= FETCHING;
+						do_read <= '0';
+						is_busy <= '1';
 					when FIRST_CONTACT =>
 						do_read <= '1';
 						is_busy <= '1';
@@ -93,7 +110,13 @@ begin
 									do_read <= '1';
 									is_busy <= '0';
 									update_instruction(data);
-									current_state <= INSTRUCTION_RECEIVED;
+
+									test := test + 1;
+									if (test = 3) then
+										current_state <= IGNORE;
+									else
+										current_state <= INSTRUCTION_RECEIVED;
+									end if;
 								else
 									do_read <= '1';
 									is_busy <= '1';
