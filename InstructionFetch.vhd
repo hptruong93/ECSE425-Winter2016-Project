@@ -50,8 +50,6 @@ signal last_instruction : STD_LOGIC_VECTOR(32-1 downto 0);
 
 begin
 	synced_clock : process(clk, reset)
-		variable test : natural := 0;
-
 		PROCEDURE update_instruction(signal new_instruction : STD_LOGIC_VECTOR(32-1 downto 0)) IS
 		BEGIN
 			if (new_instruction = Z_BYTE_32) then

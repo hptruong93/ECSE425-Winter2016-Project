@@ -56,13 +56,13 @@ PACKAGE BODY StallUtil IS
 		--Stall if destination_register_1 or destination_register_2 is the destination of the instruction right before us
 		if (destination_register_1 /= "00000" and destination_register_1 = previous_destinations_output(1) and previous_sources_output(1) = FORWARD_SOURCE_ALU) or
 			(destination_register_2 /= "00000" and destination_register_2 = previous_destinations_output(1) and previous_sources_output(1) = FORWARD_SOURCE_ALU) then
-			SHOW("DECODER STALL DUE TO BRANCH");
+			SHOW("STALL: DECODER STALL DUE TO BRANCH");
 			result := '1';
 		elsif (destination_register_1 /= "00000" and destination_register_1 = previous_destinations_output(0) and previous_sources_output(0) = FORWARD_SOURCE_ALU) or
 			(destination_register_2 /= "00000" and destination_register_2 = previous_destinations_output(0) and previous_sources_output(0) = FORWARD_SOURCE_ALU) then
 			result := '1';
 		else
-			SHOW("DECODER NOT STALL DUE TO BRANCH");
+			SHOW("STALL: DECODER NOT STALL DUE TO BRANCH");
 			result := '0';
 		end if;
 

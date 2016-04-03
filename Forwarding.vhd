@@ -62,14 +62,14 @@ begin
 	begin
 		if (clk'event and clk = '0') then
 			--SHOW("Source 1 result is " & INTEGER'image(source1_result));
-			SHOW("Source 1 reg is " & INTEGER'image(TO_INTEGER(UNSIGNED(data1_register))));
-			
-			--SHOW("Source 2 result is " & INTEGER'image(source2_result));
-			SHOW("Source 2 reg is " & INTEGER'image(TO_INTEGER(UNSIGNED(data2_register))));
+			--SHOW("FORWARDING: Source 1 reg is " & INTEGER'image(TO_INTEGER(UNSIGNED(data1_register))));
 
-			SHOW("++++++Destinations are " & INTEGER'image(TO_INTEGER(UNSIGNED(previous_destinations(0)))) & INTEGER'image(TO_INTEGER(UNSIGNED(previous_destinations(1)))) & INTEGER'image(TO_INTEGER(UNSIGNED(previous_destinations(2)))));
-			SHOW("++++++Sources are " & STD_LOGIC'image(previous_sources(0)) & STD_LOGIC'image(previous_sources(1)) & STD_LOGIC'image(previous_sources(2)));
-			SHOW("=====ALUs are " & INTEGER'image(TO_INTEGER(SIGNED(alu_buffered_output(0)))) & INTEGER'image(TO_INTEGER(SIGNED(alu_buffered_output(1)))) & INTEGER'image(TO_INTEGER(SIGNED(alu_buffered_output(2)))));
+			----SHOW("FORWARDING: Source 2 result is " & INTEGER'image(source2_result));
+			--SHOW("FORWARDING: Source 2 reg is " & INTEGER'image(TO_INTEGER(UNSIGNED(data2_register))));
+
+			--SHOW("FORWARDING: ++++++Destinations are " & INTEGER'image(TO_INTEGER(UNSIGNED(previous_destinations(0)))) & INTEGER'image(TO_INTEGER(UNSIGNED(previous_destinations(1)))) & INTEGER'image(TO_INTEGER(UNSIGNED(previous_destinations(2)))));
+			--SHOW("FORWARDING: ++++++Sources are " & STD_LOGIC'image(previous_sources(0)) & STD_LOGIC'image(previous_sources(1)) & STD_LOGIC'image(previous_sources(2)));
+			--SHOW("FORWARDING: =====ALUs are " & INTEGER'image(TO_INTEGER(SIGNED(alu_buffered_output(0)))) & INTEGER'image(TO_INTEGER(SIGNED(alu_buffered_output(1)))) & INTEGER'image(TO_INTEGER(SIGNED(alu_buffered_output(2)))));
 
 			--if ((previous_destinations(0) = data2_register) and (previous_destinations(0) /= "00000") and (previous_sources(0) = FORWARD_SOURCE_ALU)) then
 			--	SHOW("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");

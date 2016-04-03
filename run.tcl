@@ -6,17 +6,17 @@ proc AddWaves {} {
 	add wave -label clock -position end  -radix binary sim:/masterpipeline_instance/clk
 	add wave -label reset -position end  -radix binary sim:/masterpipeline_instance/reset
 
-	add wave -noupdate -divider -height 16 memarbiter_tb
+
 	#Generic
+	add wave -noupdate -divider -height 16 Generic
 	# add wave -label signal_to_mem -position end  -radix binary sim:/masterpipeline_instance/signal_to_mem
 	# add wave -label delayed_signal_to_mem -position end  -radix binary sim:/masterpipeline_instance/delayed_signal_to_mem
 	# add wave -label delayed_writeback_source -position end  -radix binary sim:/masterpipeline_instance/delayed_writeback_source
 	# add wave -label writeback_source -position end  -radix binary sim:/masterpipeline_instance/writeback_source
 	# add wave -label delayed_mem_writeback_register -position end  -radix decimal sim:/masterpipeline_instance/delayed_mem_writeback_register
 
-	add wave -noupdate -divider -height 16 memarbiter_tb
-
 	#memory_arbiter
+	add wave -noupdate -divider -height 16 memory_arbiter
 	# add wave -label we1 -position end  -radix binary sim:/masterpipeline_instance/we1
 	# add wave -label re1 -position end  -radix binary sim:/masterpipeline_instance/re1
 	# add wave -label addr1 -position end  -radix decimal sim:/memory_arbiter_instance/addr1
@@ -25,45 +25,54 @@ proc AddWaves {} {
 	# add wave -label busy2 -position end  -radix binary sim:/masterpipeline_instance/busy2
 	# add wave -label busy1 -position end  -radix binary sim:/masterpipeline_instance/busy1
 
-	add wave -label we0 -position end  -radix binary sim:/memory_arbiter_instance/main_memory/we0
-	add wave -label we1 -position end  -radix binary sim:/memory_arbiter_instance/main_memory/we1
-	add wave -label we2 -position end  -radix binary sim:/memory_arbiter_instance/main_memory/we2
-	add wave -label we3 -position end  -radix binary sim:/memory_arbiter_instance/main_memory/we3
+	# add wave -label we0 -position end  -radix binary sim:/memory_arbiter_instance/main_memory/we0
+	# add wave -label we1 -position end  -radix binary sim:/memory_arbiter_instance/main_memory/we1
+	# add wave -label we2 -position end  -radix binary sim:/memory_arbiter_instance/main_memory/we2
+	# add wave -label we3 -position end  -radix binary sim:/memory_arbiter_instance/main_memory/we3
 
-	add wave -label re0 -position end  -radix binary sim:/memory_arbiter_instance/main_memory/re0
-	add wave -label re1 -position end  -radix binary sim:/memory_arbiter_instance/main_memory/re1
-	add wave -label re2 -position end  -radix binary sim:/memory_arbiter_instance/main_memory/re2
-	add wave -label re3 -position end  -radix binary sim:/memory_arbiter_instance/main_memory/re3
+	# add wave -label re0 -position end  -radix binary sim:/memory_arbiter_instance/main_memory/re0
+	# add wave -label re1 -position end  -radix binary sim:/memory_arbiter_instance/main_memory/re1
+	# add wave -label re2 -position end  -radix binary sim:/memory_arbiter_instance/main_memory/re2
+	# add wave -label re3 -position end  -radix binary sim:/memory_arbiter_instance/main_memory/re3
 
 
-	add wave -label mm_initialize -position end  -radix binary sim:/memory_arbiter_instance/mm_initialize
+	# add wave -label mm_initialize -position end  -radix binary sim:/memory_arbiter_instance/mm_initialize
 	add wave -label mm_re -position end  -radix binary sim:/memory_arbiter_instance/mm_re
-	add wave -label mm_we -position end  -radix binary sim:/memory_arbiter_instance/mm_we
+	# add wave -label mm_we -position end  -radix binary sim:/memory_arbiter_instance/mm_we
 	add wave -label mm_rd_ready -position end  -radix binary sim:/memory_arbiter_instance/mm_rd_ready
-	add wave -label mm_wr_done -position end  -radix binary sim:/memory_arbiter_instance/mm_wr_done
+	# add wave -label mm_wr_done -position end  -radix binary sim:/memory_arbiter_instance/mm_wr_done
 	add wave -label mm_address -position end  -radix decimal sim:/memory_arbiter_instance/mm_address
 	add wave -label mm_data -position end  -radix decimal sim:/memory_arbiter_instance/mm_data
 	# add wave -label Word_Byte -position end  -radix decimal sim:/memory_arbiter_instance/Word_Byte
 	# add wave -label input_data_line -position end  -radix decimal sim:/masterpipeline_instance/mem_stage_instance/input_data_line
 
-	add wave -noupdate -divider -height 16 MemStage
+	#Cache
+	add wave -noupdate -divider -height 16 Cache
+	add wave -label cache_read -position end  -radix binary sim:/masterpipeline_instance/cache_read
+	add wave -label cache_output -position end  -radix decimal sim:/masterpipeline_instance/cache_output
+
+	#InstructionFetch
+	add wave -noupdate -divider -height 16 InstructionFetch
+	add wave -label fetched_instruction -position end  -radix decimal sim:/masterpipeline_instance/fetched_instruction
+
+	#ALU
+	add wave -noupdate -divider -height 16 ALU
+	# add wave -label alu_data1 -position end  -radix decimal sim:/masterpipeline_instance/data1
+	# add wave -label alu_data2 -position end  -radix decimal sim:/masterpipeline_instance/data2
+	# add wave -label alu_output -position end  -radix decimal sim:/masterpipeline_instance/result
 
 	#MemStage
+	add wave -noupdate -divider -height 16 MemStage
 	add wave -label mem_address -position end  -radix decimal sim:/masterpipeline_instance/mem_stage_instance/mem_address
 	add wave -label mem_stage_busy -position end  -radix decimal sim:/masterpipeline_instance/mem_stage_busy
 	# add wave -label store_load_address -position end  -radix decimal sim:/masterpipeline_instance/store_load_address
 	# add wave -label mem_writeback_register -position end  -radix decimal sim:/masterpipeline_instance/mem_writeback_register
-	# add wave -label fetched_instruction -position end  -radix binary sim:/masterpipeline_instance/fetched_instruction
-	add wave -label do_read -position end  -radix binary sim:/masterpipeline_instance/mem_stage_instance/is_mem_busy
+
+	add wave -label is_mem_busy -position end  -radix binary sim:/masterpipeline_instance/mem_stage_instance/is_mem_busy
 	add wave -label do_read -position end  -radix binary sim:/masterpipeline_instance/mem_stage_instance/do_read
 	add wave -label do_write -position end  -radix binary sim:/masterpipeline_instance/mem_stage_instance/do_write
 
-	add wave -noupdate -divider -height 16 ALU
 
-	#ALU
-	# add wave -label alu_data1 -position end  -radix decimal sim:/masterpipeline_instance/data1
-	# add wave -label alu_data2 -position end  -radix decimal sim:/masterpipeline_instance/data2
-	# add wave -label alu_output -position end  -radix decimal sim:/masterpipeline_instance/result
 
 	add wave -noupdate -divider -height 16 Memory
 
@@ -104,10 +113,12 @@ vcom CPU.vhd
 vcom ForwardingUtil.vhd
 vcom Forwarding.vhd
 vcom StallUtil.vhd
+vcom CacheInfrastructure.vhd
 
 vcom memory_arbiter_lib.vhd
 vcom memory_arbiter.vhd
 
+vcom Cache.vhd
 vcom InstructionFetch.vhd
 vcom decoder.vhd
 vcom ALU.vhd

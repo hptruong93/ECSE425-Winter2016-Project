@@ -158,11 +158,19 @@ port (	clk 	: in STD_LOGIC;
 	);
 end COMPONENT;
 
+--cache
+signal cache_read : STD_LOGIC;
+signal cache_busy : STD_LOGIC;
+signal cache_address : REGISTER_VALUE;
+signal natural_cache_address : NATURAl;
+signal cache_output : REGISTER_VALUE;
+
+--instruction fetch
 signal operation : STD_LOGIC_VECTOR(6-1 downto 0); -- Decoder => ALU
 signal do_stall : STD_LOGIC; -- Decoder ==> IF
 signal instruction : STD_LOGIC_VECTOR(32-1 downto 0); -- Fetch unit ==> Decoder
-signal data1 : STD_LOGIC_VECTOR(32-1 downto 0); -- Decoder ==> ALU
-signal data2 : STD_LOGIC_VECTOR(32-1 downto 0); -- Decoder ==> ALU
+signal data1 : REGISTER_VALUE; -- Decoder ==> ALU
+signal data2 : REGISTER_VALUE; -- Decoder ==> ALU
 --Forwarding
 signal previous_stall_destinations_output : previous_destination_array;
 signal previous_stall_sources_output : previous_source_arrray;
@@ -178,8 +186,8 @@ signal lo_reg : signed (32-1 downto 0); -- ALU ==> Mem unit
 signal hi_reg : signed (32-1 downto 0); -- ALU ==> Mem unit
 signal result : signed(32-1 downto 0); -- ALU ==> Mem unit
 signal registers : register_array;
-signal pc_reg : STD_LOGIC_VECTOR(32-1 downto 0); -- Fetch ==> Decode
-signal instruction_address_output : STD_LOGIC_VECTOR(32-1 downto 0);
+signal pc_reg : REGISTER_VALUE; -- Fetch ==> Decode
+signal instruction_address_output : REGISTER_VALUE;
 signal mem_writeback_register : STD_LOGIC_VECTOR(5-1 downto 0); -- Decoder ==> Write back unit
 signal delayed_mem_writeback_register : STD_LOGIC_VECTOR(5-1 downto 0); -- Decoder ==> Write back unit
 signal stored_register : STD_LOGIC_VECTOR(5-1 downto 0); -- Decoder ==> Mem unit
@@ -191,15 +199,32 @@ signal writeback_source : STD_LOGIC_VECTOR(3-1 downto 0);
 signal delayed_writeback_source : STD_LOGIC_VECTOR(3-1 downto 0);
 
 signal branch_signal : STD_LOGIC_VECTOR(2-1 downto 0); --send to branch
-signal branch_address : STD_LOGIC_VECTOR(32-1 downto 0);
+signal branch_address : REGISTER_VALUE;
 signal mem_stage_busy : STD_LOGIC;
 signal instruction_fetch_busy : STD_LOGIC;
-signal mem_stage_output : STD_LOGIC_VECTOR(32-1 downto 0);
+signal mem_stage_output : REGISTER_VALUE;
 
 begin
-	instruction_address <= to_integer(unsigned(instruction_address_output));
+	--instruction_address <= to_integer(unsigned(instruction_address_output));
+	natural_cache_address <= TO_INTEGER(UNSIGNED(cache_address));
 
 	observed_registers <= registers;
+
+	cache_isntance : ENTITY work.Cache port map (
+			clk => clk,
+			reset => reset,
+
+			mem_data => fetched_instruction, --from memory
+
+			cache_read => cache_read,
+			is_mem_busy => busy2,
+			mem_address => natural_cache_address, --input from instruction fetch. Always read
+
+			do_read => re2, --output to memory arbiter
+			load_address => instruction_address, --address to send to memory arbiter
+			is_cache_busy => cache_busy,
+			cache_output => cache_output --to instruction fetch
+		);
 
 	fetch_instance : InstructionFetch port map (
 		clk => clk,
@@ -207,16 +232,16 @@ begin
 
  		branch_signal => branch_signal,
 		branch_address => branch_address,
-		data => fetched_instruction,
+		data => cache_output, --from memory
 
 		do_stall => do_stall,
- 		is_mem_busy => busy2,
+ 		is_mem_busy => cache_busy,
 
  		pc_reg => pc_reg,
-		do_read => re2,
-		address => instruction_address_output,--STD_LOGIC_VECTOR(unsigned(instruction_address_output, 32)),
+		do_read => cache_read,
+		address => cache_address,
 		is_busy => instruction_fetch_busy, -- memory is busy, cannot fetch instruction
-		instruction => instruction
+		instruction => instruction --to decoder
 	);
 
 	decoder_instance : Decoder port map (
