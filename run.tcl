@@ -49,6 +49,8 @@ proc AddWaves {} {
 	#Cache
 	add wave -noupdate -divider -height 16 Cache
 	add wave -label cache_read -position end  -radix binary sim:/masterpipeline_instance/cache_read
+	add wave -label cache_busy -position end  -radix decimal sim:/masterpipeline_instance/cache_busy
+	add wave -label cache_address -position end  -radix decimal sim:/masterpipeline_instance/natural_cache_address
 	add wave -label cache_output -position end  -radix decimal sim:/masterpipeline_instance/cache_output
 	add wave -label load_address -position end  -radix decimal sim:/masterpipeline_instance/instruction_address
 
@@ -172,4 +174,4 @@ vcom test_thewholething.vhd
 vsim -t ps thewholething_tb
 AddWaves
 force -deposit clk 0 0 ns, 1 0.5 ns -repeat 1 ns
-run 20 ns
+run 25 ns

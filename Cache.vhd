@@ -13,7 +13,7 @@ use work.register_array.all;
 use work.cache_infrastructure.all;
 
 entity Cache is
-port (	
+port (
 			clk 	: in STD_LOGIC;
 			reset : in STD_LOGIC;
 
@@ -52,7 +52,7 @@ begin
 		variable cached_value : REGISTER_VALUE;
 		variable cache_hit : BOOLEAN;
 
-		PROCEDURE lru_replace_on_miss(variable tag : in TAG_VALUE ; signal retrieved_value : REGISTER_VALUE; 
+		PROCEDURE lru_replace_on_miss(variable tag : in TAG_VALUE ; signal retrieved_value : REGISTER_VALUE;
 												variable start_lru_index : NATURAL; variable end_lru_index : NATURAL) IS --end is inclusive
 			variable unused_index : NATURAL;
 			variable all_used : STD_LOGIC;
@@ -61,7 +61,7 @@ begin
 
 			for i in start_lru_index to end_lru_index loop
 				if lru_data(i) = '0' then
-					SHOW("CACHE REPLACE Unused at " & INTEGER'image(i));
+					--SHOW("CACHE REPLACE Unused at " & INTEGER'image(i));
 					unused_index := i;
 					all_used := '0';
 					exit;
@@ -69,12 +69,12 @@ begin
 			end loop;
 
 			if all_used = '1' then --all are used. Set everything to 0
-				SHOW("CACHE REPLACEMENT_BIT_PLRU ALL USED");
+				--SHOW("CACHE REPLACEMENT_BIT_PLRU ALL USED");
 				unused_index := start_lru_index + RAND_RANGE(rand, end_lru_index - start_lru_index);
 				lru_data <= (others => '0');
 			end if;
 
-			SHOW("CACHE REPLACE Writing back at " & INTEGER'image(unused_index));
+			--SHOW("CACHE REPLACE Writing back at " & INTEGER'image(unused_index));
 			cached_data(unused_index) <= retrieved_value;
 			cached_tags(unused_index) <= tag;
 		END lru_replace_on_miss;
@@ -83,7 +83,7 @@ begin
 -------------------------------------------------------------------------------------------------------------
 		PROCEDURE get_cached_value(signal address : in NATURAL) IS
 			variable currently_cached : REGISTER_VALUE;
-			
+
 			variable slot_number : NATURAL;
 			variable index : NATURAL;
 
@@ -136,14 +136,14 @@ begin
 						cached_tag := cached_tags(slot_number + index);
 
 						if ((tag = cached_tag) and (currently_cached /= INVALID_DATA)) then
-							SHOW("CACHE: Tag is and cached_tag is " & INTEGER'image(index) & INTEGER'image(TO_INTEGER(UNSIGNED(tag))) & INTEGER'image(TO_INTEGER(UNSIGNED(cached_tag))));
-							SHOW_LOVE("currently_cached ", currently_cached);
+							--SHOW("CACHE: Tag is and cached_tag is " & INTEGER'image(index) & INTEGER'image(TO_INTEGER(UNSIGNED(tag))) & INTEGER'image(TO_INTEGER(UNSIGNED(cached_tag))));
+							--SHOW_LOVE("currently_cached ", currently_cached);
 							cached_value := currently_cached;
 							cache_hit := TRUE;
 						end if;
 					end loop;
 				when FULL_ASSOCIATIVITY =>
-					SHOW("CACHE Reading address " & INTEGER'image(address));
+					--SHOW("CACHE Reading address " & INTEGER'image(address));
 					tag := STD_LOGIC_VECTOR(TO_UNSIGNED(address, tag'length));
 					cache_hit := FALSE;
 
@@ -284,12 +284,21 @@ begin
 					if cache_read = '1' then
 						get_cached_value(mem_address);
 						if cache_hit then -- cache hit, return the value
-							SHOW_LOVE("CACHE hit. Returning value ", cached_value);
+							SHOW_LOVE("CACHE hit at address " & INTEGER'image(mem_address), " Returning value ", cached_value);
 							cache_hit_callback(mem_address);
 							cache_output <= cached_value;
-							current_state <= STALL;
+							if clk = '0' then
+								--If clk is falling edge then we should wait stall for half a clock cycle so that
+								-- instruction fetch can react to our output and provide new request at rising edge
+								current_state <= STALL;
+							else
+								--Instruction fetch is only sensitive to rising edge,
+								--meaning that it can only place a request on rising edge. Therefore
+								--our processing always starts at falling edge. Consequently, a cache hit at rising edge is impossible.
+								current_state <= IDLE;
+							end if;
 						else --cache miss, read from memory
-							SHOW("CACHE missed. Reading from memory");
+							SHOW("CACHE missed. Reading from memory " & INTEGER'image(mem_address));
 							is_cache_busy <= '1';
 							do_read <= '1';
 							load_address <= mem_address;
@@ -302,7 +311,7 @@ begin
 				when FETCHING =>
 					SHOW("CACHE FETCHING");
 					if is_mem_busy = '0' then --mem finish loading. Return the value
-						SHOW_LOVE("CACHE RETURNING FROM MEMORY WITH DATA ", mem_data);
+						SHOW_LOVE("CACHE RETURNING FROM MEMORY AT ADDRESS " & INTEGER'image(mem_address), " WITH DATA ", mem_data);
 						cache_miss_callback(mem_address, mem_data);
 						cache_output <= mem_data;
 						is_cache_busy <= '0';
