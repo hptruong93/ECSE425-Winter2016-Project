@@ -18,7 +18,7 @@ port (clk 	: in STD_LOGIC;
 			re1			: in STD_LOGIC;
 			we1			: in STD_LOGIC;
 			busy1 		: out STD_LOGIC;
-			
+
 			--Memory port #2
 			addr2		: in NATURAL;
 			data2_in	: in STD_LOGIC_VECTOR(MEM_DATA_WIDTH-1 downto 0);
@@ -39,7 +39,7 @@ architecture behavioral of memory_arbiter is
 	SIGNAL mm_rd_ready      : STD_LOGIC                                     := '0';
 	SIGNAL mm_data          : STD_LOGIC_VECTOR(MEM_DATA_WIDTH-1 downto 0)   := (others => 'Z');
 	SIGNAL mm_initialize    : STD_LOGIC                                     := '0';
-	type state is (idle, read1, read2, write1, write2);
+	type state is (idle, read1, read2, write1, write2, stall);
 	signal y : state;
 begin
 
@@ -48,7 +48,7 @@ begin
       GENERIC MAP (
 			Num_Bytes_in_Word	=> NUM_BYTES_IN_WORD,
 			Num_Bits_in_Byte 	=> NUM_BITS_IN_BYTE,
-			Read_Delay        => 0, 
+			Read_Delay        => 0,
 			Write_Delay       => 0
       )
       PORT MAP (
@@ -77,23 +77,26 @@ begin
 	elsif (clk'event) then
 		mm_initialize <= '0';
 		case y is
+			when stall =>
+				y <= idle;
 			when idle =>
 				if re1 = '1' then
-					SHOW("Goinggggggggggggggggg to read 1");
+					--SHOW("Memory Arbiter started 1 reading address " & integer'image(addr1));
 					mm_address <= addr1;
 					mm_re <= re1;
 					mm_we <= we1;
 					busy1 <= '1';
 					y <= read1;
 				elsif we1 = '1' then
-					SHOW("iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiin memory_arbiter idle we1 = 1    >>>>" & INTEGER'image(addr1));
+					--SHOW("iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiin memory_arbiter idle we1 = 1    >>>>" & INTEGER'image(addr1));
 					mm_address <= addr1;
 					mm_re <= re1;
 					mm_we <= we1;
 					busy1 <= '1';
+					mm_data <= data1_in;
 					y <= write1;
 				elsif re2 = '1' then
-					SHOW("iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiin memory_arbiter re2 = 1    >>>>" & INTEGER'image(addr2));
+					--SHOW("iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiin memory_arbiter re2 = 1    >>>>" & INTEGER'image(addr2));
 					mm_address <= addr2;
 					mm_re <= re2;
 					mm_we <= we2;
@@ -109,11 +112,11 @@ begin
 					y <= idle;
 				end if;
 			when read1 =>
-				SHOW("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA Read 1 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+				--SHOW("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA Read 1 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
 				busy1 <= '1';
 				mm_address <= addr1;
 				mm_re <= re1;
-				mm_we <= we1;
+				mm_we <= '0';
 				--SHOW("Here Leonardo DiCaprio" & STD_LOGIC'image(mm_re));
 				if (re2 = '1' or we2 = '1') then
 					busy2 <= '1';
@@ -121,11 +124,8 @@ begin
 					busy2 <= '0'; -- user cancels mem access on 2
 				end if;
 
-
-
-
 				if (mm_rd_ready = '1') then
-					SHOW("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA Read 1 done");
+					--SHOW("Memory Arbiter finished 1 reading address " & integer'image(addr1));
 					mm_re <= '0';
 					mm_we <= '0';
 					busy1 <= '0';
@@ -140,12 +140,12 @@ begin
 					end if;
 				end if;
 			when write1 =>
-				SHOW("iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii memory_arbiter writing to memory at address: >>>" & INTEGER'image(addr1));
+				--SHOW("iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii memory_arbiter writing to memory at address: >>>" & INTEGER'image(addr1));
 				busy1 <= '1';
 				mm_address <= addr1;
 				mm_data <= data1_in;
 				mm_we <= we1;
-				mm_re <= re1;
+				mm_re <= '0';
 				if (re2 = '1' or we2 = '1') then
 					busy2 <= '1';
 				else
@@ -153,17 +153,19 @@ begin
 				end if;
 				if (mm_wr_done = '1') then
 					busy1 <= '0';
-					y <= idle;
+					mm_we <= '0';
+					mm_data <= (others => 'Z');
+					y <= stall; --We neeed to stall half a clk period so that clients running with rising edge will have time to react
 				else
 					y <= write1;
 				end if;
 			when read2 =>
-				SHOW("77777777777777777777777777777777777777777 in memory_arbiter re2 = 1    >>>>" & INTEGER'image(addr2));
+				--SHOW("77777777777777777777777777777777777777777 in memory_arbiter re2 = 1    >>>>" & INTEGER'image(addr2));
 				busy2 <= '1';
 				mm_address <= addr2;
 				--mm_data <= data2;
 				mm_re <= re2;
-				mm_we <= we2;
+				mm_we <= '0';
 				if (re1 = '1' or we1 = '1') then
 					busy1 <= '1';
 				else
@@ -173,7 +175,7 @@ begin
 
 
 				if (mm_rd_ready = '1') then
-					SHOW("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA Read 2 done");
+					--SHOW("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA Read 2 done");
 					busy2 <= '0';
 					data2_out <= mm_data;
 					mm_re <= '0';
@@ -191,7 +193,7 @@ begin
 				mm_address <= addr2;
 				mm_data <= data2_in;
 				mm_we <= we2;
-				mm_re <= re2;
+				mm_re <= '0';
 				if (re1 = '1' or we1 = '1') then
 					busy1 <= '1';
 				else
@@ -209,7 +211,7 @@ begin
 			end case;
 		end if;
 end process;
-			
+
 
 
 end behavioral;

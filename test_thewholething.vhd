@@ -7,14 +7,14 @@ use work.memory_arbiter_lib.all;
 
 ENTITY thewholething_tb IS
 END thewholething_tb;
- 
+
 ARCHITECTURE behaviour OF thewholething_tb IS
- 
+
 SIGNAL clk, reset: STD_LOGIC := '0';
 CONSTANT clk_period : time := 1 ns;
 
 COMPONENT MasterPipeline is
-            port (  
+            port (
                 clk : in STD_LOGIC;
                 reset : in STD_LOGIC;
                 observed_registers : out register_array;
@@ -47,7 +47,7 @@ COMPONENT memory_arbiter is
             re1 : in STD_LOGIC;
             we1 : in STD_LOGIC;
             busy1 : out STD_LOGIC;
-            
+
             --Memory port #2
             addr2 : in NATURAL;
             data2_in : in STD_LOGIC_VECTOR(MEM_DATA_WIDTH-1 downto 0);
@@ -76,7 +76,7 @@ signal destination_reg : NATURAL;
 signal count : STD_LOGIC := '0';
 
 
- 
+
 BEGIN
     masterpipeline_instance: MasterPipeline  PORT MAP (
         clk => clk,
@@ -93,13 +93,13 @@ BEGIN
         word_byte => word_byte, -- send to arbiter to control whether we interact in bytes or words
         re2 => re2,
         we1 => we1,
-        busy2 => busy2   
+        busy2 => busy2
     );
 
     memory_arbiter_instance: memory_arbiter PORT MAP (
         clk  => clk,
         reset => reset,
-  
+
         Word_Byte   => '1',
 
         --Memory port 1
@@ -111,15 +111,15 @@ BEGIN
         busy1 => busy1,
 
         --Memory port 2
-        addr2 => instruction_address, 
+        addr2 => instruction_address,
         data2_in => (others => 'Z'),
         data2_out => fetched_instruction,
         re2 => re2,
         we2 => '0',
-        busy2 => busy2 
+        busy2 => busy2
     );
 
-     -- HOW DO WE DO THIS SHIT
+     -- HOW DO WE DO THIS?
     clk_process : PROCESS
     BEGIN
         clk <= '1';
@@ -127,10 +127,13 @@ BEGIN
         clk <= '0';
         WAIT FOR clk_period/2;
     END PROCESS;
-   
- 
+
+
     --TODO: Thoroughly test the crap
     stim_process: PROCESS
+
+        variable interested_reg : NATURAL;
+
     BEGIN
         if count = '0' then count <= '1';
             SHOW("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
@@ -140,37 +143,24 @@ BEGIN
             WAIT FOR 1 * clk_period;
             reset <= '0';
 
-            SHOW(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>START TEST");
+            SHOW(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>START TEST");
             WAIT FOR 1 * clk_period;
             destination_reg <= 1;
-    -----------------------------------------------------------------------------------------------------------------------     
+            interested_reg := 1;
+    -----------------------------------------------------------------------------------------------------------------------
             WAIT FOR 5 * clk_period;
             --SHOW_LOVE("STORING VALUE TO", observed_registers(destination_reg));
 
             destination_reg <= 1;
-            WAIT FOR 3 * clk_period;
-            
-            SHOW_LOVE("EXPECTING 2", observed_registers(destination_reg));
-            destination_reg <= 1;
+            WAIT FOR 4 * clk_period;
 
-            WAIT FOR 1 * clk_period;
-            SHOW_LOVE("EXPECTING 14", observed_registers(destination_reg));
-            WAIT FOR 1 * clk_period;
-            SHOW_LOVE("EXPECTING 14", observed_registers(destination_reg));
-            WAIT FOR 1 * clk_period;
-            SHOW_LOVE("EXPECTING 14", observed_registers(destination_reg));
-            WAIT FOR 1 * clk_period;
-            SHOW_LOVE("EXPECTING 14", observed_registers(destination_reg));
-            WAIT FOR 1 * clk_period;
-            SHOW_LOVE("EXPECTING 14", observed_registers(destination_reg));
-            WAIT FOR 1 * clk_period;
-            SHOW_LOVE("EXPECTING 14", observed_registers(destination_reg));
-            WAIT FOR 1 * clk_period;
-            SHOW_LOVE("EXPECTING 14", observed_registers(destination_reg));
+            --SHOW_LOVE("RESULT IS ", observed_registers(interested_reg));
+            destination_reg <= 4;
+            interested_reg := 4;
 
-            WAIT FOR 1 * clk_period;
+            WAIT FOR 100 * clk_period;
 
-            SHOW("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<END TEST");
+            SHOW("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<END TEST");
         else
             count <= '1';
             WAIT FOR 1000 * clk_period;

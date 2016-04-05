@@ -7,9 +7,9 @@ use ieee.numeric_std_unsigned.all;
 
 ENTITY mainmemory_tb IS
 END mainmemory_tb;
- 
+
 ARCHITECTURE behaviour OF mainmemory_tb IS
- 
+
 SIGNAL clk, reset: STD_LOGIC := '0';
 CONSTANT clk_period : time := 1 ns;
 
@@ -22,7 +22,7 @@ COMPONENT Main_Memory IS
 						wr_done:out std_logic; --indicates that the write operation has been done.
 						re :in std_logic;
 						rd_ready: out std_logic; --indicates that the read data is ready at the output.
-						data : inout std_logic_vector((4*8)-1 downto 0);        
+						data : inout std_logic_vector((4*8)-1 downto 0);
 						initialize: in std_logic;
 						dump: in std_logic
 				);
@@ -34,7 +34,7 @@ signal we : std_logic;
 signal wr_done: std_logic; --indicates that the write operation has been done.
 signal re : std_logic;
 signal rd_ready: std_logic; --indicates that the read data is ready at the output.
-signal data : std_logic_vector((4*8)-1 downto 0);        
+signal data : std_logic_vector((4*8)-1 downto 0);
 signal initialize: std_logic;
 signal dump: std_logic;
 
@@ -54,7 +54,7 @@ BEGIN
 					initialize => 	initialize,
 					dump => 			dump
 					);
- 
+
 	 --clock process
 	clk_process : PROCESS
 	BEGIN
@@ -63,8 +63,8 @@ BEGIN
 		clk <= '0';
 		WAIT FOR clk_period/2;
 	END PROCESS;
-   
- 
+
+
 	--TODO: Thoroughly test the crap
 	stim_process: PROCESS
 	BEGIN
@@ -82,7 +82,7 @@ BEGIN
 		we <= '0';
 		re <= '1';
 		address <= 0;
-		data <= ZERO_BYTE_32;
+		data <= Z_BYTE_32;
 
 		WAIT FOR 1 * clk_period;
 		while (rd_ready = '0') loop
@@ -95,7 +95,7 @@ BEGIN
 		we <= '0';
 		re <= '1';
 		address <= 0;
-		data <= ZERO_BYTE_32;
+		data <= Z_BYTE_32;
 
 		WAIT FOR 1 * clk_period;
 		while (rd_ready = '0') loop
@@ -112,7 +112,7 @@ BEGIN
 		we <= '0';
 		re <= '1';
 		address <= 4;
-		data <= ZERO_BYTE_32;
+		data <= Z_BYTE_32;
 
 		WAIT FOR 1 * clk_period;
 		while (rd_ready = '0') loop
@@ -129,7 +129,7 @@ BEGIN
 		we <= '0';
 		re <= '1';
 		address <= 8;
-		data <= ZERO_BYTE_32;
+		data <= Z_BYTE_32;
 
 		WAIT FOR 1 * clk_period;
 		while (rd_ready = '0') loop
@@ -146,7 +146,7 @@ BEGIN
 		we <= '0';
 		re <= '1';
 		address <= 3;
-		data <= ZERO_BYTE_32;
+		data <= Z_BYTE_32;
 
 		WAIT FOR 1 * clk_period;
 		while (rd_ready = '0') loop
@@ -179,7 +179,7 @@ BEGIN
 		Word_Byte <= '0';
 		we <= '1';
 		re <= '0';
-		
+
 		address <= 1;
 		WAIT FOR 1 * clk_period;
 		data <= FIRST_BYTE_32;
@@ -204,14 +204,26 @@ BEGIN
 			WAIT FOR 1 * clk_period;
 		end loop;
 
+		Word_Byte <= '1';
+		we <= '1';
+		re <= '0';
+		address <= 100;
+		--WAIT FOR 1 * clk_period;
+		data <= "00000000000000000000000000010001";
+
+		WAIT FOR 1 * clk_period;
+		while (wr_done = '0') loop
+			WAIT FOR 1 * clk_period;
+		end loop;
+
 -------------------------------------------------------------------------------------------
 -------------------------------------------------------------------------------------------
 
 		Word_Byte <= '1';
 		we <= '0';
 		re <= '1';
-		address <= 0;
-		data <= ZERO_BYTE_32;
+		address <= 100;
+		data <= Z_BYTE_32;
 		WAIT FOR 1 * clk_period;
 		while (rd_ready = '0') loop
 			WAIT FOR 1 * clk_period;

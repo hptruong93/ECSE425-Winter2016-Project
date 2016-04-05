@@ -9,7 +9,7 @@ port (	clk 	: in STD_LOGIC;
 
 			mem_address : in SIGNED(32-1 downto 0); -- coming from ALU
 			--operation : out STD_LOGIC_VECTOR(6-1 downto 0);
-			mem_writeback_register : in STD_LOGIC_VECTOR(5-1 downto 0); -- used for store, tells which register to read from.
+			stored_register : in STD_LOGIC_VECTOR(5-1 downto 0); -- used for store, tells which register to read from.
 			registers : in register_array;
 			signal_to_mem : in STD_LOGIC_VECTOR(3-1 downto 0);
 			is_mem_busy : in STD_LOGIC;
@@ -28,71 +28,78 @@ end MemStage;
 architecture behavioral of MemStage is
 
 type state is (
+	MEM_IGNORE,
 	MEM_WAIT,
 	MEM_ACCESS
 	);
 signal current_state : state;
+signal current_mem_address : SIGNED(32-1 downto 0) := (others => '0'); --Test purpose
 
 begin
-	address_line <= to_integer(mem_address);
 	synced_clock : process(clk, reset)
 	begin
 		if reset = '1' then
-			
+
 		elsif (rising_edge(clk)) then
 			current_state <= current_state;
 			do_read <= '0';
 			do_write <= '0';
 
+
+
 			case( signal_to_mem ) is
 				when LOAD_WORD =>
 					case( current_state ) is
 						when MEM_WAIT =>
-							SHOW("ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc MEM WAIT");
+							SHOW("MEM LOAD WORD WAIT WITH ADDRESS " & integer'image(to_integer(mem_address)));
 							is_busy <= '1';
 							if (is_mem_busy = '0') then
-								SHOW("ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc initiating LOAD");
+								--SHOW("ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc initiating LOAD");
 								word_byte <= '1'; -- interact with mem in word
 								do_read <= '1';
-								--address_line <= to_integer(mem_address); -- where to load from
+								address_line <= to_integer(mem_address); -- where to load from
+								current_mem_address <= mem_address;
 								current_state <= MEM_ACCESS;
 							end if;
 						when MEM_ACCESS =>
-							SHOW("ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc MEM ACCESS");
-
+							--SHOW("MEM STATE IS ACCESS");
 							if (is_mem_busy = '0') then
-								SHOW_LOVE("ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc finish LOAD with value ", input_data_line);
+								SHOW_LOVE("MEM finish LOAD with value ", input_data_line);
 								is_busy <= '0';
 								mem_stage_output <= input_data_line;
-								current_state <= MEM_WAIT;
+								current_state <= MEM_IGNORE;
 							else
 								do_read <= '1';
 							end if;
+						when MEM_IGNORE => --Enter this stage after mem operation to wait for decode to change its signal
+							current_state <= MEM_WAIT;
 					end case ;
 
 				when STORE_WORD =>
-					SHOW("ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc STORE_WORD");
+					--SHOW("ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc STORE_WORD");
 					case( current_state ) is
 						when MEM_WAIT =>
 							is_busy <= '1';
 
 							if (is_mem_busy = '0') then
-								SHOW("SW: IN MEM_WAIT >>>>>>>>>>>>>>>>" & INTEGER'image(TO_INTEGER(mem_address)));
+								SHOW_LOVE("MEM STORE_WORD WAIT WITH ADDRESS AND DATA " & INTEGER'image(TO_INTEGER(mem_address)) & INTEGER'image(to_integer(unsigned(stored_register))), registers(to_integer(unsigned(stored_register))));
 								word_byte <= '1'; -- interact with mem in word
-								--address_line <= to_integer(mem_address);  -- where to store
-								output_data_line <= registers(to_integer(unsigned(mem_writeback_register)));
+								address_line <= to_integer(mem_address);  -- where to store
+								output_data_line <= registers(to_integer(unsigned(stored_register)));
 								do_write <= '1';
+								current_mem_address <= mem_address;
 								current_state <= MEM_ACCESS;
 							end if;
 						when MEM_ACCESS =>
-
 							if (is_mem_busy = '0') then
-								SHOW("SW: IN MEM_ACESS >>>>>>>>>>>>>>>>" & INTEGER'image(TO_INTEGER(mem_address)));
+								SHOW("MEM finish STORE_WORD into value " & INTEGER'image(TO_INTEGER(current_mem_address)));
 								is_busy <= '0';
-								current_state <= MEM_WAIT;
+								current_state <= MEM_IGNORE;
 							else
 								do_write <= '1';
 							end if;
+						when MEM_IGNORE => --Enter this stage after mem operation to wait for decode to change its signal
+							current_state <= MEM_WAIT;
 					end case;
 				when LOAD_BYTE =>
 					case( current_state ) is
@@ -101,7 +108,7 @@ begin
 							if (is_mem_busy = '0') then
 								word_byte <= '0'; -- interact with mem in byte
 								do_read <= '1';
-								--address_line <= to_integer(mem_address);  -- where to load from
+								address_line <= to_integer(mem_address);  -- where to load from
 								current_state <= MEM_ACCESS;
 							end if;
 						when MEM_ACCESS =>
@@ -114,8 +121,10 @@ begin
 									mem_stage_output(31 downto 8) <= "000000000000000000000000";
 								end if;
 								mem_stage_output(7 downto 0) <= input_data_line(7 downto 0);
-								current_state <= MEM_WAIT;
+								current_state <= MEM_IGNORE;
 							end if;
+						when MEM_IGNORE => --Enter this stage after mem operation to wait for decode to change its signal
+							current_state <= MEM_WAIT;
 					end case;
 				when STORE_BYTE => -- preserve all words. TODO
 					case( current_state ) is
@@ -123,25 +132,28 @@ begin
 							is_busy <= '1';
 							if (is_mem_busy = '0') then
 								word_byte <= '0'; -- interact with mem in byte
-								output_data_line <= registers(to_integer(unsigned(mem_writeback_register)));
+								output_data_line <= registers(to_integer(unsigned(stored_register)));
 								do_write <= '1';
-								--address_line <= to_integer(mem_address);  -- where to store
+								address_line <= to_integer(mem_address);  -- where to store
 								current_state <= MEM_ACCESS;
 							end if;
 						when MEM_ACCESS =>
 							if (is_mem_busy = '0') then
 								is_busy <= '0';
-								current_state <= MEM_WAIT;
+								current_state <= MEM_IGNORE;
 							end if;
+						when MEM_IGNORE => --Enter this stage after mem operation to wait for decode to change its signal
+							current_state <= MEM_WAIT;
 					end case;
 				when MEM_IDLE =>
-					SHOW("ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc MEM IDLE");
+					is_busy <= '0';
+					SHOW("MEM IDLE");
 					current_state <= MEM_WAIT;
 				when others =>
-			
+
 			end case ;
 		end if;
 	end process ; -- synced_clock
-	
+
 
 end behavioral;

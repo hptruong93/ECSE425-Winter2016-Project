@@ -1,5 +1,8 @@
 #####################testin individual instructions#######################
-add 		$3 $0 $23
-addi		$5 $1 14
-addi		$6 $7 15
-jr			$0
+addi 	$1 $0 15
+addi 	$2 $0 15
+beq 	$1 $2 AAAA
+addi	$3 $0 32
+AAAA:   mult $1 $2
+		mflo $1
+jr		$0
