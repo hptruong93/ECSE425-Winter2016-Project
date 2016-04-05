@@ -50,6 +50,7 @@ proc AddWaves {} {
 	add wave -noupdate -divider -height 16 Cache
 	add wave -label cache_read -position end  -radix binary sim:/masterpipeline_instance/cache_read
 	add wave -label cache_output -position end  -radix decimal sim:/masterpipeline_instance/cache_output
+	add wave -label load_address -position end  -radix decimal sim:/masterpipeline_instance/instruction_address
 
 	#InstructionFetch
 	add wave -noupdate -divider -height 16 InstructionFetch
@@ -127,7 +128,7 @@ vcom WriteBack.vhd
 vcom MasterPipeline.vhd
 
 # #Testing files
-vcom test_mainmemory.vhd
+# vcom test_mainmemory.vhd
 # vcom test_instructionfetch.vhd
 # vcom test_alu.vhd
 # vcom test_memstage.vhd
