@@ -27,8 +27,8 @@ PACKAGE BODY StallUtil IS
 		) RETURN STD_LOGIC is
 		VARIABLE result : STD_LOGIC;
 	BEGIN
-		SHOW("STALL PREVIOUSES ARE " & STD_LOGIC'IMAGE(previous_sources_output(2)) & STD_LOGIC'IMAGE(previous_sources_output(1)) & STD_LOGIC'IMAGE(previous_sources_output(0)));
-		SHOW("STALL REGVIOUSES ARE " & INTEGER'image(TO_INTEGER(UNSIGNED(previous_destinations_output(2)))) & INTEGER'image(TO_INTEGER(UNSIGNED(previous_destinations_output(1)))) & INTEGER'image(TO_INTEGER(UNSIGNED(previous_destinations_output(0)))));
+		--SHOW("STALL PREVIOUSES ARE " & STD_LOGIC'IMAGE(previous_sources_output(2)) & STD_LOGIC'IMAGE(previous_sources_output(1)) & STD_LOGIC'IMAGE(previous_sources_output(0)));
+		--SHOW("STALL REGVIOUSES ARE " & INTEGER'image(TO_INTEGER(UNSIGNED(previous_destinations_output(2)))) & INTEGER'image(TO_INTEGER(UNSIGNED(previous_destinations_output(1)))) & INTEGER'image(TO_INTEGER(UNSIGNED(previous_destinations_output(0)))));
 
 		--Stall if lw, sw, lb, sb are previous instruction and this instruction is dependent on those
 		if (destination_register /= "00000" and destination_register = previous_destinations_output(2) and previous_sources_output(2) = FORWARD_SOURCE_MEM) then
@@ -50,8 +50,8 @@ PACKAGE BODY StallUtil IS
 		) RETURN STD_LOGIC is
 		VARIABLE result : STD_LOGIC;
 	BEGIN
-		SHOW("STALL PREVIOUSES ARE " & STD_LOGIC'IMAGE(previous_sources_output(2)) & STD_LOGIC'IMAGE(previous_sources_output(1)) & STD_LOGIC'IMAGE(previous_sources_output(0)));
-		SHOW("STALL REGVIOUSES ARE " & INTEGER'image(TO_INTEGER(UNSIGNED(previous_destinations_output(2)))) & INTEGER'image(TO_INTEGER(UNSIGNED(previous_destinations_output(1)))) & INTEGER'image(TO_INTEGER(UNSIGNED(previous_destinations_output(0)))));
+		--SHOW("STALL PREVIOUSES ARE " & STD_LOGIC'IMAGE(previous_sources_output(2)) & STD_LOGIC'IMAGE(previous_sources_output(1)) & STD_LOGIC'IMAGE(previous_sources_output(0)));
+		--SHOW("STALL REGVIOUSES ARE " & INTEGER'image(TO_INTEGER(UNSIGNED(previous_destinations_output(2)))) & INTEGER'image(TO_INTEGER(UNSIGNED(previous_destinations_output(1)))) & INTEGER'image(TO_INTEGER(UNSIGNED(previous_destinations_output(0)))));
 
 		--Stall if destination_register_1 or destination_register_2 is the destination of the instruction right before us
 		if (destination_register_1 /= "00000" and destination_register_1 = previous_destinations_output(1) and previous_sources_output(1) = FORWARD_SOURCE_ALU) or

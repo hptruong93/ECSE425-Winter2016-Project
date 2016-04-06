@@ -40,8 +40,9 @@ type state is (
 signal current_state : state;
 signal cached_data : CACHE_DATA_TYPE;
 signal cached_tags : CACHE_TAG_TYPE;
-signal lru_data : LRU_DATA_TYPE;
 
+signal fifo_data : FIFO_DATA_TYPE;
+signal lru_data : LRU_DATA_TYPE;
 signal rand : INTEGER := 1;
 
 begin
@@ -52,32 +53,7 @@ begin
 		variable cached_value : REGISTER_VALUE;
 		variable cache_hit : BOOLEAN;
 
-		PROCEDURE lru_replace_on_miss(variable tag : in TAG_VALUE ; signal retrieved_value : REGISTER_VALUE;
-												variable start_lru_index : NATURAL; variable end_lru_index : NATURAL) IS --end is inclusive
-			variable unused_index : NATURAL;
-			variable all_used : STD_LOGIC;
-		BEGIN
-			all_used := '1';
 
-			for i in start_lru_index to end_lru_index loop
-				if lru_data(i) = '0' then
-					--SHOW("CACHE REPLACE Unused at " & INTEGER'image(i));
-					unused_index := i;
-					all_used := '0';
-					exit;
-				end if;
-			end loop;
-
-			if all_used = '1' then --all are used. Set everything to 0
-				--SHOW("CACHE REPLACEMENT_BIT_PLRU ALL USED");
-				unused_index := start_lru_index + RAND_RANGE(rand, end_lru_index - start_lru_index);
-				lru_data <= (others => '0');
-			end if;
-
-			--SHOW("CACHE REPLACE Writing back at " & INTEGER'image(unused_index));
-			cached_data(unused_index) <= retrieved_value;
-			cached_tags(unused_index) <= tag;
-		END lru_replace_on_miss;
 
 -------------------------------------------------------------------------------------------------------------
 -------------------------------------------------------------------------------------------------------------
@@ -163,6 +139,36 @@ begin
 		END get_cached_value;
 -------------------------------------------------------------------------------------------------------------
 -------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------
+		PROCEDURE lru_replace_on_miss(variable tag : in TAG_VALUE ; signal retrieved_value : REGISTER_VALUE;
+												variable start_lru_index : NATURAL; variable end_lru_index : NATURAL) IS --end is inclusive
+			variable unused_index : NATURAL;
+			variable all_used : STD_LOGIC;
+		BEGIN
+			all_used := '1';
+
+			for i in start_lru_index to end_lru_index loop
+				if lru_data(i) = '0' then
+					--SHOW("CACHE REPLACE Unused at " & INTEGER'image(i));
+					unused_index := i;
+					all_used := '0';
+					exit;
+				end if;
+			end loop;
+
+			if all_used = '1' then --all are used. Set everything to 0
+				--SHOW("CACHE REPLACEMENT_BIT_PLRU ALL USED");
+				unused_index := start_lru_index + RAND_RANGE(rand, end_lru_index - start_lru_index);
+				lru_data <= (others => '0');
+			end if;
+
+			--SHOW("CACHE REPLACE Writing back at " & INTEGER'image(unused_index));
+			cached_data(unused_index) <= retrieved_value;
+			cached_tags(unused_index) <= tag;
+		END lru_replace_on_miss;
+-------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------
 		PROCEDURE cache_miss_callback(signal address : in NATURAL; signal retrieved_value : REGISTER_VALUE) IS
 			variable slot_number : NATURAL;
 			variable index : NATURAL;
@@ -229,6 +235,7 @@ begin
 							end_lru_index := CACHE_SIZE_IN_WORD-1;
 							lru_replace_on_miss(tag, retrieved_value, start_lru_index, end_lru_index);
 						when REPLACEMENT_FIFO =>
+
 						when others =>
 					end case ;
 				when others =>
@@ -236,18 +243,54 @@ begin
 		END cache_miss_callback;
 -------------------------------------------------------------------------------------------------------------
 -------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------
+		PROCEDURE lru_mark_on_hit(variable tag : TAG_VALUE; variable start_lru_index : NATURAL; variable end_lru_index : NATURAL) IS
+		BEGIN
+			for i in start_lru_index to end_lru_index loop
+				if cached_tags(i) = tag then
+					lru_data(i) <= '1';
+				end if;
+			end loop;
+		END lru_mark_on_hit;
+-------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------
 		PROCEDURE cache_hit_callback(signal address : in NATURAL) IS
 			variable tag : TAG_VALUE;
+			variable slot_number : NATURAL;
+			variable start_lru_index, end_lru_index : NATURAL;
 		BEGIN
 			case( REPLACEMENT_STRATEGY ) is
 				when REPLACEMENT_BIT_PLRU =>
-					tag := STD_LOGIC_VECTOR(TO_UNSIGNED(address, tag'length) srl CACHE_SIZE_BIT_COUNT);
-					for i in 0 to CACHE_SIZE_IN_WORD-1 loop
-						if cached_tags(i) = tag then
-							lru_data(i) <= '1';
-						end if;
-					end loop;
+					case( CACHE_ASSOCIATIVITY ) is
+						when TWO_WAY_ASSOCIATIVITY =>
+							slot_number := address mod (CACHE_SIZE_IN_WORD / 2);
+							tag := STD_LOGIC_VECTOR(TO_UNSIGNED(address, tag'length) srl (CACHE_SIZE_BIT_COUNT - 1));
+
+							start_lru_index := slot_number;
+							end_lru_index := slot_number + 1;
+							lru_mark_on_hit(tag, start_lru_index, end_lru_index);
+						when FOUR_WAY_ASSOCIATIVITY =>
+							slot_number := address mod (CACHE_SIZE_IN_WORD / 4);
+							tag := STD_LOGIC_VECTOR(TO_UNSIGNED(address, tag'length) srl (CACHE_SIZE_BIT_COUNT - 2));
+
+							start_lru_index := slot_number;
+							end_lru_index := slot_number + 3;
+							lru_mark_on_hit(tag, start_lru_index, end_lru_index);
+						when FULL_ASSOCIATIVITY =>
+							tag := STD_LOGIC_VECTOR(TO_UNSIGNED(address, tag'length) srl CACHE_SIZE_BIT_COUNT);
+							start_lru_index := 0;
+							end_lru_index := CACHE_SIZE_IN_WORD-1;
+							lru_mark_on_hit(tag, start_lru_index, end_lru_index);
+						when others =>
+					end case ;
 				when REPLACEMENT_FIFO =>
+					case( CACHE_ASSOCIATIVITY ) is
+						when FULL_ASSOCIATIVITY =>
+
+						when others =>
+					end case ;
+
 				when others =>
 			end case;
 		END cache_hit_callback;
@@ -261,6 +304,7 @@ begin
 			for i in cached_data'range loop
 				cached_data(i) <= (others => '1');
 				cached_tags(i) <= (others => '1');
+				fifo_data(i) <= CACHE_SIZE_IN_WORD;
 			end loop;
 
 			lru_data <= (others => '0');
@@ -284,7 +328,7 @@ begin
 					if cache_read = '1' then
 						get_cached_value(mem_address);
 						if cache_hit then -- cache hit, return the value
-							SHOW_LOVE("CACHE hit at address " & INTEGER'image(mem_address), " Returning value ", cached_value);
+							--SHOW_LOVE("CACHE hit at address " & INTEGER'image(mem_address), " Returning value ", cached_value);
 							cache_hit_callback(mem_address);
 							cache_output <= cached_value;
 							if clk = '0' then
@@ -298,20 +342,20 @@ begin
 								current_state <= IDLE;
 							end if;
 						else --cache miss, read from memory
-							SHOW("CACHE missed. Reading from memory " & INTEGER'image(mem_address));
+							--SHOW("CACHE missed. Reading from memory " & INTEGER'image(mem_address));
 							is_cache_busy <= '1';
 							do_read <= '1';
 							load_address <= mem_address;
 							current_state <= FETCHING;
 						end if;
 					else
-						SHOW("CACHE IDLING");
+						--SHOW("CACHE IDLING");
 						current_state <= IDLE;
 					end if;
 				when FETCHING =>
-					SHOW("CACHE FETCHING");
+					--SHOW("CACHE FETCHING");
 					if is_mem_busy = '0' then --mem finish loading. Return the value
-						SHOW_LOVE("CACHE RETURNING FROM MEMORY AT ADDRESS " & INTEGER'image(mem_address), " WITH DATA ", mem_data);
+						--SHOW_LOVE("CACHE RETURNING FROM MEMORY AT ADDRESS " & INTEGER'image(mem_address), " WITH DATA ", mem_data);
 						cache_miss_callback(mem_address, mem_data);
 						cache_output <= mem_data;
 						is_cache_busy <= '0';

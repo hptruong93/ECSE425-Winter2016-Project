@@ -84,13 +84,13 @@ begin
 					--SHOW("Memory Arbiter started 1 reading address " & integer'image(addr1));
 					mm_address <= addr1;
 					mm_re <= re1;
-					mm_we <= we1;
+					mm_we <= '0';
 					busy1 <= '1';
 					y <= read1;
 				elsif we1 = '1' then
-					--SHOW("iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiin memory_arbiter idle we1 = 1    >>>>" & INTEGER'image(addr1));
+					SHOW("iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiin memory_arbiter idle we1 = 1    >>>>" & INTEGER'image(addr1));
 					mm_address <= addr1;
-					mm_re <= re1;
+					mm_re <= '0';
 					mm_we <= we1;
 					busy1 <= '1';
 					mm_data <= data1_in;
@@ -99,12 +99,12 @@ begin
 					--SHOW("iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiin memory_arbiter re2 = 1    >>>>" & INTEGER'image(addr2));
 					mm_address <= addr2;
 					mm_re <= re2;
-					mm_we <= we2;
+					mm_we <= '0';
 					busy2 <= '1';
 					y <= read2;
 				elsif we2 = '1' then
 					mm_address <= addr2;
-					mm_re <= re2;
+					mm_re <= '0';
 					mm_we <= we2;
 					busy2 <= '1';
 					y <= write2;
@@ -112,7 +112,7 @@ begin
 					y <= idle;
 				end if;
 			when read1 =>
-				--SHOW("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA Read 1 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+				SHOW("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA Read 1 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
 				busy1 <= '1';
 				mm_address <= addr1;
 				mm_re <= re1;
@@ -134,6 +134,7 @@ begin
 					y <= idle;
 				else
 					if (re1 = '0') then --user cancels read
+						SHOW("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA Canceled Read 1 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
 						y <= idle;
 					else
 						y <= read1;
@@ -160,7 +161,7 @@ begin
 					y <= write1;
 				end if;
 			when read2 =>
-				--SHOW("77777777777777777777777777777777777777777 in memory_arbiter re2 = 1    >>>>" & INTEGER'image(addr2));
+				SHOW("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA Read 2 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
 				busy2 <= '1';
 				mm_address <= addr2;
 				--mm_data <= data2;
@@ -183,6 +184,7 @@ begin
 					y <= idle;
 				else
 					if (re2 = '0') then --user cancels mem access
+						SHOW("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA Canceled Read 2 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
 						y <= idle;
 					else
 						y <= read2;

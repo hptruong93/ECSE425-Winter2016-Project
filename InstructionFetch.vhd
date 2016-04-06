@@ -85,7 +85,6 @@ begin
 			else
 				pc_reg <= program_counter;
 				instruction <= (others => '0');
-				SHOW("Fetching " & INTEGER'image(TO_INTEGER(UNSIGNED(program_counter))));
 
 				case( current_state ) is
 					when FIRST_CONTACT =>
@@ -93,7 +92,7 @@ begin
 						is_busy <= '1';
 						current_state <= FETCHING;
 					when FETCHING =>
-						SHOW("InstructionFetch FETCHING");
+						SHOW("InstructionFetch FETCHING " & INTEGER'image(TO_INTEGER(UNSIGNED(program_counter))));
 						case( branch_signal ) is
 							when BRANCH_NOT =>
 								if is_mem_busy = '0' then
@@ -113,7 +112,7 @@ begin
 							when others =>
 						end case;
 					when INSTRUCTION_RECEIVED =>
-						SHOW("InstructionFetch INSTRUCTION_RECEIVED");
+						SHOW("InstructionFetch INSTRUCTION_RECEIVED " & INTEGER'image(TO_INTEGER(UNSIGNED(program_counter))));
 						case( branch_signal ) is
 							when BRANCH_NOT =>
 								if is_mem_busy = '0' then
@@ -134,7 +133,7 @@ begin
 							when others =>
 						end case;
 					when BRANCHED_INSTRUCTION_RECEIVED =>
-						SHOW("Did BRANCHED_INSTRUCTION_RECEIVED");
+						SHOW("Did BRANCHED_INSTRUCTION_RECEIVED " & INTEGER'image(TO_INTEGER(UNSIGNED(program_counter))));
 						if is_mem_busy = '0' then
 							got_fetch;
 							current_state <= FETCHING;
@@ -144,12 +143,12 @@ begin
 							current_state <= FETCHING;
 						end if;
 					when FETCH_BRANCH_SET =>
-						SHOW("InstructionFetch Doing BRANCH");
+						SHOW("InstructionFetch Doing BRANCH " & INTEGER'image(TO_INTEGER(UNSIGNED(program_counter))));
 						do_read <= '1';
 						is_busy <= '1';
 						current_state <= FETCH_BRANCH;
 					when FETCH_BRANCH =>
-						SHOW("Fetching branch");
+						SHOW("Fetching branch " & INTEGER'image(TO_INTEGER(UNSIGNED(program_counter))));
 						if is_mem_busy = '0' then
 							got_fetch;
 							current_state <= BRANCHED_INSTRUCTION_RECEIVED;

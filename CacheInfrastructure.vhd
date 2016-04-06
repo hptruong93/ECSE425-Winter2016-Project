@@ -10,13 +10,14 @@ PACKAGE cache_infrastructure IS
 	CONSTANT CACHE_SIZE_BIT_COUNT : NATURAL := 7;
 
 	subtype LRU_DATA_TYPE IS STD_LOGIC_VECTOR(CACHE_SIZE_IN_WORD-1 downto 0);
+	type FIFO_DATA_TYPE IS array(0 to CACHE_SIZE_IN_WORD) of NATURAL;
 
 	subtype TAG_VALUE_ONE_WAY_ASSOCIATIVE IS STD_LOGIC_VECTOR(32-CACHE_SIZE_BIT_COUNT-1 downto 0);
-	subtype TAG_VALUE_FULLY_ASSOCIATIVE IS STD_LOGIC_VECTOR(32-1 downto 0);
 	subtype TAG_VALUE_TWO_WAY_ASSOCIATIVE IS STD_LOGIC_VECTOR(32-CACHE_SIZE_BIT_COUNT-1-1 downto 0);
 	subtype TAG_VALUE_FOUR_WAY_ASSOCIATIVE IS STD_LOGIC_VECTOR(32-CACHE_SIZE_BIT_COUNT-2-1 downto 0);
+	subtype TAG_VALUE_FULLY_ASSOCIATIVE IS STD_LOGIC_VECTOR(32-1 downto 0);
 
-	subtype TAG_VALUE IS TAG_VALUE_FOUR_WAY_ASSOCIATIVE; --remember to change CACHE_ASSOCIATIVITY
+	subtype TAG_VALUE IS TAG_VALUE_FULLY_ASSOCIATIVE; --remember to change CACHE_ASSOCIATIVITY
 	type CACHE_DATA_TYPE IS array(0 to CACHE_SIZE_IN_WORD) of REGISTER_VALUE;
 	type CACHE_TAG_TYPE IS array(0 to CACHE_SIZE_IN_WORD) of TAG_VALUE;
 
@@ -37,9 +38,8 @@ PACKAGE cache_infrastructure IS
 ---------------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------------
-
-	CONSTANT CACHE_ASSOCIATIVITY : CACHE_ASSOCIATIVITY_TYPE := FOUR_WAY_ASSOCIATIVITY; --remember to change subtype TAG_VALUE
-	CONSTANT REPLACEMENT_STRATEGY : CACHE_REPLACEMENT_STRATEGY := REPLACEMENT_BIT_PLRU;
+	CONSTANT CACHE_ASSOCIATIVITY : CACHE_ASSOCIATIVITY_TYPE := FULL_ASSOCIATIVITY; --remember to change subtype TAG_VALUE
+	CONSTANT REPLACEMENT_STRATEGY : CACHE_REPLACEMENT_STRATEGY := REPLACEMENT_RANDOM;
 
 	FUNCTION RAND_RANGE(signal previous : IN INTEGER; CONSTANT max : IN INTEGER) return INTEGER;
 END cache_infrastructure ; -- cache_infrastructure

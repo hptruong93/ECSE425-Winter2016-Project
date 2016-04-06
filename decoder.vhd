@@ -86,10 +86,11 @@ BEGIN
 			previous_stall_sources(2) <= source;
 
 			--Instruction history used for forwarding here.
-			--It is important to NOT update instruction history used for forwarding during memory stalls.
-			--When memory stalls, instructions are stopped and therefore results from ALU/MEM can be forwarded
+			--It is important to NOT update instruction history used for forwarding during memory stalls
+			--given the data source is memmory.
+			--When memory stalls, instructions are stopped and therefore results from MEM can be forwarded
 			--to the next instruction in case of hazard.
-			if (is_stalling = '0') then
+			if (is_stalling = '0' or previous_forwarding_sources(2) /= FORWARD_SOURCE_MEM) then
 				previous_forwarding_destinations(2) <= register_destination;
 				previous_forwarding_sources(2) <= source;
 
@@ -165,6 +166,7 @@ BEGIN
 				do_stall <= '0'; --This will overwrite the value in stall_decoder procedure
 			elsif mem_stage_busy = '1' then --When memory is busy, we cannot issue new instruction to ALU (otherwise might happen in out of order execution)
 				stall_decoder("DECODER STALL DUE TO MEM BUSY");
+				--do_stall <= '0'; --This will overwrite the value in stall_decoder procedure
 			else --categorize instructions using its op code and relevant informations
 				branch_signal <= BRANCH_NOT;
 				signal_to_mem <= MEM_IDLE;
@@ -400,7 +402,7 @@ BEGIN
 						else
 							update_history(rt, FORWARD_SOURCE_ALU, ZERO_REGISTER, ZERO_REGISTER);
 
-							SHOW("Here lui");
+							SHOW("DECODER lui");
 							operation <= "000000"; --sll
 							data1	<= STD_LOGIC_VECTOR(resize(signed(immediate), data1'length));
 							data2	<= STD_LOGIC_VECTOR(to_unsigned(16, data2'length));
@@ -413,7 +415,7 @@ BEGIN
 						else
 							update_history(rt, FORWARD_SOURCE_MEM, rs, ZERO_REGISTER);
 
-							SHOW_TWO("Here lw with rs " & integer'image(to_integer(unsigned(rs))), "and immediate " & INTEGER'image(TO_INTEGER(signed(immediate))));
+							SHOW_TWO("DECODER lw with rs " & integer'image(to_integer(unsigned(rs))), "and immediate " & INTEGER'image(TO_INTEGER(signed(immediate))));
 							operation <= "100000"; --add
 							data1	<= registers(to_integer(unsigned(rs)));
 							data2	<= STD_LOGIC_VECTOR(resize(signed(immediate), data2'length));
@@ -427,7 +429,7 @@ BEGIN
 						else
 							update_history(ZERO_REGISTER, FORWARD_SOURCE_MEM, rs, ZERO_REGISTER);
 
-							SHOW("Here sw");
+							SHOW("DECODER sw");
 							operation <= "100000"; --add
 							data1	<= registers(to_integer(unsigned(rs)));
 							data2	<= STD_LOGIC_VECTOR(resize(signed(immediate), data2'length));
@@ -476,7 +478,7 @@ BEGIN
 						else
 							update_history(ZERO_REGISTER, FORWARD_SOURCE_ALU, rs, rt);
 
-							SHOW("Here beq comparing two registers " & INTEGER'image(to_integer(unsigned(rs))) & INTEGER'image(to_integer(unsigned(rt))));
+							SHOW("DECODER beq comparing two registers " & INTEGER'image(to_integer(unsigned(rs))) & INTEGER'image(to_integer(unsigned(rt))));
 							operation <= "100000"; --Tell ALU to not do anything
 							data1 <= (others => '0');
 							data2 <= (others => '0');
@@ -499,7 +501,7 @@ BEGIN
 						else
 							update_history(ZERO_REGISTER, FORWARD_SOURCE_ALU, rs, rt);
 
-							SHOW("Here bne comparing two registers " & INTEGER'image(to_integer(unsigned(rs))) & INTEGER'image(to_integer(unsigned(rt))));
+							SHOW("DECODER bne comparing two registers " & INTEGER'image(to_integer(unsigned(rs))) & INTEGER'image(to_integer(unsigned(rt))));
 							operation <= "100000"; --Tell ALU to not do anything
 							data1 <= (others => '0');
 							data2 <= (others => '0');
