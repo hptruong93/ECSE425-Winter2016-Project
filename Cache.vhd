@@ -328,7 +328,7 @@ begin
 					if cache_read = '1' then
 						get_cached_value(mem_address);
 						if cache_hit then -- cache hit, return the value
-							--SHOW_LOVE("CACHE hit at address " & INTEGER'image(mem_address), " Returning value ", cached_value);
+							SHOW_LOVE("CACHE hit at address " & INTEGER'image(mem_address), " Returning value ", cached_value);
 							cache_hit_callback(mem_address);
 							cache_output <= cached_value;
 							if clk = '0' then
@@ -342,7 +342,7 @@ begin
 								current_state <= IDLE;
 							end if;
 						else --cache miss, read from memory
-							--SHOW("CACHE missed. Reading from memory " & INTEGER'image(mem_address));
+							SHOW("CACHE missed. Reading from memory " & INTEGER'image(mem_address));
 							is_cache_busy <= '1';
 							do_read <= '1';
 							load_address <= mem_address;
@@ -355,7 +355,7 @@ begin
 				when FETCHING =>
 					--SHOW("CACHE FETCHING");
 					if is_mem_busy = '0' then --mem finish loading. Return the value
-						--SHOW_LOVE("CACHE RETURNING FROM MEMORY AT ADDRESS " & INTEGER'image(mem_address), " WITH DATA ", mem_data);
+						SHOW_LOVE("CACHE RETURNING FROM MEMORY AT ADDRESS " & INTEGER'image(mem_address), " WITH DATA ", mem_data);
 						cache_miss_callback(mem_address, mem_data);
 						cache_output <= mem_data;
 						is_cache_busy <= '0';

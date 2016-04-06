@@ -81,7 +81,7 @@ begin
 		elsif (rising_edge(clk)) then
 			if do_stall = '1' then
 				SHOW("InstructionFetch STALLING");
-				instruction <= last_instruction;
+				instruction <= (others => '0');--last_instruction;
 			else
 				pc_reg <= program_counter;
 				instruction <= (others => '0');
@@ -124,7 +124,7 @@ begin
 									current_state <= FETCHING;
 								end if;
 							when BRANCH_ALWAYS =>
-								SHOW("Leaving for BRANCH");
+								SHOW("InstructionFetch Leaving for BRANCH");
 								do_read <= '0';
 								is_busy <= '1';
 								address <= branch_address;
@@ -133,7 +133,7 @@ begin
 							when others =>
 						end case;
 					when BRANCHED_INSTRUCTION_RECEIVED =>
-						SHOW("Did BRANCHED_INSTRUCTION_RECEIVED " & INTEGER'image(TO_INTEGER(UNSIGNED(program_counter))));
+						SHOW("InstructionFetch BRANCHED_INSTRUCTION_RECEIVED " & INTEGER'image(TO_INTEGER(UNSIGNED(program_counter))));
 						if is_mem_busy = '0' then
 							got_fetch;
 							current_state <= FETCHING;
@@ -148,7 +148,7 @@ begin
 						is_busy <= '1';
 						current_state <= FETCH_BRANCH;
 					when FETCH_BRANCH =>
-						SHOW("Fetching branch " & INTEGER'image(TO_INTEGER(UNSIGNED(program_counter))));
+						SHOW("InstructionFetch Fetching branch " & INTEGER'image(TO_INTEGER(UNSIGNED(program_counter))));
 						if is_mem_busy = '0' then
 							got_fetch;
 							current_state <= BRANCHED_INSTRUCTION_RECEIVED;

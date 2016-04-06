@@ -88,7 +88,7 @@ begin
 					busy1 <= '1';
 					y <= read1;
 				elsif we1 = '1' then
-					SHOW("iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiin memory_arbiter idle we1 = 1    >>>>" & INTEGER'image(addr1));
+					--SHOW("iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiin memory_arbiter idle we1 = 1    >>>>" & INTEGER'image(addr1));
 					mm_address <= addr1;
 					mm_re <= '0';
 					mm_we <= we1;
@@ -112,7 +112,7 @@ begin
 					y <= idle;
 				end if;
 			when read1 =>
-				SHOW("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA Read 1 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+				--SHOW("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA Read 1 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
 				busy1 <= '1';
 				mm_address <= addr1;
 				mm_re <= re1;
@@ -126,15 +126,16 @@ begin
 
 				if (mm_rd_ready = '1') then
 					--SHOW("Memory Arbiter finished 1 reading address " & integer'image(addr1));
+					--SHOW("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA Read 1 FINISHED >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
 					mm_re <= '0';
 					mm_we <= '0';
 					busy1 <= '0';
 					data1_out <= mm_data;
 					--SHOW("Here Will Smith" & STD_LOGIC'image(mm_data(31)) & STD_LOGIC'image(mm_data(30)) & STD_LOGIC'image(mm_data(29)) & STD_LOGIC'image(mm_data(28)) & STD_LOGIC'image(mm_data(27)) & STD_LOGIC'image(mm_data(26)) & STD_LOGIC'image(mm_data(25)) & STD_LOGIC'image(mm_data(24)) & STD_LOGIC'image(mm_data(23)) & STD_LOGIC'image(mm_data(22)) & STD_LOGIC'image(mm_data(21)) & STD_LOGIC'image(mm_data(20)) & STD_LOGIC'image(mm_data(19)) & STD_LOGIC'image(mm_data(18)) & STD_LOGIC'image(mm_data(17)) & STD_LOGIC'image(mm_data(16)) & STD_LOGIC'image(mm_data(15)) & STD_LOGIC'image(mm_data(14)) & STD_LOGIC'image(mm_data(13)) & STD_LOGIC'image(mm_data(12)) & STD_LOGIC'image(mm_data(11)) & STD_LOGIC'image(mm_data(10)) & STD_LOGIC'image(mm_data(9)) & STD_LOGIC'image(mm_data(8)) & STD_LOGIC'image(mm_data(7)) & STD_LOGIC'image(mm_data(6)) & STD_LOGIC'image(mm_data(5)) & STD_LOGIC'image(mm_data(4)) & STD_LOGIC'image(mm_data(3)) & STD_LOGIC'image(mm_data(2)) & STD_LOGIC'image(mm_data(1)) & STD_LOGIC'image(mm_data(0)));
-					y <= idle;
+					y <= stall;
 				else
 					if (re1 = '0') then --user cancels read
-						SHOW("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA Canceled Read 1 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+						--SHOW("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA Canceled Read 1 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
 						y <= idle;
 					else
 						y <= read1;
@@ -161,7 +162,7 @@ begin
 					y <= write1;
 				end if;
 			when read2 =>
-				SHOW("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA Read 2 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+				--SHOW("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA Read 2 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
 				busy2 <= '1';
 				mm_address <= addr2;
 				--mm_data <= data2;
@@ -184,7 +185,7 @@ begin
 					y <= idle;
 				else
 					if (re2 = '0') then --user cancels mem access
-						SHOW("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA Canceled Read 2 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+						--SHOW("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA Canceled Read 2 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
 						y <= idle;
 					else
 						y <= read2;
@@ -206,7 +207,7 @@ begin
 					data2_out <= mm_data;
 					mm_re <= '0';
 					mm_we <= '0';
-					y <= idle;
+					y <= stall;
 				else
 					y <= write2;
 				end if;

@@ -49,6 +49,10 @@ signal previous_forwarding_sources : previous_source_arrray; --biggest index is 
 
 signal ZERO_REGISTER : REGISTER_INDEX := (others => '0');
 
+signal last_instruction : REGISTER_VALUE := (others => '0');
+signal internal_stall : STD_LOGIC := '0';
+
+
 signal op_code, funct : STD_LOGIC_VECTOR(6-1 downto 0);
 signal rs, rt, rd : REGISTER_INDEX;
 signal sa : STD_LOGIC_VECTOR(5-1 downto 0);
@@ -63,16 +67,18 @@ BEGIN
 	previous_forwarding_sources_output <= previous_forwarding_sources;
 
 	--Precalculate useful quantities for convenience
-	op_code <= instruction(32-1 downto 26);
-	rs <= instruction(25 downto 21);
-	rt <= instruction(20 downto 16);
-	rd <= instruction(15 downto 11);
-	sa <= instruction(10 downto 6);
-	funct <= instruction(5 downto 0);
-	immediate <= instruction(15 downto 0);
-	target <= instruction(25 downto 0);
+	op_code <= instruction(32-1 downto 26)  when internal_stall = '0' else last_instruction(32-1 downto 26);
+	rs <= instruction(25 downto 21) when internal_stall = '0' else last_instruction(25 downto 21);
+	rt <= instruction(20 downto 16) when internal_stall = '0' else last_instruction(20 downto 16);
+	rd <= instruction(15 downto 11) when internal_stall = '0' else last_instruction(15 downto 11);
+	sa <= instruction(10 downto 6) when internal_stall = '0' else last_instruction(10 downto 6);
+	funct <= instruction(5 downto 0) when internal_stall = '0' else last_instruction(5 downto 0);
+	immediate <= instruction(15 downto 0) when internal_stall = '0' else last_instruction(15 downto 0);
+	target <= instruction(25 downto 0) when internal_stall = '0' else last_instruction(25 downto 0);
 
 	synced_clock : process(clk, reset)
+
+		variable using_instruction : REGISTER_VALUE;
 
 		PROCEDURE update_history (--Forwarding logic
 				signal register_destination : in REGISTER_INDEX;
@@ -125,7 +131,7 @@ BEGIN
 			previous_stall_sources(1) <= previous_stall_sources(2);
 		END shift_stall_history;
 
-		PROCEDURE stall_decoder(msg : in String) is --Stall decoder and thereby stalling ALU as well
+		PROCEDURE stall_decoder(msg : in String; CONSTANT stored_instruction : STD_LOGIC) is --Stall decoder and thereby stalling ALU as well
 		BEGIN
 			SHOW(msg);
 			operation <= "100000"; --add
@@ -136,11 +142,18 @@ BEGIN
 
 			do_stall <= '1';
 			update_history(ZERO_REGISTER, FORWARD_SOURCE_ALU, ZERO_REGISTER, ZERO_REGISTER, '1');
+
+			if stored_instruction = '1' then
+				last_instruction <= instruction;
+				internal_stall <= '1';
+			else
+				internal_stall <= internal_stall;
+			end if;
 		END stall_decoder;
 
 		PROCEDURE stall_decoder is
 		BEGIN
-			stall_decoder("Decoder STALLING DUE TO PREVIOUS INSTRUCTION");
+			stall_decoder("Decoder STALLING DUE TO PREVIOUS INSTRUCTION", '1');
 		END stall_decoder;
 
 		IMPURE FUNCTION check_stall(destination_register : in REGISTER_INDEX) RETURN STD_LOGIC is
@@ -159,15 +172,29 @@ BEGIN
 			END loop;
 		elsif (rising_edge(clk)) then
 			shift_stall_history;
+			SHOW_LOVE("DECODER INSTRUCTION IS ", instruction);
+			SHOW_LOVE("DECODER LAST INSTRUCTION IS ", last_instruction);
 			--SHOW("previouses are " & std_logic'image(previous_sources(2)) & std_logic'image(previous_sources(1)) & std_logic'image(previous_sources(0)));
 
-			if instruction = STD_LOGIC_VECTOR(ALL_32_ZEROES) then --This happens when instruction fetch stages is stalled due to memory access
-				stall_decoder("DECODER STALL DUE TO NO OP");
+			if internal_stall = '0' then
+				using_instruction := instruction;
+			else
+			 	using_instruction := last_instruction;
+			end if;
+
+			if mem_stage_busy = '1' then --When memory is busy, we cannot issue new instruction to ALU (otherwise might happen in out of order execution)
+				if instruction = STD_LOGIC_VECTOR(ALL_32_ZEROES) then
+					--Don't store the empty instruction as last instruction
+					stall_decoder("DECODER STALL DUE TO MEM BUSY", '0');
+				else --Instruction is valid. Need to store during stall
+					stall_decoder("DECODER STALL DUE TO MEM BUSY", '1');
+				end if;
+			elsif using_instruction = STD_LOGIC_VECTOR(ALL_32_ZEROES) then --This happens when instruction fetch stages is stalled due to memory access
+				stall_decoder("DECODER STALL DUE TO NO OP", '1');
 				do_stall <= '0'; --This will overwrite the value in stall_decoder procedure
-			elsif mem_stage_busy = '1' then --When memory is busy, we cannot issue new instruction to ALU (otherwise might happen in out of order execution)
-				stall_decoder("DECODER STALL DUE TO MEM BUSY");
-				--do_stall <= '0'; --This will overwrite the value in stall_decoder procedure
+				internal_stall <= '0';
 			else --categorize instructions using its op code and relevant informations
+				internal_stall <= '0';
 				branch_signal <= BRANCH_NOT;
 				signal_to_mem <= MEM_IDLE;
 				SHOW("OP code is " & integer'image(to_integer(unsigned(op_code))));

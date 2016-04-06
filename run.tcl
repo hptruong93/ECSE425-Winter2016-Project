@@ -21,8 +21,8 @@ proc AddWaves {} {
 	# add wave -label addr1 -position end  -radix decimal sim:/memory_arbiter_instance/addr1
 
 	# add wave -label re2 -position end  -radix binary sim:/masterpipeline_instance/re2
-	# add wave -label busy2 -position end  -radix binary sim:/masterpipeline_instance/busy2
-	# add wave -label busy1 -position end  -radix binary sim:/masterpipeline_instance/busy1
+	add wave -label busy2 -position end  -radix binary sim:/masterpipeline_instance/busy2
+	add wave -label busy1 -position end  -radix binary sim:/masterpipeline_instance/busy1
 
 	# add wave -label we0 -position end  -radix binary sim:/memory_arbiter_instance/main_memory/we0
 	# add wave -label we1 -position end  -radix binary sim:/memory_arbiter_instance/main_memory/we1
@@ -174,4 +174,4 @@ vcom test_thewholething.vhd
 vsim -t ps thewholething_tb
 AddWaves
 force -deposit clk 0 0 ns, 1 0.5 ns -repeat 1 ns
-run 25 ns
+run 200 ns

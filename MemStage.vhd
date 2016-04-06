@@ -91,6 +91,7 @@ begin
 								current_state <= MEM_ACCESS;
 							end if;
 						when MEM_IDLE =>
+							SHOW("MEM IDLE");
 							current_state <= MEM_WAIT;
 						when others =>
 					end case ;
@@ -135,16 +136,17 @@ begin
 								do_write <= '1';
 							end if;
 						when MEM_IDLE =>
+							SHOW("MEM IDLE");
 							current_state <= MEM_WAIT;
 						when others =>
 					end case ;
 				when MEM_IGNORE =>
 					is_busy <= '0';
-					SHOW("MEM IDLE");
+					SHOW("MEM IGNORE");
 					current_state <= MEM_WAIT;
 				when MEM_IGNORE_2 =>
 					is_busy <= '0';
-					SHOW("MEM IDLE 2");
+					SHOW("MEM IGNORE 2");
 					current_state <= MEM_IGNORE;
 				when others =>
 			end case ;
