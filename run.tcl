@@ -56,6 +56,8 @@ proc AddWaves {} {
 	add wave -noupdate -divider -height 16 InstructionFetch
 	# add wave -label fetched_instruction -position end  -radix decimal sim:/masterpipeline_instance/fetched_instruction
 	add wave -label do_stall -position end  -radix binary sim:/masterpipeline_instance/do_stall
+	add wave -label branch_address -position end  -radix decimal sim:/masterpipeline_instance/branch_address
+	add wave -label branch_signal -position end  -radix binary sim:/masterpipeline_instance/branch_signal
 
 	#ALU
 	add wave -noupdate -divider -height 16 ALU
@@ -174,4 +176,4 @@ vcom test_thewholething.vhd
 vsim -t ps thewholething_tb
 AddWaves
 force -deposit clk 0 0 ns, 1 0.5 ns -repeat 1 ns
-run 80 ns
+run 220 ns

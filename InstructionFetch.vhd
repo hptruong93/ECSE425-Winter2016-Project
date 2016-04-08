@@ -103,7 +103,10 @@ begin
 				--just_fetched <= '0';
 				pc_reg <= program_counter;
 				instruction <= (others => '0');
-				if was_stalled = '1' then
+				if was_stalled = '1' and branch_signal /= BRANCH_ALWAYS then
+					--This is for actual stall.
+					--When there is a branch, there is no need to reissue because the previous instruction is incorrect anyways
+					SHOW("InstructionFetch issuing last instruction");
 					instruction <= last_instruction;
 				else
 					case( current_state ) is

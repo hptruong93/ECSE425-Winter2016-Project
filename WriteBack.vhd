@@ -47,7 +47,7 @@ begin
 			registers(8) <= (others => '0');
 			registers(9) <= (others => '0');
 			registers(10) <= (others => '0');
-			registers(11) <= STD_LOGIC_VECTOR(TO_UNSIGNED(11, 32));--(others => '0');
+			registers(11) <= (others => '0');
 			registers(12) <= (others => '0');
 			registers(13) <= (others => '0');
 			registers(14) <= (others => '0');

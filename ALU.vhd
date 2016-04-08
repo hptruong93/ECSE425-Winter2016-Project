@@ -42,15 +42,15 @@ begin
 
 			case( operation ) is
 				when "100000" => --add
-					SHOW("ALU Adding two things " & integer'image(to_integer(data1)) & integer'image(to_integer(data2)));
+					SHOW("ALU Adding two things " & integer'image(to_integer(data1)), " " & integer'image(to_integer(data2)));
 					internal_buffered_result(2) <= data1 + data2;
 					result <= data1 + data2;
 				when "100010" => --sub
-					SHOW("ALU Subing two things " & integer'image(to_integer(data1)) & integer'image(to_integer(data2)));
+					SHOW("ALU Subing two things " & integer'image(to_integer(data1)), " " & integer'image(to_integer(data2)));
 					internal_buffered_result(2) <= data1 - data2;
 					result <= data1 - data2; --Add overflow
 				when "011000" => --mult
-					SHOW("ALU Multing two things " & integer'image(to_integer(data1)) & integer'image(to_integer(data2)));
+					SHOW("ALU Multing two things " & integer'image(to_integer(data1)), " " & integer'image(to_integer(data2)));
 					mult_result := data1 * data2;
 					hi_reg <= mult_result(64-1 downto 32);
 					lo_reg <= mult_result(32-1 downto 0);

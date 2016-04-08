@@ -49,9 +49,9 @@ signal previous_forwarding_sources : previous_source_arrray; --biggest index is 
 
 signal ZERO_REGISTER : REGISTER_INDEX := (others => '0');
 
-signal last_instruction : REGISTER_VALUE := (others => '0');
-signal internal_stall : STD_LOGIC := '0';
-
+signal last_instruction : REGISTER_VALUE;
+signal internal_stall : STD_LOGIC;
+signal just_branched : STD_LOGIC;
 
 signal op_code, funct : STD_LOGIC_VECTOR(6-1 downto 0);
 signal rs, rt, rd : REGISTER_INDEX;
@@ -167,6 +167,10 @@ BEGIN
 
 	BEGIN
 		if reset = '1' then
+			just_branched <= '0';
+			internal_stall <= '0';
+			last_instruction <= (others => '0');
+
 			for i in previous_stall_destinations'range loop
 				previous_stall_destinations(i) <= "00000";
 				previous_stall_sources(i) <= '0';
@@ -195,14 +199,23 @@ BEGIN
 				else --Instruction is valid. Need to store during stall
 					stall_decoder("DECODER STALL DUE TO MEM BUSY", '1');
 				end if;
+			elsif just_branched = '1' then --ignore the instruction right after branch
+				SHOW("DECODER IGNORE INSTRUCTION DUE TO PREVIOUS BRANCH");
+				operation <= "100000"; --add
+				data1 <= (others => '0');
+				data2 <= (others => '0');
+				mem_writeback_register <= (others => '0');
+				writeback_source <= NO_WRITE_BACK;
+				just_branched <= '0';
 			elsif using_instruction = STD_LOGIC_VECTOR(ALL_32_ZEROES) then --This happens when instruction fetch stages is stalled due to memory access
 				stall_decoder("DECODER STALL DUE TO NO OP", '1');
 				do_stall <= '0'; --This will overwrite the value in stall_decoder procedure
 				internal_stall <= '0';
 			else --categorize instructions using its op code and relevant informations
 				internal_stall <= '0';
+				do_stall <= '0';
 				branch_signal <= BRANCH_NOT;
-				
+
 				SHOW_LOVE("DECODER POTENTIALLY DECODING AT ADDRESS " & INTEGER'image(TO_INTEGER(UNSIGNED(pc_reg))), using_instruction);
 				SHOW("OP code is " & integer'image(to_integer(unsigned(op_code))));
 
@@ -313,6 +326,7 @@ BEGIN
 									branch_signal <= BRANCH_ALWAYS;
 									branch_address <= registers(to_integer(unsigned(rs)));
 									signal_to_mem <= MEM_IDLE;
+									just_branched <= '1';
 								end if;
 	-------------------------------------------------------------------------------------------------------------------------------------
 	-------------------------------------------------SHIFTS OPERATIONS-------------------------------------------------------------------
@@ -533,7 +547,8 @@ BEGIN
 						else
 							update_history(ZERO_REGISTER, FORWARD_SOURCE_ALU, rs, rt);
 
-							SHOW("DECODER beq comparing two registers " & INTEGER'image(to_integer(unsigned(rs))) & INTEGER'image(to_integer(unsigned(rt))));
+							SHOW("DECODER beq comparing two registers " & INTEGER'image(to_integer(unsigned(rs))), " " & INTEGER'image(to_integer(unsigned(rt))));
+							SHOW("VALUES ARE " & INTEGER'image(TO_INTEGER(UNSIGNED(registers(to_integer(unsigned(rs)))))), " and " & INTEGER'image(TO_INTEGER(UNSIGNED(registers(to_integer(unsigned(rt)))))));
 							operation <= "100000"; --Tell ALU to not do anything
 							data1 <= (others => '0');
 							data2 <= (others => '0');
@@ -541,9 +556,10 @@ BEGIN
 							mem_writeback_register <= "00000"; --Don't write back
 
 							if registers(to_integer(unsigned(rs))) = registers(to_integer(unsigned(rt))) then --Do branch
-								SHOW("DECODER TAKEN BRANCH");
+								SHOW("DECODER TAKEN BRANCH " & INTEGER'image(TO_INTEGER(UNSIGNED(std_logic_vector(resize(unsigned(immediate), branch_address'length))))));
 								branch_signal <= BRANCH_ALWAYS;
 								branch_address <= std_logic_vector(resize(unsigned(immediate), branch_address'length));
+								just_branched <= '1';
 							else
 								SHOW("DECODER NOT TAKEN BRANCH");
 								do_stall <= '0';
@@ -558,7 +574,8 @@ BEGIN
 						else
 							update_history(ZERO_REGISTER, FORWARD_SOURCE_ALU, rs, rt);
 
-							SHOW("DECODER bne comparing two registers " & INTEGER'image(to_integer(unsigned(rs))) & INTEGER'image(to_integer(unsigned(rt))));
+							SHOW("DECODER bne comparing two registers " & INTEGER'image(to_integer(unsigned(rs))), " " & INTEGER'image(to_integer(unsigned(rt))));
+							SHOW("VALUES ARE " & INTEGER'image(TO_INTEGER(UNSIGNED(registers(to_integer(unsigned(rs)))))), " and " & INTEGER'image(TO_INTEGER(UNSIGNED(registers(to_integer(unsigned(rt)))))));
 							operation <= "100000"; --Tell ALU to not do anything
 							data1 <= (others => '0');
 							data2 <= (others => '0');
@@ -569,6 +586,7 @@ BEGIN
 								SHOW("DECODER TAKEN BRANCH");
 								branch_signal <= BRANCH_ALWAYS;
 								branch_address <= std_logic_vector(resize(unsigned(immediate), branch_address'length));
+								just_branched <= '1';
 							else
 								SHOW("DECODER NOT TAKEN BRANCH");
 								branch_signal <= BRANCH_NOT;
@@ -587,6 +605,7 @@ BEGIN
 						branch_signal <= BRANCH_ALWAYS;
 						branch_address <= std_logic_vector(resize(unsigned(target), branch_address'length));
 						signal_to_mem <= MEM_IDLE;
+						just_branched <= '1';
 					when "000011" => --jal --> $31 = $PC + 8, jump
 						update_history(ZERO_REGISTER, FORWARD_SOURCE_ALU, ZERO_REGISTER, ZERO_REGISTER);
 
@@ -600,6 +619,7 @@ BEGIN
 						branch_signal <= BRANCH_ALWAYS;
 						branch_address <= std_logic_vector(resize(unsigned(target), branch_address'length));
 						signal_to_mem <= MEM_IDLE;
+						just_branched <= '1';
 					--when => --jr (see above)
 					when others =>
 
