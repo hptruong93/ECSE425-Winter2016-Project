@@ -30,7 +30,7 @@ PACKAGE BODY StallUtil IS
 		SHOW("STALL: PREVIOUSES ARE " & STD_LOGIC'IMAGE(previous_sources_output(0)) & STD_LOGIC'IMAGE(previous_sources_output(1)) & STD_LOGIC'IMAGE(previous_sources_output(2)), "STALL REGVIOUSES ARE " & INTEGER'image(TO_INTEGER(UNSIGNED(previous_destinations_output(0)))) & INTEGER'image(TO_INTEGER(UNSIGNED(previous_destinations_output(1)))) & INTEGER'image(TO_INTEGER(UNSIGNED(previous_destinations_output(2)))));
 
 		--Stall if lw, sw, lb, sb are previous instruction and this instruction is dependent on those
-		if (destination_register /= "00000" and destination_register = previous_destinations_output(2) and previous_sources_output(2) = FORWARD_SOURCE_MEM) then
+		if previous_sources_output(2) = FORWARD_SOURCE_MEM then
 			result := '1';
 		elsif previous_sources_output(1) = FORWARD_SOURCE_MEM then
 			result := '1';

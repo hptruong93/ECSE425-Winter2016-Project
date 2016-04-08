@@ -158,7 +158,7 @@ BEGIN
             destination_reg <= 4;
             interested_reg := 4;
 
-            WAIT FOR 100 * clk_period;
+            WAIT FOR 1000 * clk_period;
 
             SHOW("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<END TEST");
         else

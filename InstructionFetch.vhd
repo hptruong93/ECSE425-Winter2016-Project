@@ -100,10 +100,10 @@ begin
 				was_stalled <= '1';
 			else
 				was_stalled <= '0';
-				just_fetched <= '0';
+				--just_fetched <= '0';
 				pc_reg <= program_counter;
 				instruction <= (others => '0');
-				if just_fetched = '1' and was_stalled = '1' then
+				if was_stalled = '1' then
 					instruction <= last_instruction;
 				else
 					case( current_state ) is

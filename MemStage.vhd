@@ -38,9 +38,15 @@ signal current_mem_address : SIGNED(32-1 downto 0) := (others => '0'); --Test pu
 
 begin
 	synced_clock : process(clk, reset)
+
+		PROCEDURE go_to_mem_access(previous_signal_to_mem : in STD_LOGIC_VECTOR(3-1 downto 0)) IS
+		BEGIN
+			current_state <= MEM_ACCESS;
+		END go_to_mem_access;
+
 	begin
 		if reset = '1' then
-
+			current_state <= MEM_WAIT;
 		elsif (rising_edge(clk)) then
 			current_state <= current_state;
 			do_read <= '0';
@@ -58,7 +64,8 @@ begin
 								do_read <= '1';
 								address_line <= to_integer(mem_address); -- where to load from
 								current_mem_address <= mem_address;
-								current_state <= MEM_ACCESS;
+
+								go_to_mem_access(LOAD_WORD);
 							end if;
 						when STORE_WORD =>
 							is_busy <= '1';
@@ -70,7 +77,8 @@ begin
 								output_data_line <= registers(to_integer(unsigned(stored_register)));
 								do_write <= '1';
 								current_mem_address <= mem_address;
-								current_state <= MEM_ACCESS;
+
+								go_to_mem_access(STORE_WORD);
 							end if;
 						when LOAD_BYTE =>
 							is_busy <= '1';
@@ -79,7 +87,8 @@ begin
 								word_byte <= '0'; -- interact with mem in byte
 								do_read <= '1';
 								address_line <= to_integer(mem_address);  -- where to load from
-								current_state <= MEM_ACCESS;
+
+								go_to_mem_access(LOAD_BYTE);
 							end if;
 						when STORE_BYTE =>
 							is_busy <= '1';
@@ -88,10 +97,11 @@ begin
 								output_data_line <= registers(to_integer(unsigned(stored_register)));
 								do_write <= '1';
 								address_line <= to_integer(mem_address);  -- where to store
-								current_state <= MEM_ACCESS;
+
+								go_to_mem_access(STORE_BYTE);
 							end if;
 						when MEM_IDLE =>
-							SHOW("MEM IDLE");
+							SHOW("MEM IDLE IN MEM_WAIT");
 							current_state <= MEM_WAIT;
 						when others =>
 					end case ;
@@ -107,6 +117,7 @@ begin
 								do_read <= '1';
 							end if;
 						when STORE_WORD =>
+							SHOW("MemStage MEM_ACCESS STORE");
 							if (is_mem_busy = '0') then
 								SHOW("MEM finish STORE_WORD into value " & INTEGER'image(TO_INTEGER(current_mem_address)));
 								is_busy <= '0';
@@ -136,7 +147,7 @@ begin
 								do_write <= '1';
 							end if;
 						when MEM_IDLE =>
-							SHOW("MEM IDLE");
+							SHOW("MEM IDLE IN MEM_ACCESS");
 							current_state <= MEM_WAIT;
 						when others =>
 					end case ;

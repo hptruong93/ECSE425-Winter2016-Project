@@ -183,7 +183,7 @@ BEGIN
 			if internal_stall = '0' then
 				using_instruction := instruction;
 			else
-				SHOW("DECODER processing last_instruction");
+				SHOW_LOVE("DECODER processing last_instruction", last_instruction);
 				do_stall <= '1';
 			 	using_instruction := last_instruction;
 			end if;
@@ -202,8 +202,8 @@ BEGIN
 			else --categorize instructions using its op code and relevant informations
 				internal_stall <= '0';
 				branch_signal <= BRANCH_NOT;
-				signal_to_mem <= MEM_IDLE;
-				SHOW_LOVE("DECODER DECODING AT ADDRESS " & INTEGER'image(TO_INTEGER(UNSIGNED(pc_reg))), using_instruction);
+				
+				SHOW_LOVE("DECODER POTENTIALLY DECODING AT ADDRESS " & INTEGER'image(TO_INTEGER(UNSIGNED(pc_reg))), using_instruction);
 				SHOW("OP code is " & integer'image(to_integer(unsigned(op_code))));
 
 				case( op_code ) is
@@ -222,6 +222,7 @@ BEGIN
 									data1 <= registers(to_integer(unsigned(rs)));
 									data2 <= registers(to_integer(unsigned(rt)));
 									writeback_source <= ALU_AS_SOURCE;
+									signal_to_mem <= MEM_IDLE;
 								end if;
 							when "100010" => --sub
 								if (check_stall(rd) = '1') then
@@ -233,6 +234,7 @@ BEGIN
 									data1 <= registers(to_integer(unsigned(rs)));
 									data2 <= registers(to_integer(unsigned(rt)));
 									writeback_source <= ALU_AS_SOURCE;
+									signal_to_mem <= MEM_IDLE;
 								end if;
 							when "011000" => --mult
 								update_history(ZERO_REGISTER, FORWARD_SOURCE_ALU, rs, rt);
@@ -241,12 +243,14 @@ BEGIN
 								data1 <= registers(to_integer(unsigned(rs)));
 								data2 <= registers(to_integer(unsigned(rt)));
 								writeback_source <= NO_WRITE_BACK; --ALU will write back for us
+								signal_to_mem <= MEM_IDLE;
 							when "011010" => --div
 								update_history(ZERO_REGISTER, FORWARD_SOURCE_ALU, rs, rt);
 
 								data1 <= registers(to_integer(unsigned(rs)));
 								data2 <= registers(to_integer(unsigned(rt)));
 								writeback_source <= NO_WRITE_BACK; --ALU will write back for us
+								signal_to_mem <= MEM_IDLE;
 							when "100100" => --and
 								if (check_stall(rd) = '1') then
 									stall_decoder;
@@ -256,6 +260,7 @@ BEGIN
 									data1 <= registers(to_integer(unsigned(rs)));
 									data2 <= registers(to_integer(unsigned(rt)));
 									writeback_source <= ALU_AS_SOURCE;
+									signal_to_mem <= MEM_IDLE;
 								end if;
 							when "100101" => --or
 								if (check_stall(rd) = '1') then
@@ -266,6 +271,7 @@ BEGIN
 									data1 <= registers(to_integer(unsigned(rs)));
 									data2 <= registers(to_integer(unsigned(rt)));
 									writeback_source <= ALU_AS_SOURCE;
+									signal_to_mem <= MEM_IDLE;
 								end if;
 							when "100111" => --nor
 								if (check_stall(rd) = '1') then
@@ -276,6 +282,7 @@ BEGIN
 									data1 <= registers(to_integer(unsigned(rs)));
 									data2 <= registers(to_integer(unsigned(rt)));
 									writeback_source <= ALU_AS_SOURCE;
+									signal_to_mem <= MEM_IDLE;
 								end if;
 							when "100110" => --xor
 								if (check_stall(rd) = '1') then
@@ -286,6 +293,7 @@ BEGIN
 									data1 <= registers(to_integer(unsigned(rs)));
 									data2 <= registers(to_integer(unsigned(rt)));
 									writeback_source <= ALU_AS_SOURCE;
+									signal_to_mem <= MEM_IDLE;
 								end if;
 
 							--A wild jr appears
@@ -304,6 +312,7 @@ BEGIN
 
 									branch_signal <= BRANCH_ALWAYS;
 									branch_address <= registers(to_integer(unsigned(rs)));
+									signal_to_mem <= MEM_IDLE;
 								end if;
 	-------------------------------------------------------------------------------------------------------------------------------------
 	-------------------------------------------------SHIFTS OPERATIONS-------------------------------------------------------------------
@@ -317,6 +326,7 @@ BEGIN
 									data1 <= registers(to_integer(unsigned(rs)));
 									data2 <= registers(to_integer(unsigned(rt)));
 									writeback_source <= ALU_AS_SOURCE;
+									signal_to_mem <= MEM_IDLE;
 								end if;
 							when "000000" => --sll
 								if (check_stall(rd) = '1') then
@@ -327,6 +337,7 @@ BEGIN
 									data1 <= registers(to_integer(unsigned(rs)));
 									data2 <= STD_LOGIC_VECTOR(resize(signed(sa), data2'length));
 									writeback_source <= ALU_AS_SOURCE;
+									signal_to_mem <= MEM_IDLE;
 								end if;
 							when "000010" => --srl
 								if (check_stall(rd) = '1') then
@@ -337,6 +348,7 @@ BEGIN
 									data1 <= registers(to_integer(unsigned(rs)));
 									data2 <= STD_LOGIC_VECTOR(resize(signed(sa), data2'length));
 									writeback_source <= ALU_AS_SOURCE;
+									signal_to_mem <= MEM_IDLE;
 								end if;
 							when "000011" => --sra
 								if (check_stall(rd) = '1') then
@@ -347,13 +359,16 @@ BEGIN
 									data1 <= registers(to_integer(unsigned(rs)));
 									data2 <= STD_LOGIC_VECTOR(resize(signed(sa), data2'length));
 									writeback_source <= ALU_AS_SOURCE;
+									signal_to_mem <= MEM_IDLE;
 								end if;
 							when "010000" => --mfhi
 								update_history(rd, FORWARD_SOURCE_ALU, ZERO_REGISTER, ZERO_REGISTER);
 								writeback_source <= HI_AS_SOURCE;
+								signal_to_mem <= MEM_IDLE;
 							when "010010" => --mflo
 								update_history(rd, FORWARD_SOURCE_ALU, ZERO_REGISTER, ZERO_REGISTER);
 								writeback_source <= LO_AS_SOURCE;
+								signal_to_mem <= MEM_IDLE;
 
 							when others =>
 
@@ -373,6 +388,7 @@ BEGIN
 							data2 <= STD_LOGIC_VECTOR(resize(signed(immediate), data2'length));
 							mem_writeback_register <= rt;
 							writeback_source <= ALU_AS_SOURCE;
+							signal_to_mem <= MEM_IDLE;
 						end if;
 					when "001010" => -- slti
 						if (check_stall(rt) = '1') then
@@ -386,6 +402,7 @@ BEGIN
 							data2 <= STD_LOGIC_VECTOR(resize(signed(immediate), data2'length));
 							mem_writeback_register <= rt;
 							writeback_source <= ALU_AS_SOURCE;
+							signal_to_mem <= MEM_IDLE;
 						end if;
 					when "001100" => -- andi
 						if (check_stall(rt) = '1') then
@@ -399,6 +416,7 @@ BEGIN
 							data2 <= STD_LOGIC_VECTOR(resize(signed(immediate), data2'length));
 							mem_writeback_register <= rt;
 							writeback_source <= ALU_AS_SOURCE;
+							signal_to_mem <= MEM_IDLE;
 						end if;
 					when "001101" => -- ori
 						if (check_stall(rt) = '1') then
@@ -412,6 +430,7 @@ BEGIN
 							data2 <= STD_LOGIC_VECTOR(resize(signed(immediate), data2'length));
 							mem_writeback_register <= rt;
 							writeback_source <= ALU_AS_SOURCE;
+							signal_to_mem <= MEM_IDLE;
 						end if;
 					when "001110" => -- xori
 						if (check_stall(rt) = '1') then
@@ -425,6 +444,7 @@ BEGIN
 							data2 <= STD_LOGIC_VECTOR(resize(signed(immediate), data2'length));
 							mem_writeback_register <= rt;
 							writeback_source <= ALU_AS_SOURCE;
+							signal_to_mem <= MEM_IDLE;
 						end if;
 
 -----------------------------------------------------------------------------------------------------------------------------------
@@ -442,6 +462,7 @@ BEGIN
 							data2	<= STD_LOGIC_VECTOR(to_unsigned(16, data2'length));
 							mem_writeback_register <= rt;
 							writeback_source <= ALU_AS_SOURCE;
+							signal_to_mem <= MEM_IDLE;
 						end if;
 					when "100011" => --lw
 						if (check_stall(rt) = '1') then
@@ -528,6 +549,7 @@ BEGIN
 								do_stall <= '0';
 								branch_signal <= BRANCH_NOT;
 							end if;
+							signal_to_mem <= MEM_IDLE;
 						end if;
 					when "000101" => --bne
 						--Stall here until result is forwarded actually
@@ -551,6 +573,7 @@ BEGIN
 								SHOW("DECODER NOT TAKEN BRANCH");
 								branch_signal <= BRANCH_NOT;
 							end if;
+							signal_to_mem <= MEM_IDLE;
 						end if;
 					when "000010" => --j
 						update_history(ZERO_REGISTER, FORWARD_SOURCE_ALU, ZERO_REGISTER, ZERO_REGISTER);
@@ -563,6 +586,7 @@ BEGIN
 						mem_writeback_register <= "00000"; --Don't write back
 						branch_signal <= BRANCH_ALWAYS;
 						branch_address <= std_logic_vector(resize(unsigned(target), branch_address'length));
+						signal_to_mem <= MEM_IDLE;
 					when "000011" => --jal --> $31 = $PC + 8, jump
 						update_history(ZERO_REGISTER, FORWARD_SOURCE_ALU, ZERO_REGISTER, ZERO_REGISTER);
 
@@ -575,6 +599,7 @@ BEGIN
 						writeback_source <= ALU_AS_SOURCE;
 						branch_signal <= BRANCH_ALWAYS;
 						branch_address <= std_logic_vector(resize(unsigned(target), branch_address'length));
+						signal_to_mem <= MEM_IDLE;
 					--when => --jr (see above)
 					when others =>
 
