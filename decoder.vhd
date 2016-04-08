@@ -144,7 +144,11 @@ BEGIN
 			update_history(ZERO_REGISTER, FORWARD_SOURCE_ALU, ZERO_REGISTER, ZERO_REGISTER, '1');
 
 			if stored_instruction = '1' then
-				last_instruction <= instruction;
+				if internal_stall = '1' then -- more than 1 stall. Do not use result from instruction fetch
+					last_instruction <= last_instruction;
+				else
+					last_instruction <= instruction;
+				end if;
 				internal_stall <= '1';
 			else
 				internal_stall <= internal_stall;
@@ -172,13 +176,15 @@ BEGIN
 			END loop;
 		elsif (rising_edge(clk)) then
 			shift_stall_history;
-			SHOW_LOVE("DECODER INSTRUCTION IS ", instruction);
-			SHOW_LOVE("DECODER LAST INSTRUCTION IS ", last_instruction);
+			--SHOW_LOVE("DECODER INSTRUCTION IS ", instruction);
+			--SHOW_LOVE("DECODER LAST INSTRUCTION IS ", last_instruction);
 			--SHOW("previouses are " & std_logic'image(previous_sources(2)) & std_logic'image(previous_sources(1)) & std_logic'image(previous_sources(0)));
 
 			if internal_stall = '0' then
 				using_instruction := instruction;
 			else
+				SHOW("DECODER processing last_instruction");
+				do_stall <= '1';
 			 	using_instruction := last_instruction;
 			end if;
 
@@ -197,6 +203,7 @@ BEGIN
 				internal_stall <= '0';
 				branch_signal <= BRANCH_NOT;
 				signal_to_mem <= MEM_IDLE;
+				SHOW_LOVE("DECODER DECODING AT ADDRESS " & INTEGER'image(TO_INTEGER(UNSIGNED(pc_reg))), using_instruction);
 				SHOW("OP code is " & integer'image(to_integer(unsigned(op_code))));
 
 				case( op_code ) is
@@ -518,6 +525,7 @@ BEGIN
 								branch_address <= std_logic_vector(resize(unsigned(immediate), branch_address'length));
 							else
 								SHOW("DECODER NOT TAKEN BRANCH");
+								do_stall <= '0';
 								branch_signal <= BRANCH_NOT;
 							end if;
 						end if;
@@ -547,7 +555,7 @@ BEGIN
 					when "000010" => --j
 						update_history(ZERO_REGISTER, FORWARD_SOURCE_ALU, ZERO_REGISTER, ZERO_REGISTER);
 
-						SHOW("--------------------------------------------------------Here j");
+						SHOW("--------------------------------------------------------Here j " & INTEGER'image(TO_INTEGER(unsigned(target))));
 						operation <= "100000"; --Tell ALU to not do anything
 						data1 <= (others => '0');
 						data2 <= (others => '0');

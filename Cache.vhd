@@ -35,9 +35,12 @@ architecture behavioral of Cache is
 type state is (
 	STALL, STALL2,
 	IDLE,
+	PREFETCHING,
 	FETCHING
 	);
 signal current_state : state;
+signal loading_address : NATURAL;
+
 signal cached_data : CACHE_DATA_TYPE;
 signal cached_tags : CACHE_TAG_TYPE;
 
@@ -52,8 +55,6 @@ begin
 -------------------------------------------------------------------------------------------------------------
 		variable cached_value : REGISTER_VALUE;
 		variable cache_hit : BOOLEAN;
-
-
 
 -------------------------------------------------------------------------------------------------------------
 -------------------------------------------------------------------------------------------------------------
@@ -186,17 +187,16 @@ begin
 					cached_data(slot_number) <= retrieved_value;
 					cached_tags(slot_number) <= tag;
 				when TWO_WAY_ASSOCIATIVITY =>
+					tag := STD_LOGIC_VECTOR(TO_UNSIGNED(address, tag'length) srl (CACHE_SIZE_BIT_COUNT - 1));
 					case( REPLACEMENT_STRATEGY ) is
 						when REPLACEMENT_RANDOM =>
 							slot_number := address mod (CACHE_SIZE_IN_WORD / 2);
-							tag := STD_LOGIC_VECTOR(TO_UNSIGNED(address, tag'length) srl (CACHE_SIZE_BIT_COUNT - 1));
 							index := RAND_RANGE(rand, 2);
 
 							cached_data(slot_number + index) <= retrieved_value;
 							cached_tags(slot_number + index) <= tag;
 						when REPLACEMENT_BIT_PLRU =>
 							slot_number := address mod (CACHE_SIZE_IN_WORD / 2);
-							tag := STD_LOGIC_VECTOR(TO_UNSIGNED(address, tag'length) srl (CACHE_SIZE_BIT_COUNT - 1));
 
 							start_lru_index := slot_number;
 							end_lru_index := slot_number + 1;
@@ -204,17 +204,16 @@ begin
 						when others =>
 					end case;
 				when FOUR_WAY_ASSOCIATIVITY =>
+					tag := STD_LOGIC_VECTOR(TO_UNSIGNED(address, tag'length) srl (CACHE_SIZE_BIT_COUNT - 2));
 					case( REPLACEMENT_STRATEGY ) is
 						when REPLACEMENT_RANDOM =>
 							slot_number := address mod (CACHE_SIZE_IN_WORD / 4);
-							tag := STD_LOGIC_VECTOR(TO_UNSIGNED(address, tag'length) srl (CACHE_SIZE_BIT_COUNT - 2));
 							index := RAND_RANGE(rand, 4);
 
 							cached_data(slot_number + index) <= retrieved_value;
 							cached_tags(slot_number + index) <= tag;
 						when REPLACEMENT_BIT_PLRU =>
 							slot_number := address mod (CACHE_SIZE_IN_WORD / 4);
-							tag := STD_LOGIC_VECTOR(TO_UNSIGNED(address, tag'length) srl (CACHE_SIZE_BIT_COUNT - 2));
 
 							start_lru_index := slot_number;
 							end_lru_index := slot_number + 3;
@@ -227,6 +226,8 @@ begin
 						when REPLACEMENT_RANDOM =>
 							slot_number := RAND_RANGE(rand, CACHE_SIZE_IN_WORD);
 							rand <= slot_number;
+
+							SHOW("CACHE Replacement to slot " & INTEGER'image(slot_number), "at address " & INTEGER'image(address));
 
 							cached_data(slot_number) <= retrieved_value;
 							cached_tags(slot_number) <= tag;
@@ -278,7 +279,7 @@ begin
 							end_lru_index := slot_number + 3;
 							lru_mark_on_hit(tag, start_lru_index, end_lru_index);
 						when FULL_ASSOCIATIVITY =>
-							tag := STD_LOGIC_VECTOR(TO_UNSIGNED(address, tag'length) srl CACHE_SIZE_BIT_COUNT);
+							tag := STD_LOGIC_VECTOR(TO_UNSIGNED(address, tag'length));
 							start_lru_index := 0;
 							end_lru_index := CACHE_SIZE_IN_WORD-1;
 							lru_mark_on_hit(tag, start_lru_index, end_lru_index);
@@ -346,17 +347,20 @@ begin
 							is_cache_busy <= '1';
 							do_read <= '1';
 							load_address <= mem_address;
-							current_state <= FETCHING;
+							loading_address <= mem_address;
+							current_state <= PREFETCHING;
 						end if;
 					else
 						--SHOW("CACHE IDLING");
 						current_state <= IDLE;
 					end if;
+				when PREFETCHING =>
+					current_state <= FETCHING;
 				when FETCHING =>
 					--SHOW("CACHE FETCHING");
 					if is_mem_busy = '0' then --mem finish loading. Return the value
 						SHOW_LOVE("CACHE RETURNING FROM MEMORY AT ADDRESS " & INTEGER'image(mem_address), " WITH DATA ", mem_data);
-						cache_miss_callback(mem_address, mem_data);
+						cache_miss_callback(loading_address, mem_data);
 						cache_output <= mem_data;
 						is_cache_busy <= '0';
 						current_state <= STALL;

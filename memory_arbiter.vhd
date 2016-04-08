@@ -78,6 +78,13 @@ begin
 		mm_initialize <= '0';
 		case y is
 			when stall =>
+				if (re2 = '1' or we2 = '1') then
+					busy2 <= '1';
+				end if;
+
+				if (re1 = '1' or we1 = '1') then
+					busy1 <= '1';
+				end if;
 				y <= idle;
 			when idle =>
 				if re1 = '1' then
@@ -126,7 +133,6 @@ begin
 
 				if (mm_rd_ready = '1') then
 					--SHOW("Memory Arbiter finished 1 reading address " & integer'image(addr1));
-					--SHOW("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA Read 1 FINISHED >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
 					mm_re <= '0';
 					mm_we <= '0';
 					busy1 <= '0';
@@ -142,7 +148,7 @@ begin
 					end if;
 				end if;
 			when write1 =>
-				--SHOW("iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii memory_arbiter writing to memory at address: >>>" & INTEGER'image(addr1));
+				--SHOW("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA Write 1 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", " addr = " & INTEGER'image(addr1), "re2 " & STD_LOGIC'image(re2));
 				busy1 <= '1';
 				mm_address <= addr1;
 				mm_data <= data1_in;
@@ -154,6 +160,7 @@ begin
 					busy2 <= '0'; -- user cancels mem access on 2
 				end if;
 				if (mm_wr_done = '1') then
+					--SHOW("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA Write 1 DONE >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
 					busy1 <= '0';
 					mm_we <= '0';
 					mm_data <= (others => 'Z');
@@ -182,7 +189,7 @@ begin
 					data2_out <= mm_data;
 					mm_re <= '0';
 					mm_we <= '0';
-					y <= idle;
+					y <= stall;
 				else
 					if (re2 = '0') then --user cancels mem access
 						--SHOW("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA Canceled Read 2 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
@@ -207,7 +214,7 @@ begin
 					data2_out <= mm_data;
 					mm_re <= '0';
 					mm_we <= '0';
-					y <= stall;
+					y <= idle;
 				else
 					y <= write2;
 				end if;

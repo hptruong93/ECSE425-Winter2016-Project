@@ -46,7 +46,8 @@ signal current_state : state;
 
 signal program_counter : STD_LOGIC_VECTOR(32-1 downto 0)  := (others => '0');
 signal last_instruction : STD_LOGIC_VECTOR(32-1 downto 0);
-
+signal was_stalled : STD_LOGIC;
+signal just_fetched : STD_LOGIC;
 
 begin
 	synced_clock : process(clk, reset)
@@ -63,12 +64,26 @@ begin
 
 		PROCEDURE got_fetch IS
 		BEGIN
+
 			SHOW_LOVE("GOT FETCH " & INTEGER'image(TO_INTEGER(UNSIGNED(program_counter))), data);
+			update_instruction(data);
+			do_read <= '1';
+
+			--if was_stalled = '0' then
 			program_counter <= program_counter + 4;
 			address <= program_counter + 4;
-			do_read <= '1';
-			is_busy <= '0';
 			update_instruction(data);
+			--else
+			--	SHOW("InstructionFetch refetch due to stall " & INTEGER'image(TO_INTEGER(UNSIGNED(program_counter))));
+			--	program_counter <= program_counter;
+			--	address <= program_counter;
+
+			--	instruction <= data;
+			--	last_instruction <= (others => '0');
+			--end if;
+
+			is_busy <= '0';
+			just_fetched <= '1';
 		END got_fetch;
 
 	begin
@@ -81,84 +96,90 @@ begin
 		elsif (rising_edge(clk)) then
 			if do_stall = '1' then
 				SHOW("InstructionFetch STALLING");
-				instruction <= (others => '0');--last_instruction;
+				instruction <= (others => '0');
+				was_stalled <= '1';
 			else
+				was_stalled <= '0';
+				just_fetched <= '0';
 				pc_reg <= program_counter;
 				instruction <= (others => '0');
-
-				case( current_state ) is
-					when FIRST_CONTACT =>
-						do_read <= '1';
-						is_busy <= '1';
-						current_state <= FETCHING;
-					when FETCHING =>
-						SHOW("InstructionFetch FETCHING " & INTEGER'image(TO_INTEGER(UNSIGNED(program_counter))));
-						case( branch_signal ) is
-							when BRANCH_NOT =>
-								if is_mem_busy = '0' then
-									got_fetch;
-									current_state <= INSTRUCTION_RECEIVED;
-								else
-									do_read <= '1';
-									is_busy <= '1';
-									current_state <= FETCHING;
-								end if;
-							when BRANCH_ALWAYS =>
-								is_busy <= '1';
-								do_read <= '0'; -- assume is_mem_busy is going to be clear next clock cycle
-								address <= branch_address;
-								program_counter <= branch_address;
-								current_state <= FETCH_BRANCH_SET;
-							when others =>
-						end case;
-					when INSTRUCTION_RECEIVED =>
-						SHOW("InstructionFetch INSTRUCTION_RECEIVED " & INTEGER'image(TO_INTEGER(UNSIGNED(program_counter))));
-						case( branch_signal ) is
-							when BRANCH_NOT =>
-								if is_mem_busy = '0' then
-									got_fetch;
-									current_state <= INSTRUCTION_RECEIVED;
-								else
-									do_read <= '1';
-									is_busy <= '1';
-									current_state <= FETCHING;
-								end if;
-							when BRANCH_ALWAYS =>
-								SHOW("InstructionFetch Leaving for BRANCH");
-								do_read <= '0';
-								is_busy <= '1';
-								address <= branch_address;
-								program_counter <= branch_address;
-								current_state <= FETCH_BRANCH_SET;
-							when others =>
-						end case;
-					when BRANCHED_INSTRUCTION_RECEIVED =>
-						SHOW("InstructionFetch BRANCHED_INSTRUCTION_RECEIVED " & INTEGER'image(TO_INTEGER(UNSIGNED(program_counter))));
-						if is_mem_busy = '0' then
-							got_fetch;
-							current_state <= FETCHING;
-						else
+				if just_fetched = '1' and was_stalled = '1' then
+					instruction <= last_instruction;
+				else
+					case( current_state ) is
+						when FIRST_CONTACT =>
 							do_read <= '1';
 							is_busy <= '1';
 							current_state <= FETCHING;
-						end if;
-					when FETCH_BRANCH_SET =>
-						SHOW("InstructionFetch Doing BRANCH " & INTEGER'image(TO_INTEGER(UNSIGNED(program_counter))));
-						do_read <= '1';
-						is_busy <= '1';
-						current_state <= FETCH_BRANCH;
-					when FETCH_BRANCH =>
-						SHOW("InstructionFetch Fetching branch " & INTEGER'image(TO_INTEGER(UNSIGNED(program_counter))));
-						if is_mem_busy = '0' then
-							got_fetch;
-							current_state <= BRANCHED_INSTRUCTION_RECEIVED;
-						else
+						when FETCHING =>
+							SHOW("InstructionFetch FETCHING " & INTEGER'image(TO_INTEGER(UNSIGNED(program_counter))));
+							case( branch_signal ) is
+								when BRANCH_NOT =>
+									if is_mem_busy = '0' then
+										got_fetch;
+										current_state <= INSTRUCTION_RECEIVED;
+									else
+										do_read <= '1';
+										is_busy <= '1';
+										current_state <= FETCHING;
+									end if;
+								when BRANCH_ALWAYS =>
+									is_busy <= '1';
+									do_read <= '0'; -- assume is_mem_busy is going to be clear next clock cycle
+									address <= branch_address;
+									program_counter <= branch_address;
+									current_state <= FETCH_BRANCH_SET;
+								when others =>
+							end case;
+						when INSTRUCTION_RECEIVED =>
+							SHOW("InstructionFetch INSTRUCTION_RECEIVED " & INTEGER'image(TO_INTEGER(UNSIGNED(program_counter))));
+							case( branch_signal ) is
+								when BRANCH_NOT =>
+									if is_mem_busy = '0' then
+										got_fetch;
+										current_state <= INSTRUCTION_RECEIVED;
+									else
+										do_read <= '1';
+										is_busy <= '1';
+										current_state <= FETCHING;
+									end if;
+								when BRANCH_ALWAYS =>
+									SHOW("InstructionFetch Leaving for BRANCH");
+									do_read <= '0';
+									is_busy <= '1';
+									address <= branch_address;
+									program_counter <= branch_address;
+									current_state <= FETCH_BRANCH_SET;
+								when others =>
+							end case;
+						when BRANCHED_INSTRUCTION_RECEIVED =>
+							SHOW("InstructionFetch BRANCHED_INSTRUCTION_RECEIVED " & INTEGER'image(TO_INTEGER(UNSIGNED(program_counter))));
+							if is_mem_busy = '0' then
+								got_fetch;
+								current_state <= FETCHING;
+							else
+								do_read <= '1';
+								is_busy <= '1';
+								current_state <= FETCHING;
+							end if;
+						when FETCH_BRANCH_SET =>
+							SHOW("InstructionFetch Doing BRANCH " & INTEGER'image(TO_INTEGER(UNSIGNED(program_counter))));
 							do_read <= '1';
 							is_busy <= '1';
 							current_state <= FETCH_BRANCH;
-						end if;
-					when others =>
-				end case ;
+						when FETCH_BRANCH =>
+							SHOW("InstructionFetch Fetching branch " & INTEGER'image(TO_INTEGER(UNSIGNED(program_counter))));
+							if is_mem_busy = '0' then
+								got_fetch;
+								current_state <= BRANCHED_INSTRUCTION_RECEIVED;
+							else
+								do_read <= '1';
+								is_busy <= '1';
+								current_state <= FETCH_BRANCH;
+							end if;
+						when others =>
+					end case ;
+				end if;
 			end if;
 		end if;
 	end process;

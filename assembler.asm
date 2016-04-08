@@ -5,19 +5,19 @@
 
 #Sum all integers from 0 to 10
 
-addi $1 $0 0 # count = 10
-addi $11 $0 11
-add $2 $0 $0 				#Initialize sum
-addi $3 $0 100 				#Mem location
+addi $1 $0 0 				# count = 10 					#0
+addi $11 $0 11												#4
+add $2 $0 $0 				#Initialize sum 				$8
+addi $3 $0 100 				#Mem location					#12
 
-LOOP: addi $1 $1 1
-beq $1 $11 LOAD
+LOOP: addi $1 $1 1 											#16
+beq $1 $11 LOAD 											#20
 
-add $2 $1 $2
-sw $2 0($3) 				#Store at 100 + 4 * i
-addi $3 $3 4
-j LOOP
+add $2 $1 $2 												#24
+sw $2 0($3) 				#Store at 100 + 4 * i 			#28
+addi $3 $3 4												#32
+j LOOP 														#36
 
-LOAD: lw $7 -4($3)
+LOAD: lw $7 -4($3) 											#40
 
-END: j END
+END: j END													#44

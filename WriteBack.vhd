@@ -38,8 +38,8 @@ begin
 		if reset = '1' then
 			registers(0) <= (others => '0');
 			registers(1) <= (others => '0');--STD_LOGIC_VECTOR(TO_UNSIGNED(1, 32));
-			registers(2) <= (others => '0');--STD_LOGIC_VECTOR(TO_UNSIGNED(2, 32));--(others => '0');
-			registers(3) <= (others => '0');--STD_LOGIC_VECTOR(TO_UNSIGNED(3, 32));--(others => '0');
+			registers(2) <= (others => '0');--STD_LOGIC_VECTOR(TO_UNSIGNED(2, 32));
+			registers(3) <= (others => '0');--STD_LOGIC_VECTOR(TO_UNSIGNED(3, 32));
 			registers(4) <= (others => '0');
 			registers(5) <= (others => '0');
 			registers(6) <= (others => '0');
@@ -47,7 +47,7 @@ begin
 			registers(8) <= (others => '0');
 			registers(9) <= (others => '0');
 			registers(10) <= (others => '0');
-			registers(11) <= (others => '0');
+			registers(11) <= STD_LOGIC_VECTOR(TO_UNSIGNED(11, 32));--(others => '0');
 			registers(12) <= (others => '0');
 			registers(13) <= (others => '0');
 			registers(14) <= (others => '0');
