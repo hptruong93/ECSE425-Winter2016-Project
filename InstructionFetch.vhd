@@ -83,7 +83,6 @@ begin
 			--end if;
 
 			is_busy <= '0';
-			just_fetched <= '1';
 		END got_fetch;
 
 	begin
@@ -93,22 +92,34 @@ begin
 			address <= program_counter;
 			pc_reg <= (others => '0');
 			last_instruction <= (others => '0');
+
+			was_stalled <= '0';
 		elsif (rising_edge(clk)) then
 			if do_stall = '1' then
 				SHOW("InstructionFetch STALLING");
 				instruction <= (others => '0');
 				was_stalled <= '1';
+
+				if is_mem_busy = '0' then --a new instruction has been fetched
+					just_fetched <= '1';
+				end if;
 			else
 				was_stalled <= '0';
-				--just_fetched <= '0';
+				just_fetched <= '0';
 				pc_reg <= program_counter;
 				instruction <= (others => '0');
 				if was_stalled = '1' and branch_signal /= BRANCH_ALWAYS then
-					--This is for actual stall.
-					--When there is a branch, there is no need to reissue because the previous instruction is incorrect anyways
-					SHOW("InstructionFetch issuing last instruction");
-					instruction <= last_instruction;
+					if just_fetched = '1' then
+						--This is for actual stall.
+						--When there is a branch, there is no need to reissue because the previous instruction is incorrect anyways
+						SHOW("InstructionFetch issuing last instruction since a new instruction has been fetched");
+						instruction <= last_instruction;
+					else
+						SHOW("InstructionFetch issuing no op for last instruction since no new instruction has been fetched");
+						instruction <= (others => '0');
+					end if;
 				else
+					last_instruction <= (others => '0');
 					case( current_state ) is
 						when FIRST_CONTACT =>
 							do_read <= '1';

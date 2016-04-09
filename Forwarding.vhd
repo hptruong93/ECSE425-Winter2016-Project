@@ -12,8 +12,11 @@ port (
 			previous_destinations : previous_destination_array;
 			previous_sources : previous_source_arrray;
 
+			lo_reg : in signed(32-1 downto 0);
+			hi_reg : in signed(32-1 downto 0);
+
 			alu_buffered_output : in previous_alu_array;
-			mem_output : in STD_LOGIC_VECTOR(32-1 downto 0);
+			mem_output : in REGISTER_VALUE;
 
 			data1_decoder : in SIGNED(32-1 downto 0);
 			data2_decoder : in SIGNED(32-1 downto 0);
@@ -36,13 +39,17 @@ begin
 	--Since the alu_buffered_output is not yet updated at this stage (recall that this unit is between Decode and ALU), the alu_buffered_output will be one cycle behind.
 	--Therefore, alu_buffered_output(n) will be forwarded to the previous_destinations(n - 1)
 	alu_source1 <= alu_buffered_output(2) when ((previous_destinations(1) = data1_register) and (previous_destinations(1) /= "00000") and (previous_sources(1) = FORWARD_SOURCE_ALU)) else
-						--alu_buffered_output(1) when ((previous_destinations(0) = data1_register) and (previous_destinations(0) /= "00000") and (previous_sources(0) = FORWARD_SOURCE_ALU)) else
+						alu_buffered_output(1) when ((previous_destinations(0) = data1_register) and (previous_destinations(0) /= "00000") and (previous_sources(0) = FORWARD_SOURCE_ALU)) else
 						SIGNED(mem_output) when ((previous_destinations(1) = data1_register) and (previous_destinations(1) /= "00000") and (previous_sources(1) = FORWARD_SOURCE_MEM)) else
+						lo_reg when ((previous_destinations(1) = data1_register) and (previous_destinations(1) /= "00000") and (previous_sources(1) = FORWARD_SOURCE_LO)) else
+						hi_reg when ((previous_destinations(1) = data1_register) and (previous_destinations(1) /= "00000") and (previous_sources(1) = FORWARD_SOURCE_HI)) else
 						data1_decoder;
 
 	alu_source2 <= alu_buffered_output(2) when ((previous_destinations(1) = data2_register) and (previous_destinations(1) /= "00000") and (previous_sources(1) = FORWARD_SOURCE_ALU)) else
-						--alu_buffered_output(1) when ((previous_destinations(0) = data2_register) and (previous_destinations(0) /= "00000") and (previous_sources(0) = FORWARD_SOURCE_ALU)) else
+						alu_buffered_output(1) when ((previous_destinations(0) = data2_register) and (previous_destinations(0) /= "00000") and (previous_sources(0) = FORWARD_SOURCE_ALU)) else
 						SIGNED(mem_output) when ((previous_destinations(1) = data2_register) and (previous_destinations(1) /= "00000") and (previous_sources(1) = FORWARD_SOURCE_MEM)) else
+						lo_reg when ((previous_destinations(1) = data2_register) and (previous_destinations(1) /= "00000") and (previous_sources(1) = FORWARD_SOURCE_LO)) else
+						hi_reg when ((previous_destinations(1) = data2_register) and (previous_destinations(1) /= "00000") and (previous_sources(1) = FORWARD_SOURCE_HI)) else
 						data2_decoder;
 
 	--Testing

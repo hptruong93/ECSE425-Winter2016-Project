@@ -82,7 +82,7 @@ BEGIN
 
 		PROCEDURE update_history (--Forwarding logic
 				signal register_destination : in REGISTER_INDEX;
-				CONSTANT source : in STD_LOGIC;
+				CONSTANT source : in FORWARD_SOURCE_TYPE;
 				signal data1_source : in REGISTER_INDEX;
 				signal data2_source : in REGISTER_INDEX;
 				CONSTANT is_stalling : STD_LOGIC
@@ -112,7 +112,7 @@ BEGIN
 
 		PROCEDURE update_history (--Forwarding logic
 				signal register_destination : in REGISTER_INDEX;
-				CONSTANT source : in STD_LOGIC;
+				CONSTANT source : in FORWARD_SOURCE_TYPE;
 				signal data1_source : in REGISTER_INDEX;
 				signal data2_source : in REGISTER_INDEX
 			) is
@@ -147,6 +147,7 @@ BEGIN
 				if internal_stall = '1' then -- more than 1 stall. Do not use result from instruction fetch
 					last_instruction <= last_instruction;
 				else
+					--SHOW_LOVE("DECODER STORING last_instruction to be ", instruction);
 					last_instruction <= instruction;
 				end if;
 				internal_stall <= '1';
@@ -172,21 +173,22 @@ BEGIN
 			last_instruction <= (others => '0');
 
 			for i in previous_stall_destinations'range loop
-				previous_stall_destinations(i) <= "00000";
-				previous_stall_sources(i) <= '0';
+				previous_stall_destinations(i) <= (others => '0');
+				previous_stall_sources(i) <= (others => '0');
 
-				previous_forwarding_destinations(i) <= "00000";
-				previous_forwarding_sources(i) <= '0';
+				previous_forwarding_destinations(i) <= (others => '0');
+				previous_forwarding_sources(i) <= (others => '0');
 			END loop;
 		elsif (rising_edge(clk)) then
 			shift_stall_history;
+			do_stall <= '0';
 			--SHOW_LOVE("DECODER INSTRUCTION IS ", instruction);
 			--SHOW_LOVE("DECODER LAST INSTRUCTION IS ", last_instruction);
 			--SHOW("previouses are " & std_logic'image(previous_sources(2)) & std_logic'image(previous_sources(1)) & std_logic'image(previous_sources(0)));
 
 			if internal_stall = '0' then
 				using_instruction := instruction;
-			else
+			else --internal_stall = '1'
 				SHOW_LOVE("DECODER processing last_instruction", last_instruction);
 				do_stall <= '1';
 			 	using_instruction := last_instruction;
@@ -213,7 +215,6 @@ BEGIN
 				internal_stall <= '0';
 			else --categorize instructions using its op code and relevant informations
 				internal_stall <= '0';
-				do_stall <= '0';
 				branch_signal <= BRANCH_NOT;
 
 				SHOW_LOVE("DECODER POTENTIALLY DECODING AT ADDRESS " & INTEGER'image(TO_INTEGER(UNSIGNED(pc_reg))), using_instruction);
@@ -231,7 +232,7 @@ BEGIN
 								else
 									update_history(rd, FORWARD_SOURCE_ALU, rs, rt);
 
-									SHOW(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ADD!!! " & integer'image(to_integer(unsigned(rs))) & integer'image(to_integer(unsigned(rt))));
+									SHOW(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ADD!!! " & integer'image(to_integer(unsigned(rs))), "" & integer'image(to_integer(unsigned(rt))));
 									data1 <= registers(to_integer(unsigned(rs)));
 									data2 <= registers(to_integer(unsigned(rt)));
 									writeback_source <= ALU_AS_SOURCE;
@@ -243,7 +244,7 @@ BEGIN
 								else
 									update_history(rd, FORWARD_SOURCE_ALU, rs, rt);
 
-									SHOW(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> SUB!!! " & integer'image(to_integer(unsigned(rs))) & integer'image(to_integer(unsigned(rt))));
+									SHOW(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> SUB!!! " & integer'image(to_integer(unsigned(rs))), "" & integer'image(to_integer(unsigned(rt))));
 									data1 <= registers(to_integer(unsigned(rs)));
 									data2 <= registers(to_integer(unsigned(rt)));
 									writeback_source <= ALU_AS_SOURCE;
@@ -252,7 +253,7 @@ BEGIN
 							when "011000" => --mult
 								update_history(ZERO_REGISTER, FORWARD_SOURCE_ALU, rs, rt);
 
-								SHOW(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> MULT!!! " & integer'image(to_integer(unsigned(rs))) & integer'image(to_integer(unsigned(rt))));
+								SHOW(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> MULT!!! " & integer'image(to_integer(unsigned(rs))), "" & integer'image(to_integer(unsigned(rt))));
 								data1 <= registers(to_integer(unsigned(rs)));
 								data2 <= registers(to_integer(unsigned(rt)));
 								writeback_source <= NO_WRITE_BACK; --ALU will write back for us
@@ -376,11 +377,13 @@ BEGIN
 									signal_to_mem <= MEM_IDLE;
 								end if;
 							when "010000" => --mfhi
-								update_history(rd, FORWARD_SOURCE_ALU, ZERO_REGISTER, ZERO_REGISTER);
+								SHOW(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> MFHI " & integer'image(to_integer(unsigned(rd))));
+								update_history(rd, FORWARD_SOURCE_HI, ZERO_REGISTER, ZERO_REGISTER);
 								writeback_source <= HI_AS_SOURCE;
 								signal_to_mem <= MEM_IDLE;
 							when "010010" => --mflo
-								update_history(rd, FORWARD_SOURCE_ALU, ZERO_REGISTER, ZERO_REGISTER);
+								SHOW(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> MFLO " & integer'image(to_integer(unsigned(rd))));
+								update_history(rd, FORWARD_SOURCE_LO, ZERO_REGISTER, ZERO_REGISTER);
 								writeback_source <= LO_AS_SOURCE;
 								signal_to_mem <= MEM_IDLE;
 
@@ -396,7 +399,7 @@ BEGIN
 						else
 							update_history(rt, FORWARD_SOURCE_ALU, rs, ZERO_REGISTER);
 
-							SHOW(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ADDI!!! " & integer'image(to_integer(unsigned(rs))) & integer'image(to_integer(signed(immediate))));
+							SHOW(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ADDI!!! " & integer'image(to_integer(unsigned(rs))), "and immediate " & integer'image(to_integer(signed(immediate))));
 							operation <= "100000";
 							data1 <= registers(to_integer(unsigned(rs)));
 							data2 <= STD_LOGIC_VECTOR(resize(signed(immediate), data2'length));

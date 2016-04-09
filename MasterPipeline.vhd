@@ -89,6 +89,9 @@ COMPONENT Forwarding IS
 			previous_destinations : previous_destination_array;
 			previous_sources : previous_source_arrray;
 
+			lo_reg : in signed(32-1 downto 0);
+			hi_reg : in signed(32-1 downto 0);
+
 			alu_buffered_output : in previous_alu_array;
 			mem_output : in STD_LOGIC_VECTOR(32-1 downto 0);
 
@@ -111,8 +114,8 @@ COMPONENT ALU IS
 			data2	:	in signed(32-1 downto 0);
 
 			operation : in STD_LOGIC_VECTOR(6-1 downto 0);
-			lo_reg : out signed (32-1 downto 0);
-			hi_reg : out signed (32-1 downto 0);
+			lo_reg : out signed(32-1 downto 0);
+			hi_reg : out signed(32-1 downto 0);
 
 			buffered_result : out previous_alu_array;
 			result : out signed(32-1 downto 0)
@@ -274,6 +277,9 @@ begin
 		clk => clk,
 		previous_destinations => previous_forwarding_destinations_output,
 		previous_sources => previous_forwarding_sources_output,
+
+		lo_reg => lo_reg,
+		hi_reg => hi_reg,
 
 		alu_buffered_output => buffered_result,
 		mem_output => mem_stage_output,

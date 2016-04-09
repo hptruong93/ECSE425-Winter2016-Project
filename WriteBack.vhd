@@ -76,16 +76,20 @@ begin
 				when IDLE =>
 					case( writeback_source ) is
 						when LO_AS_SOURCE =>
-							SHOW_TWO("WRITE BACK lo as source " & integer'image(to_integer(signed(alu_output))), "and mem_writeback_register " & integer'image(to_integer(unsigned(mem_writeback_register))));
+							--SHOW("WRITE BACK lo as source " & INTEGER'image(TO_INTEGER(UNSIGNED(STD_LOGIC_VECTOR(lo_reg)))), "and mem_writeback_register " & integer'image(to_integer(unsigned(mem_writeback_register))));
+							SHOW("WRITE BACK lo as source " & INTEGER'image(TO_INTEGER(UNSIGNED(STD_LOGIC_VECTOR(lo_reg)))), "--> $" & integer'image(to_integer(unsigned(mem_writeback_register))));
 							registers(to_integer(unsigned(mem_writeback_register))) <= STD_LOGIC_VECTOR(lo_reg);
 						when HI_AS_SOURCE =>
-							SHOW_TWO("WRITE BACK high as source " & integer'image(to_integer(signed(alu_output))), "and mem_writeback_register " & integer'image(to_integer(unsigned(mem_writeback_register))));
+							--SHOW("WRITE BACK high as source " & INTEGER'image(TO_INTEGER(UNSIGNED(STD_LOGIC_VECTOR(hi_reg)))), "and mem_writeback_register " & integer'image(to_integer(unsigned(mem_writeback_register))));
+							SHOW("WRITE BACK high as source " & INTEGER'image(TO_INTEGER(UNSIGNED(STD_LOGIC_VECTOR(hi_reg)))), "--> $" & integer'image(to_integer(unsigned(mem_writeback_register))));
 							registers(to_integer(unsigned(mem_writeback_register))) <= STD_LOGIC_VECTOR(hi_reg);
 						when ALU_AS_SOURCE =>
-							SHOW_TWO("WRITE BACK alu output " & integer'image(to_integer(signed(alu_output))), "and mem_writeback_register " & integer'image(to_integer(unsigned(mem_writeback_register))));
+							--SHOW("WRITE BACK alu output " & integer'image(to_integer(signed(alu_output))), "and mem_writeback_register " & integer'image(to_integer(unsigned(mem_writeback_register))));
+							SHOW("WRITE BACK alu as source " & integer'image(to_integer(signed(alu_output))), "--> $" & integer'image(to_integer(unsigned(mem_writeback_register))));
 							registers(to_integer(unsigned(mem_writeback_register))) <= STD_LOGIC_VECTOR(alu_output);
 						when MEM_AS_SOURCE | MEM_BYTE_AS_SOURCE =>
-							SHOW_TWO("WRITE BACK mem output " & integer'image(to_integer(signed(mem_stage_output))), "and mem_writeback_register " & integer'image(to_integer(unsigned(mem_writeback_register))));
+							--SHOW("WRITE BACK mem output " & integer'image(to_integer(signed(mem_stage_output))), "and mem_writeback_register " & integer'image(to_integer(unsigned(mem_writeback_register))));
+							SHOW("WRITE BACK mem as source " & integer'image(to_integer(signed(mem_stage_output))), "--> $" & integer'image(to_integer(unsigned(mem_writeback_register))));
 
 							--At the cycle that write back receives this signal, mem stage is just starting.
 							--Therefore there is no way for write back unit to write back at this point. We have to wait for at least
