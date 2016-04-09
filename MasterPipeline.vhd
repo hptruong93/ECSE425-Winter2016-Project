@@ -4,6 +4,7 @@ use IEEE.numeric_std.all;
 use work.register_array.all;
 use work.memory_arbiter_lib.all;
 use work.ForwardingUtil.all;
+use work.StallUtil.all;
 
 entity MasterPipeline is
 port (	clk 	: in STD_LOGIC;
@@ -38,7 +39,7 @@ port (	clk 	: in STD_LOGIC;
 			branch_address : in STD_LOGIC_VECTOR(32-1 downto 0); --from decoder
 			data : in STD_LOGIC_VECTOR(32-1 downto 0); --from memory
 
-			do_stall : in STD_LOGIC;
+			do_stall : in STALL_SIGNAL;
 			is_mem_busy : in STD_LOGIC;
 
 			pc_reg : out STD_LOGIC_VECTOR(32-1 downto 0); --send to decoder
@@ -70,7 +71,7 @@ port (	clk 	: in STD_LOGIC;
 			data1 : out STD_LOGIC_VECTOR(32-1 downto 0); --send to ALU
 			data2 : out STD_LOGIC_VECTOR(32-1 downto 0); --send to ALU
 
-			do_stall : out STD_LOGIC;
+			do_stall : out STALL_SIGNAL;
 
 			--Forwarding
 			data1_register : out STD_LOGIC_VECTOR(5-1 downto 0); --send to ALU
@@ -170,7 +171,7 @@ signal cache_output : REGISTER_VALUE;
 
 --instruction fetch
 signal operation : STD_LOGIC_VECTOR(6-1 downto 0); -- Decoder => ALU
-signal do_stall : STD_LOGIC; -- Decoder ==> IF
+signal do_stall : STALL_SIGNAL; -- Decoder ==> IF
 signal instruction : STD_LOGIC_VECTOR(32-1 downto 0); -- Fetch unit ==> Decoder
 signal data1 : REGISTER_VALUE; -- Decoder ==> ALU
 signal data2 : REGISTER_VALUE; -- Decoder ==> ALU

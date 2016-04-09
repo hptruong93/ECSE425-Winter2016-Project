@@ -334,7 +334,7 @@ begin
 						end if;
 
 						if cache_hit and CACHE_ENABLED then -- cache hit, return the value
-							SHOW_LOVE("CACHE hit at address " & INTEGER'image(mem_address), ".Returning value ", cached_value);
+							SHOW_LOVE("CACHE hit at address " & INTEGER'image(mem_address), "Returning value ", cached_value);
 							cache_hit_callback(mem_address);
 							cache_output <= cached_value;
 							if clk = '0' then

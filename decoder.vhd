@@ -27,7 +27,7 @@ port (	clk 	: in STD_LOGIC;
 			data1 : out STD_LOGIC_VECTOR(32-1 downto 0); --send to ALU
 			data2 : out STD_LOGIC_VECTOR(32-1 downto 0); --send to ALU
 
-			do_stall : out STD_LOGIC;
+			do_stall : out STALL_SIGNAL;
 
 			--Forwarding
 			data1_register : out STD_LOGIC_VECTOR(5-1 downto 0); --send to ALU
@@ -50,7 +50,7 @@ signal previous_forwarding_sources : previous_source_arrray; --biggest index is 
 signal ZERO_REGISTER : REGISTER_INDEX := (others => '0');
 
 signal last_instruction : REGISTER_VALUE;
-signal internal_stall : STD_LOGIC;
+signal internal_stall : STALL_SIGNAL;
 signal just_branched : STD_LOGIC;
 
 signal op_code, funct : STD_LOGIC_VECTOR(6-1 downto 0);
@@ -67,14 +67,14 @@ BEGIN
 	previous_forwarding_sources_output <= previous_forwarding_sources;
 
 	--Precalculate useful quantities for convenience
-	op_code <= instruction(32-1 downto 26)  when internal_stall = '0' else last_instruction(32-1 downto 26);
-	rs <= instruction(25 downto 21) when internal_stall = '0' else last_instruction(25 downto 21);
-	rt <= instruction(20 downto 16) when internal_stall = '0' else last_instruction(20 downto 16);
-	rd <= instruction(15 downto 11) when internal_stall = '0' else last_instruction(15 downto 11);
-	sa <= instruction(10 downto 6) when internal_stall = '0' else last_instruction(10 downto 6);
-	funct <= instruction(5 downto 0) when internal_stall = '0' else last_instruction(5 downto 0);
-	immediate <= instruction(15 downto 0) when internal_stall = '0' else last_instruction(15 downto 0);
-	target <= instruction(25 downto 0) when internal_stall = '0' else last_instruction(25 downto 0);
+	op_code <= instruction(32-1 downto 26)  when internal_stall = STALL_NONE else last_instruction(32-1 downto 26);
+	rs <= instruction(25 downto 21) when internal_stall = STALL_NONE else last_instruction(25 downto 21);
+	rt <= instruction(20 downto 16) when internal_stall = STALL_NONE else last_instruction(20 downto 16);
+	rd <= instruction(15 downto 11) when internal_stall = STALL_NONE else last_instruction(15 downto 11);
+	sa <= instruction(10 downto 6) when internal_stall = STALL_NONE else last_instruction(10 downto 6);
+	funct <= instruction(5 downto 0) when internal_stall = STALL_NONE else last_instruction(5 downto 0);
+	immediate <= instruction(15 downto 0) when internal_stall = STALL_NONE else last_instruction(15 downto 0);
+	target <= instruction(25 downto 0) when internal_stall = STALL_NONE else last_instruction(25 downto 0);
 
 	synced_clock : process(clk, reset)
 
@@ -140,17 +140,18 @@ BEGIN
 			mem_writeback_register <= (others => '0');
 			writeback_source <= NO_WRITE_BACK;
 
-			do_stall <= '1';
+			do_stall <= STALL_REISSUE;
 			update_history(ZERO_REGISTER, FORWARD_SOURCE_ALU, ZERO_REGISTER, ZERO_REGISTER, '1');
 
 			if stored_instruction = '1' then
-				if internal_stall = '1' then -- more than 1 stall. Do not use result from instruction fetch
+				if internal_stall /= STALL_NONE then
+					-- more than 1 stall (i.e. has just been stalled in the previous cyle). Do not use result from instruction fetch
 					last_instruction <= last_instruction;
 				else
 					--SHOW_LOVE("DECODER STORING last_instruction to be ", instruction);
 					last_instruction <= instruction;
 				end if;
-				internal_stall <= '1';
+				internal_stall <= STALL_REISSUE;
 			else
 				internal_stall <= internal_stall;
 			end if;
@@ -169,7 +170,7 @@ BEGIN
 	BEGIN
 		if reset = '1' then
 			just_branched <= '0';
-			internal_stall <= '0';
+			internal_stall <= STALL_NONE;
 			last_instruction <= (others => '0');
 
 			for i in previous_stall_destinations'range loop
@@ -181,16 +182,15 @@ BEGIN
 			END loop;
 		elsif (rising_edge(clk)) then
 			shift_stall_history;
-			do_stall <= '0';
+			do_stall <= STALL_NONE;
 			--SHOW_LOVE("DECODER INSTRUCTION IS ", instruction);
 			--SHOW_LOVE("DECODER LAST INSTRUCTION IS ", last_instruction);
 			--SHOW("previouses are " & std_logic'image(previous_sources(2)) & std_logic'image(previous_sources(1)) & std_logic'image(previous_sources(0)));
 
-			if internal_stall = '0' then
+			if internal_stall = STALL_NONE then
 				using_instruction := instruction;
-			else --internal_stall = '1'
+			else
 				SHOW_LOVE("DECODER processing last_instruction", last_instruction);
-				do_stall <= '1';
 			 	using_instruction := last_instruction;
 			end if;
 
@@ -201,6 +201,7 @@ BEGIN
 				else --Instruction is valid. Need to store during stall
 					stall_decoder("DECODER STALL DUE TO MEM BUSY", '1');
 				end if;
+				do_stall <= STALL_NO_REISSUE;
 			elsif just_branched = '1' then --ignore the instruction right after branch
 				SHOW("DECODER IGNORE INSTRUCTION DUE TO PREVIOUS BRANCH");
 				operation <= "100000"; --add
@@ -211,10 +212,10 @@ BEGIN
 				just_branched <= '0';
 			elsif using_instruction = STD_LOGIC_VECTOR(ALL_32_ZEROES) then --This happens when instruction fetch stages is stalled due to memory access
 				stall_decoder("DECODER STALL DUE TO NO OP", '1');
-				do_stall <= '0'; --This will overwrite the value in stall_decoder procedure
-				internal_stall <= '0';
+				do_stall <= STALL_NONE; --This will overwrite the value in stall_decoder procedure
+				internal_stall <= STALL_NONE;
 			else --categorize instructions using its op code and relevant informations
-				internal_stall <= '0';
+				internal_stall <= STALL_NONE;
 				branch_signal <= BRANCH_NOT;
 
 				SHOW_LOVE("DECODER POTENTIALLY DECODING AT ADDRESS " & INTEGER'image(TO_INTEGER(UNSIGNED(pc_reg))), using_instruction);
@@ -570,7 +571,6 @@ BEGIN
 								just_branched <= '1';
 							else
 								SHOW("DECODER NOT TAKEN BRANCH");
-								do_stall <= '0';
 								branch_signal <= BRANCH_NOT;
 							end if;
 							signal_to_mem <= MEM_IDLE;

@@ -12,6 +12,7 @@ use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 use work.register_array.all;
 use ieee.numeric_std_unsigned.all;
+use work.StallUtil.all;
 
 entity InstructionFetch is
 port (	clk 	: in STD_LOGIC;
@@ -21,7 +22,7 @@ port (	clk 	: in STD_LOGIC;
 			branch_address : in STD_LOGIC_VECTOR(32-1 downto 0); --from decoder
 			data : in STD_LOGIC_VECTOR(32-1 downto 0); --from memory
 
-			do_stall : in STD_LOGIC;
+			do_stall : in STALL_SIGNAL;
 			is_mem_busy : in STD_LOGIC;
 
 			pc_reg : out STD_LOGIC_VECTOR(32-1 downto 0); --send to decoder
@@ -47,7 +48,7 @@ signal current_state : state;
 signal program_counter : STD_LOGIC_VECTOR(32-1 downto 0) := (others => '0');
 signal last_instruction : STD_LOGIC_VECTOR(32-1 downto 0);
 signal was_stalled : STD_LOGIC;
---signal just_fetched : STD_LOGIC;
+signal last_stall_signal : STALL_SIGNAL;
 signal pending_instruction : STD_LOGIC;
 
 begin
@@ -88,22 +89,36 @@ begin
 
 			was_stalled <= '0';
 			pending_instruction <= '0';
+			last_stall_signal <= STALL_NONE;
 		elsif (rising_edge(clk)) then
-			if do_stall = '1' then
+			if do_stall /= STALL_NONE then
 				SHOW("InstructionFetch STALLING");
 				instruction <= (others => '0');
 				was_stalled <= '1';
+
+				--At a given rising edge, decoder may or may not have a last instruction to decode.
+				--Given that we have a newly fetched instruction and the decoder
+				--issues a stall on the decoding instruction itself, we can conclude that the instruction we just fetched
+				--will not be processed the next time decoder decodes. In addition, we only need one STALL_REISSUE signal from decoder
+				--among a series of consecutive STALLs to recognize that our instruction has not been decoded successfully.
+				--On the other hand, if decoder only stalls due to memory (i.e. STALL_NO_REISSUE), we can conclude that
+				--decoder successfully decoded the last instruction and is ready to decode our pending instruction the next
+				--time it decodes.
+				if last_stall_signal = STALL_NONE or do_stall = STALL_REISSUE then
+					last_stall_signal <= do_stall;
+				end if;
 			else
 				was_stalled <= '0';
 				pending_instruction <= '0';
+				last_stall_signal <= STALL_NONE;
 
 				pc_reg <= program_counter;
 				instruction <= (others => '0');
 				if was_stalled = '1' and branch_signal /= BRANCH_ALWAYS then
-					if pending_instruction = '1' then
+					if pending_instruction = '1' and last_stall_signal = STALL_REISSUE then
 						--This is for actual stall.
-						--When there is a branch, there is no need to reissue because the previous instruction is incorrect anyways
-						SHOW("InstructionFetch issuing last instruction since a new instruction has been fetched");
+						--When there is a branch, there is no need to reissue because the previous instruction is incorrect
+						SHOW_LOVE("InstructionFetch issuing last instruction since a new instruction has been fetched", last_instruction);
 						instruction <= last_instruction;
 					else
 						SHOW("InstructionFetch issuing no op for last instruction since no new instruction has been fetched");
