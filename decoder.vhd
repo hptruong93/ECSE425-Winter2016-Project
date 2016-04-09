@@ -218,7 +218,7 @@ BEGIN
 				branch_signal <= BRANCH_NOT;
 
 				SHOW_LOVE("DECODER POTENTIALLY DECODING AT ADDRESS " & INTEGER'image(TO_INTEGER(UNSIGNED(pc_reg))), using_instruction);
-				SHOW("OP code is " & integer'image(to_integer(unsigned(op_code))));
+				--SHOW("OP code is " & integer'image(to_integer(unsigned(op_code))));
 
 				case( op_code ) is
 					when "000000" =>
@@ -232,7 +232,7 @@ BEGIN
 								else
 									update_history(rd, FORWARD_SOURCE_ALU, rs, rt);
 
-									SHOW(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ADD!!! " & integer'image(to_integer(unsigned(rs))), "" & integer'image(to_integer(unsigned(rt))));
+									SHOW(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ADD $" & integer'image(to_integer(unsigned(rs))), "$" & integer'image(to_integer(unsigned(rt))));
 									data1 <= registers(to_integer(unsigned(rs)));
 									data2 <= registers(to_integer(unsigned(rt)));
 									writeback_source <= ALU_AS_SOURCE;
@@ -244,7 +244,7 @@ BEGIN
 								else
 									update_history(rd, FORWARD_SOURCE_ALU, rs, rt);
 
-									SHOW(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> SUB!!! " & integer'image(to_integer(unsigned(rs))), "" & integer'image(to_integer(unsigned(rt))));
+									SHOW(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> SUB $" & integer'image(to_integer(unsigned(rs))), "$" & integer'image(to_integer(unsigned(rt))));
 									data1 <= registers(to_integer(unsigned(rs)));
 									data2 <= registers(to_integer(unsigned(rt)));
 									writeback_source <= ALU_AS_SOURCE;
@@ -253,7 +253,7 @@ BEGIN
 							when "011000" => --mult
 								update_history(ZERO_REGISTER, FORWARD_SOURCE_ALU, rs, rt);
 
-								SHOW(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> MULT!!! " & integer'image(to_integer(unsigned(rs))), "" & integer'image(to_integer(unsigned(rt))));
+								SHOW(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> MULT $" & integer'image(to_integer(unsigned(rs))), "$" & integer'image(to_integer(unsigned(rt))));
 								data1 <= registers(to_integer(unsigned(rs)));
 								data2 <= registers(to_integer(unsigned(rt)));
 								writeback_source <= NO_WRITE_BACK; --ALU will write back for us
@@ -261,6 +261,7 @@ BEGIN
 							when "011010" => --div
 								update_history(ZERO_REGISTER, FORWARD_SOURCE_ALU, rs, rt);
 
+								SHOW(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> DIV $" & integer'image(to_integer(unsigned(rs))), "$" & integer'image(to_integer(unsigned(rt))));
 								data1 <= registers(to_integer(unsigned(rs)));
 								data2 <= registers(to_integer(unsigned(rt)));
 								writeback_source <= NO_WRITE_BACK; --ALU will write back for us
@@ -271,6 +272,7 @@ BEGIN
 								else
 									update_history(rd, FORWARD_SOURCE_ALU, rs, rt);
 
+									SHOW(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> and $" & integer'image(to_integer(unsigned(rs))), "$" & integer'image(to_integer(unsigned(rt))));
 									data1 <= registers(to_integer(unsigned(rs)));
 									data2 <= registers(to_integer(unsigned(rt)));
 									writeback_source <= ALU_AS_SOURCE;
@@ -282,6 +284,7 @@ BEGIN
 								else
 									update_history(rd, FORWARD_SOURCE_ALU, rs, rt);
 
+									SHOW(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> or $" & integer'image(to_integer(unsigned(rs))), "$" & integer'image(to_integer(unsigned(rt))));
 									data1 <= registers(to_integer(unsigned(rs)));
 									data2 <= registers(to_integer(unsigned(rt)));
 									writeback_source <= ALU_AS_SOURCE;
@@ -293,6 +296,7 @@ BEGIN
 								else
 									update_history(rd, FORWARD_SOURCE_ALU, rs, rt);
 
+									SHOW(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> nor $" & integer'image(to_integer(unsigned(rs))), "$" & integer'image(to_integer(unsigned(rt))));
 									data1 <= registers(to_integer(unsigned(rs)));
 									data2 <= registers(to_integer(unsigned(rt)));
 									writeback_source <= ALU_AS_SOURCE;
@@ -304,6 +308,7 @@ BEGIN
 								else
 									update_history(rd, FORWARD_SOURCE_ALU, rs, rt);
 
+									SHOW(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> xor $" & integer'image(to_integer(unsigned(rs))), "$" & integer'image(to_integer(unsigned(rt))));
 									data1 <= registers(to_integer(unsigned(rs)));
 									data2 <= registers(to_integer(unsigned(rt)));
 									writeback_source <= ALU_AS_SOURCE;
@@ -377,12 +382,12 @@ BEGIN
 									signal_to_mem <= MEM_IDLE;
 								end if;
 							when "010000" => --mfhi
-								SHOW(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> MFHI " & integer'image(to_integer(unsigned(rd))));
+								SHOW(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> MFHI $" & integer'image(to_integer(unsigned(rd))));
 								update_history(rd, FORWARD_SOURCE_HI, ZERO_REGISTER, ZERO_REGISTER);
 								writeback_source <= HI_AS_SOURCE;
 								signal_to_mem <= MEM_IDLE;
 							when "010010" => --mflo
-								SHOW(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> MFLO " & integer'image(to_integer(unsigned(rd))));
+								SHOW(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> MFLO $" & integer'image(to_integer(unsigned(rd))));
 								update_history(rd, FORWARD_SOURCE_LO, ZERO_REGISTER, ZERO_REGISTER);
 								writeback_source <= LO_AS_SOURCE;
 								signal_to_mem <= MEM_IDLE;
@@ -399,7 +404,7 @@ BEGIN
 						else
 							update_history(rt, FORWARD_SOURCE_ALU, rs, ZERO_REGISTER);
 
-							SHOW(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ADDI!!! " & integer'image(to_integer(unsigned(rs))), "and immediate " & integer'image(to_integer(signed(immediate))));
+							SHOW(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ADDI $" & integer'image(to_integer(unsigned(rs))), "and immediate " & integer'image(to_integer(signed(immediate))));
 							operation <= "100000";
 							data1 <= registers(to_integer(unsigned(rs)));
 							data2 <= STD_LOGIC_VECTOR(resize(signed(immediate), data2'length));
@@ -487,7 +492,7 @@ BEGIN
 						else
 							update_history(rt, FORWARD_SOURCE_MEM, rs, ZERO_REGISTER);
 
-							SHOW_TWO("DECODER lw with rs " & integer'image(to_integer(unsigned(rs))), "and immediate " & INTEGER'image(TO_INTEGER(signed(immediate))));
+							SHOW_TWO("DECODER lw with rs $" & integer'image(to_integer(unsigned(rs))), "and immediate " & INTEGER'image(TO_INTEGER(signed(immediate))));
 							operation <= "100000"; --add
 							data1	<= registers(to_integer(unsigned(rs)));
 							data2	<= STD_LOGIC_VECTOR(resize(signed(immediate), data2'length));
@@ -550,8 +555,8 @@ BEGIN
 						else
 							update_history(ZERO_REGISTER, FORWARD_SOURCE_ALU, rs, rt);
 
-							SHOW("DECODER beq comparing two registers " & INTEGER'image(to_integer(unsigned(rs))), " " & INTEGER'image(to_integer(unsigned(rt))));
-							SHOW("VALUES ARE " & INTEGER'image(TO_INTEGER(UNSIGNED(registers(to_integer(unsigned(rs)))))), " and " & INTEGER'image(TO_INTEGER(UNSIGNED(registers(to_integer(unsigned(rt)))))));
+							SHOW("DECODER beq comparing two registers $" & INTEGER'image(to_integer(unsigned(rs))), "$" & INTEGER'image(to_integer(unsigned(rt))));
+							SHOW("VALUES ARE " & INTEGER'image(TO_INTEGER(UNSIGNED(registers(to_integer(unsigned(rs)))))), "and " & INTEGER'image(TO_INTEGER(UNSIGNED(registers(to_integer(unsigned(rt)))))));
 							operation <= "100000"; --Tell ALU to not do anything
 							data1 <= (others => '0');
 							data2 <= (others => '0');
@@ -577,8 +582,8 @@ BEGIN
 						else
 							update_history(ZERO_REGISTER, FORWARD_SOURCE_ALU, rs, rt);
 
-							SHOW("DECODER bne comparing two registers " & INTEGER'image(to_integer(unsigned(rs))), " " & INTEGER'image(to_integer(unsigned(rt))));
-							SHOW("VALUES ARE " & INTEGER'image(TO_INTEGER(UNSIGNED(registers(to_integer(unsigned(rs)))))), " and " & INTEGER'image(TO_INTEGER(UNSIGNED(registers(to_integer(unsigned(rt)))))));
+							SHOW("DECODER bne comparing two registers $" & INTEGER'image(to_integer(unsigned(rs))), "$" & INTEGER'image(to_integer(unsigned(rt))));
+							SHOW("VALUES ARE " & INTEGER'image(TO_INTEGER(UNSIGNED(registers(to_integer(unsigned(rs)))))), "and " & INTEGER'image(TO_INTEGER(UNSIGNED(registers(to_integer(unsigned(rt)))))));
 							operation <= "100000"; --Tell ALU to not do anything
 							data1 <= (others => '0');
 							data2 <= (others => '0');

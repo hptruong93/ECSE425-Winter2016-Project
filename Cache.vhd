@@ -46,7 +46,7 @@ signal cached_tags : CACHE_TAG_TYPE;
 
 signal fifo_data : FIFO_DATA_TYPE;
 signal lru_data : LRU_DATA_TYPE;
-signal rand : INTEGER := 1;
+signal rand : INTEGER := 1; --this is the seed for the random function.
 
 begin
 	synced_clock : process(clk, reset)
@@ -227,7 +227,7 @@ begin
 							slot_number := RAND_RANGE(rand, CACHE_SIZE_IN_WORD);
 							rand <= slot_number;
 
-							SHOW("CACHE Replacement to slot " & INTEGER'image(slot_number), "at address " & INTEGER'image(address));
+							--SHOW("CACHE Replacement to slot " & INTEGER'image(slot_number), "at address " & INTEGER'image(address));
 
 							cached_data(slot_number) <= retrieved_value;
 							cached_tags(slot_number) <= tag;
@@ -310,9 +310,10 @@ begin
 
 			lru_data <= (others => '0');
 		elsif (clk'event) then
-		--elsif (rising_edge(clk)) then
 			case( current_state ) is
 				when STALL =>
+					--This state is present to accommodate the fact that the client (i.e. instructi0on fetch) operates on rising edge
+					--Therefore we must stall at least half a clock cycle so that the client can react to our 
 					SHOW("CACHE STALLING");
 					current_state <= IDLE;
 					do_read <= '0';
@@ -328,8 +329,12 @@ begin
 
 					if cache_read = '1' then
 						get_cached_value(mem_address);
+						if not CACHE_ENABLED then
+							SHOW("WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING: CACHE DISABLED!");
+						end if;
+
 						if cache_hit and CACHE_ENABLED then -- cache hit, return the value
-							SHOW_LOVE("CACHE hit at address " & INTEGER'image(mem_address), " Returning value ", cached_value);
+							SHOW_LOVE("CACHE hit at address " & INTEGER'image(mem_address), ".Returning value ", cached_value);
 							cache_hit_callback(mem_address);
 							cache_output <= cached_value;
 							if clk = '0' then
@@ -355,11 +360,16 @@ begin
 						current_state <= IDLE;
 					end if;
 				when PREFETCHING =>
+					--We have this stage because the underlying layer (i.e. memory arbiter) actually needs a complete clock cycle to 
+					--response (i.e. set busy to high) in case of two requests from port 1 and port 2 happening at the same time
+
+					--This is also reasonable even if the underlying layer (i.e. memory arbiter) can response in half clock cycle since
+					--main memory is rising edge sensitive only anyways (i.e. minimum time taken to fetch something from memory is 1 clock cycle)
 					current_state <= FETCHING;
 				when FETCHING =>
 					--SHOW("CACHE FETCHING");
 					if is_mem_busy = '0' then --mem finish loading. Return the value
-						SHOW_LOVE("CACHE RETURNING FROM MEMORY AT ADDRESS " & INTEGER'image(mem_address), " WITH DATA ", mem_data);
+						SHOW_LOVE("CACHE RETURNING FROM MEMORY AT ADDRESS " & INTEGER'image(mem_address), "WITH DATA", mem_data);
 						cache_miss_callback(loading_address, mem_data);
 						cache_output <= mem_data;
 						is_cache_busy <= '0';

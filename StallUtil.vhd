@@ -5,6 +5,12 @@ use work.register_array.all;
 use work.ForwardingUtil.all;
 
 PACKAGE StallUtil is
+
+	SUBTYPE STALL_SIGNAL is STD_LOGIC_VECTOR(2-1 downto 0);
+	CONSTANT STALL_NONE : STALL_SIGNAL := "00"; --no stall
+	CONSTANT STALL_NO_REISSUE : STALL_SIGNAL := "01";
+	CONSTANT STALL_REISSUE : STALL_SIGNAL := "10";
+
 	FUNCTION SHOULD_STALL (
 			destination_register : in REGISTER_INDEX;
 			previous_destinations_output : in previous_destination_array;
@@ -54,7 +60,7 @@ PACKAGE BODY StallUtil IS
 		SHOW("STALL BRANCH: PREVIOUSES ARE " & INTEGER'image(TO_INTEGER(UNSIGNED(previous_sources_output(0)))),
 											""	& INTEGER'image(TO_INTEGER(UNSIGNED(previous_sources_output(1)))),
 											""	& INTEGER'image(TO_INTEGER(UNSIGNED(previous_sources_output(2)))));
-		SHOW("STALL BRANCH: Destinations are " & INTEGER'image(TO_INTEGER(UNSIGNED(destination_register_1))), " and " & INTEGER'image(TO_INTEGER(UNSIGNED(destination_register_2))));
+		SHOW("STALL BRANCH: Destinations are " & INTEGER'image(TO_INTEGER(UNSIGNED(destination_register_1))), "and " & INTEGER'image(TO_INTEGER(UNSIGNED(destination_register_2))));
 
 		--Stall if destination_register_1 or destination_register_2 is the destination of the instruction right before us
 		if (destination_register_1 /= "00000" and destination_register_1 = previous_destinations_output(2) and previous_sources_output(2) = FORWARD_SOURCE_ALU) or
