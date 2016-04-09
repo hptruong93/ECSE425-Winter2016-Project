@@ -65,6 +65,28 @@ PACKAGE BODY StallUtil IS
 			(destination_register_2 /= "00000" and destination_register_2 = previous_destinations_output(1) and previous_sources_output(1) = FORWARD_SOURCE_ALU) then
 			SHOW("STALL: DECODER STALL DUE TO BRANCH. Dependency at 1.");
 			result := '1';
+		-----------------------------------------------------------------------------------------------------------------------------------------------------
+		------------------------------------------Special cases for lo and hi registers----------------------------------------------------------------------
+		-----------------------------------------------------------------------------------------------------------------------------------------------------
+		elsif (destination_register_1 /= "00000" and destination_register_1 = previous_destinations_output(2) and previous_sources_output(2) = FORWARD_SOURCE_HI) or
+			(destination_register_2 /= "00000" and destination_register_2 = previous_destinations_output(2) and previous_sources_output(2) = FORWARD_SOURCE_HI) then
+			SHOW("STALL: DECODER STALL DUE TO BRANCH. Dependency at 2.");
+			result := '1';
+		elsif (destination_register_1 /= "00000" and destination_register_1 = previous_destinations_output(1) and previous_sources_output(1) = FORWARD_SOURCE_HI) or
+			(destination_register_2 /= "00000" and destination_register_2 = previous_destinations_output(1) and previous_sources_output(1) = FORWARD_SOURCE_HI) then
+			SHOW("STALL: DECODER STALL DUE TO BRANCH. Dependency at 1.");
+			result := '1';
+		elsif (destination_register_1 /= "00000" and destination_register_1 = previous_destinations_output(2) and previous_sources_output(2) = FORWARD_SOURCE_LO) or
+			(destination_register_2 /= "00000" and destination_register_2 = previous_destinations_output(2) and previous_sources_output(2) = FORWARD_SOURCE_LO) then
+			SHOW("STALL: DECODER STALL DUE TO BRANCH. Dependency at 2.");
+			result := '1';
+		elsif (destination_register_1 /= "00000" and destination_register_1 = previous_destinations_output(1) and previous_sources_output(1) = FORWARD_SOURCE_LO) or
+			(destination_register_2 /= "00000" and destination_register_2 = previous_destinations_output(1) and previous_sources_output(1) = FORWARD_SOURCE_LO) then
+			SHOW("STALL: DECODER STALL DUE TO BRANCH. Dependency at 1.");
+			result := '1';
+		-----------------------------------------------------------------------------------------------------------------------------------------------------
+		-----------------------------------------------------------------------------------------------------------------------------------------------------
+		-----------------------------------------------------------------------------------------------------------------------------------------------------
 		--elsif (destination_register_1 /= "00000" and destination_register_1 = previous_destinations_output(0) and previous_sources_output(0) = FORWARD_SOURCE_ALU) or
 		--	(destination_register_2 /= "00000" and destination_register_2 = previous_destinations_output(0) and previous_sources_output(0) = FORWARD_SOURCE_ALU) then
 		--	result := '1';
