@@ -6,6 +6,11 @@ use ieee.numeric_std_unsigned.all;
 use work.register_array.all;
 
 PACKAGE cache_infrastructure IS
+	CONSTANT CACHE_ENABLED : BOOLEAN := TRUE;
+
+---------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------
 	CONSTANT CACHE_SIZE_IN_WORD : NATURAL := 128; --always a multiple of four
 	CONSTANT CACHE_SIZE_BIT_COUNT : NATURAL := 7;
 

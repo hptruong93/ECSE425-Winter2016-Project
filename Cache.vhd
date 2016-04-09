@@ -328,7 +328,7 @@ begin
 
 					if cache_read = '1' then
 						get_cached_value(mem_address);
-						if cache_hit then -- cache hit, return the value
+						if cache_hit and CACHE_ENABLED then -- cache hit, return the value
 							SHOW_LOVE("CACHE hit at address " & INTEGER'image(mem_address), " Returning value ", cached_value);
 							cache_hit_callback(mem_address);
 							cache_output <= cached_value;

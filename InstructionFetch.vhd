@@ -44,10 +44,11 @@ type state is (
 	);
 signal current_state : state;
 
-signal program_counter : STD_LOGIC_VECTOR(32-1 downto 0)  := (others => '0');
+signal program_counter : STD_LOGIC_VECTOR(32-1 downto 0) := (others => '0');
 signal last_instruction : STD_LOGIC_VECTOR(32-1 downto 0);
 signal was_stalled : STD_LOGIC;
-signal just_fetched : STD_LOGIC;
+--signal just_fetched : STD_LOGIC;
+signal pending_instruction : STD_LOGIC;
 
 begin
 	synced_clock : process(clk, reset)
@@ -69,20 +70,12 @@ begin
 			update_instruction(data);
 			do_read <= '1';
 
-			--if was_stalled = '0' then
 			program_counter <= program_counter + 4;
 			address <= program_counter + 4;
 			update_instruction(data);
-			--else
-			--	SHOW("InstructionFetch refetch due to stall " & INTEGER'image(TO_INTEGER(UNSIGNED(program_counter))));
-			--	program_counter <= program_counter;
-			--	address <= program_counter;
-
-			--	instruction <= data;
-			--	last_instruction <= (others => '0');
-			--end if;
 
 			is_busy <= '0';
+			pending_instruction <= '1';
 		END got_fetch;
 
 	begin
@@ -94,22 +87,20 @@ begin
 			last_instruction <= (others => '0');
 
 			was_stalled <= '0';
+			pending_instruction <= '0';
 		elsif (rising_edge(clk)) then
 			if do_stall = '1' then
 				SHOW("InstructionFetch STALLING");
 				instruction <= (others => '0');
 				was_stalled <= '1';
-
-				if is_mem_busy = '0' then --a new instruction has been fetched
-					just_fetched <= '1';
-				end if;
 			else
 				was_stalled <= '0';
-				just_fetched <= '0';
+				pending_instruction <= '0';
+
 				pc_reg <= program_counter;
 				instruction <= (others => '0');
 				if was_stalled = '1' and branch_signal /= BRANCH_ALWAYS then
-					if just_fetched = '1' then
+					if pending_instruction = '1' then
 						--This is for actual stall.
 						--When there is a branch, there is no need to reissue because the previous instruction is incorrect anyways
 						SHOW("InstructionFetch issuing last instruction since a new instruction has been fetched");
