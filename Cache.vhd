@@ -151,12 +151,11 @@ begin
 		BEGIN
 			all_used := '1';
 
-			for i in start_lru_index to end_lru_index loop
+			for i in end_lru_index downto start_lru_index loop
 				if lru_data(i) = '0' then
 					--SHOW("CACHE REPLACE Unused at " & INTEGER'image(i));
 					unused_index := i;
 					all_used := '0';
-					exit;
 				end if;
 			end loop;
 
@@ -170,6 +169,7 @@ begin
 			--SHOW("CACHE REPLACE Writing back at " & INTEGER'image(unused_index));
 			cached_data(unused_index) <= retrieved_value;
 			cached_tags(unused_index) <= tag;
+			lru_data(unused_index) <= '1';
 		END lru_replace_on_miss;
 -------------------------------------------------------------------------------------------------------------
 -------------------------------------------------------------------------------------------------------------
@@ -230,7 +230,7 @@ begin
 							rand := RAND_RANGE(rand, CACHE_SIZE_IN_WORD);
 							slot_number := rand;
 
-							SHOW("CACHE Replacement to slot " & INTEGER'image(slot_number), "at address " & INTEGER'image(address));
+							--SHOW("CACHE Replacement to slot " & INTEGER'image(slot_number), "at address " & INTEGER'image(address));
 
 							cached_data(slot_number) <= retrieved_value;
 							cached_tags(slot_number) <= tag;
@@ -253,6 +253,7 @@ begin
 		BEGIN
 			for i in start_lru_index to end_lru_index loop
 				if cached_tags(i) = tag then
+					--SHOW("CACHE MARK ON HIT AT " & INTEGER'image(i));
 					lru_data(i) <= '1';
 				end if;
 			end loop;
