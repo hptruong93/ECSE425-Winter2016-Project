@@ -77,6 +77,11 @@ begin
 
 			is_busy <= '0';
 			pending_instruction <= '1';
+
+			--For evaluation purpose
+			if program_counter = PROGRAM_END_INSTRUCTION_ADDRESS then
+				SHOW("Program finished");
+			end if;
 		END got_fetch;
 
 	begin

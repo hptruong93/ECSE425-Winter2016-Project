@@ -57,10 +57,10 @@ proc AddWaves {} {
 	# add wave -label fetched_instruction -position end  -radix decimal sim:/masterpipeline_instance/fetched_instruction
 	add wave -label instruction -position end  -radix decimal sim:/masterpipeline_instance/fetch_instance/instruction
 	# add wave -label just_fetched -position end  -radix binary sim:/masterpipeline_instance/fetch_instance/just_fetched
-	add wave -label do_stall -position end  -radix binary sim:/masterpipeline_instance/do_stall
-	add wave -label last_stall_signal -position end  -radix binary sim:/masterpipeline_instance/fetch_instance/last_stall_signal
-	add wave -label branch_address -position end  -radix decimal sim:/masterpipeline_instance/branch_address
-	add wave -label branch_signal -position end  -radix binary sim:/masterpipeline_instance/branch_signal
+	# add wave -label do_stall -position end  -radix binary sim:/masterpipeline_instance/do_stall
+	# add wave -label last_stall_signal -position end  -radix binary sim:/masterpipeline_instance/fetch_instance/last_stall_signal
+	# add wave -label branch_address -position end  -radix decimal sim:/masterpipeline_instance/branch_address
+	# add wave -label branch_signal -position end  -radix binary sim:/masterpipeline_instance/branch_signal
 
 	#Decoder
 	add wave -noupdate -divider -height 16 Decoder

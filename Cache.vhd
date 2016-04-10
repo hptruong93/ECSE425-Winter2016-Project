@@ -58,9 +58,10 @@ begin
 
 -------------------------------------------------------------------------------------------------------------
 -------------------------------------------------------------------------------------------------------------
-		PROCEDURE get_cached_value(signal address : in NATURAL) IS
+		PROCEDURE get_cached_value(signal real_address : in NATURAL) IS
 			variable currently_cached : REGISTER_VALUE;
 
+			variable address : NATURAL;
 			variable slot_number : NATURAL;
 			variable index : NATURAL;
 
@@ -68,6 +69,7 @@ begin
 			variable cached_tag : TAG_VALUE;
 
 		BEGIN
+			address := real_address / 4;
 			case( CACHE_ASSOCIATIVITY ) is
 				when ONE_WAY_ASSOCIATIVITY =>
 					slot_number := address mod CACHE_SIZE_IN_WORD;
@@ -85,7 +87,7 @@ begin
 					end if;
 				when TWO_WAY_ASSOCIATIVITY =>
 					slot_number := address mod (CACHE_SIZE_IN_WORD / 2);
-					tag := STD_LOGIC_VECTOR(TO_UNSIGNED(address, tag'length) srl (CACHE_SIZE_BIT_COUNT - 1));
+					tag := STD_LOGIC_VECTOR(TO_UNSIGNED(address, tag'length));
 
 					cached_value := X_BYTE_32;
 					cache_hit := FALSE;
@@ -103,7 +105,7 @@ begin
 					end loop;
 				when FOUR_WAY_ASSOCIATIVITY =>
 					slot_number := address mod (CACHE_SIZE_IN_WORD / 4);
-					tag := STD_LOGIC_VECTOR(TO_UNSIGNED(address, tag'length) srl (CACHE_SIZE_BIT_COUNT - 2));
+					tag := STD_LOGIC_VECTOR(TO_UNSIGNED(address, tag'length));
 
 					cached_value := X_BYTE_32;
 					cache_hit := FALSE;
@@ -170,7 +172,8 @@ begin
 		END lru_replace_on_miss;
 -------------------------------------------------------------------------------------------------------------
 -------------------------------------------------------------------------------------------------------------
-		PROCEDURE cache_miss_callback(signal address : in NATURAL; signal retrieved_value : REGISTER_VALUE) IS
+		PROCEDURE cache_miss_callback(signal real_address : in NATURAL; signal retrieved_value : REGISTER_VALUE) IS
+			variable address : NATURAL;
 			variable slot_number : NATURAL;
 			variable index : NATURAL;
 			variable unused_index : NATURAL;
@@ -179,6 +182,7 @@ begin
 
 			variable start_lru_index, end_lru_index : NATURAL;
 		BEGIN
+			address := real_address / 4;
 			case( CACHE_ASSOCIATIVITY ) is
 				when ONE_WAY_ASSOCIATIVITY =>
 					slot_number := address mod CACHE_SIZE_IN_WORD;
@@ -187,34 +191,30 @@ begin
 					cached_data(slot_number) <= retrieved_value;
 					cached_tags(slot_number) <= tag;
 				when TWO_WAY_ASSOCIATIVITY =>
-					tag := STD_LOGIC_VECTOR(TO_UNSIGNED(address, tag'length) srl (CACHE_SIZE_BIT_COUNT - 1));
+					slot_number := address mod (CACHE_SIZE_IN_WORD / 2);
+					tag := STD_LOGIC_VECTOR(TO_UNSIGNED(address, tag'length));
 					case( REPLACEMENT_STRATEGY ) is
 						when REPLACEMENT_RANDOM =>
-							slot_number := address mod (CACHE_SIZE_IN_WORD / 2);
 							index := RAND_RANGE(rand, 2);
 
 							cached_data(slot_number + index) <= retrieved_value;
 							cached_tags(slot_number + index) <= tag;
 						when REPLACEMENT_BIT_PLRU =>
-							slot_number := address mod (CACHE_SIZE_IN_WORD / 2);
-
 							start_lru_index := slot_number;
 							end_lru_index := slot_number + 1;
 							lru_replace_on_miss(tag, retrieved_value, start_lru_index, end_lru_index);
 						when others =>
 					end case;
 				when FOUR_WAY_ASSOCIATIVITY =>
-					tag := STD_LOGIC_VECTOR(TO_UNSIGNED(address, tag'length) srl (CACHE_SIZE_BIT_COUNT - 2));
+					slot_number := address mod (CACHE_SIZE_IN_WORD / 4);
+					tag := STD_LOGIC_VECTOR(TO_UNSIGNED(address, tag'length));
 					case( REPLACEMENT_STRATEGY ) is
 						when REPLACEMENT_RANDOM =>
-							slot_number := address mod (CACHE_SIZE_IN_WORD / 4);
 							index := RAND_RANGE(rand, 4);
 
 							cached_data(slot_number + index) <= retrieved_value;
 							cached_tags(slot_number + index) <= tag;
 						when REPLACEMENT_BIT_PLRU =>
-							slot_number := address mod (CACHE_SIZE_IN_WORD / 4);
-
 							start_lru_index := slot_number;
 							end_lru_index := slot_number + 3;
 							lru_replace_on_miss(tag, retrieved_value, start_lru_index, end_lru_index);
@@ -266,14 +266,14 @@ begin
 					case( CACHE_ASSOCIATIVITY ) is
 						when TWO_WAY_ASSOCIATIVITY =>
 							slot_number := address mod (CACHE_SIZE_IN_WORD / 2);
-							tag := STD_LOGIC_VECTOR(TO_UNSIGNED(address, tag'length) srl (CACHE_SIZE_BIT_COUNT - 1));
+							tag := STD_LOGIC_VECTOR(TO_UNSIGNED(address, tag'length));
 
 							start_lru_index := slot_number;
 							end_lru_index := slot_number + 1;
 							lru_mark_on_hit(tag, start_lru_index, end_lru_index);
 						when FOUR_WAY_ASSOCIATIVITY =>
 							slot_number := address mod (CACHE_SIZE_IN_WORD / 4);
-							tag := STD_LOGIC_VECTOR(TO_UNSIGNED(address, tag'length) srl (CACHE_SIZE_BIT_COUNT - 2));
+							tag := STD_LOGIC_VECTOR(TO_UNSIGNED(address, tag'length));
 
 							start_lru_index := slot_number;
 							end_lru_index := slot_number + 3;
