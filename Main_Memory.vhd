@@ -9,8 +9,8 @@ ENTITY Main_Memory IS
 			Mem_Size_in_Word : integer:=4000;
 			Num_Bytes_in_Word: integer:=4;
 			Num_Bits_in_Byte: integer := 8; 
-			Read_Delay: integer:=0; 
-			Write_Delay:integer:=0
+			Read_Delay: integer:=5; 
+			Write_Delay:integer:=5
 		 );
 	port (
 			clk : in std_logic;

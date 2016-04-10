@@ -6,7 +6,7 @@ use ieee.numeric_std_unsigned.all;
 use work.register_array.all;
 
 PACKAGE cache_infrastructure IS
-	CONSTANT CACHE_ENABLED : BOOLEAN := TRUE;
+	CONSTANT CACHE_ENABLED : BOOLEAN := FALSE;
 
 ---------------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------------

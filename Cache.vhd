@@ -373,7 +373,7 @@ begin
 						cache_miss_callback(loading_address, mem_data);
 						cache_output <= mem_data;
 						is_cache_busy <= '0';
-						current_state <= STALL;
+						current_state <= STALL2;
 					else --keep waiting for mem
 						if cache_read = '0' then --client cancels read
 							do_read <= '0';
