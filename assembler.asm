@@ -1,25 +1,39 @@
-###############################################
-# This program generates Fibonacci series.
-# It stores the generated Fibonacci numbers fisrt into, Reg[2] ($2), and then into memory
-# Assume that your data section in memory starts from address 2000
-			
-	addi $10,  $0, 7	# number of generating Fibonacci-numbers 								#0 
-	addi $1,   $0, 1	# initializing Fib(-1) = 1												#4 
-	addi $2,   $0, 1	# initializing Fib(0) = 1												#8
-	addi $11,  $0, 2000  	# initializing the beginning of Data Section address in memory		#12
-	addi $15,  $0, 4	# word size in byte														#16
-			
-loop:	addi $3, $2, 0		# temp = Fib(n-1)													#20
-	add  $2, $2, $1		# Fib(n)=Fib(n-1)+Fib(n-2)												#24
-	addi $1, $3, 0		# Fib(n-2)=temp=Fib(n-1)												#28
-	mult $10, $15		# $lo=4*$10, for word alignment 										#32
-	mflo $12		# assume small numbers 														#36
-	add  $13, $11, $12	# Make data pointer [2000+($10)*4]										#40
-	sw	 $2, 0($13)	# Mem[$10+2000] <-- Fib(n)													#44
-	addi $10, $10, -1	# loop index															#48
-	bne  $10, $0, loop 																			#52
-			
-	lw   $7, 2004($0)																			#56 for testing to see if write was correct
+###############################################################################
+############### A large loop program ##########################################
+############### The loop does not fit in cache ################################
+###############################################################################
 
-EoP:	beq	 $11, $11, EoP 	#end of program (infinite loop)										#60
-###############################################
+#Find all prime divisors
+
+addi $1 $0 15						#Input																	#0
+addi $5 $0 100 						#index in memory where we store prime divisors							#4
+
+addi $2 $0 1 						#Checking if this number is a prime divisor 							#8
+OUTER_LOOP: addi $2 $2 1 			#Increment index														#12
+beq $2 $1 END						#Cannot find any prime divisor 											#16
+
+addi $3 $0 1 						#Check if $2 is prime 													#20
+INNER_LOOP: addi $3 $3 1 			#Increment inner index 													#24
+beq $3 $2 FOUND_PRIME				#If cannot find divisor 												#28
+
+#Check if $2 mod $3 = 0
+div $2 $3																									#32
+mflo $29																									#36
+mult $29 $3																									#40
+mflo $28																									#44
+beq $28 $2 OUTER_LOOP				#If $2 mod $3 = 0 then this is not a prime. Check the next divisor 		#48
+
+j INNER_LOOP 																								#52
+
+FOUND_PRIME: div $1 $2				#check if $2 divides $1													#56
+mfhi $3																										#60
+bne $3 $0 OUTER_LOOP																						#64
+
+
+sw $2 0($5)							#Store the result 														#68
+addi $5 $5 4						#Increment pointer in memory											#22
+
+j OUTER_LOOP																								#76
+
+add $8 $2 $0																								#80
+END: j END																									#84

@@ -23,7 +23,7 @@ PACKAGE cache_infrastructure IS
 	subtype TAG_VALUE_FOUR_WAY_ASSOCIATIVE IS STD_LOGIC_VECTOR(32-1 downto 0);
 	subtype TAG_VALUE_FULLY_ASSOCIATIVE IS STD_LOGIC_VECTOR(32-1 downto 0);
 
-	subtype TAG_VALUE IS TAG_VALUE_FOUR_WAY_ASSOCIATIVE; --remember to change CACHE_ASSOCIATIVITY
+	subtype TAG_VALUE IS TAG_VALUE_FULLY_ASSOCIATIVE; --remember to change CACHE_ASSOCIATIVITY
 	type CACHE_DATA_TYPE IS array(0 to CACHE_SIZE_IN_WORD) of REGISTER_VALUE;
 	type CACHE_TAG_TYPE IS array(0 to CACHE_SIZE_IN_WORD) of TAG_VALUE;
 
@@ -43,18 +43,20 @@ PACKAGE cache_infrastructure IS
 ---------------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------------
-	
-	CONSTANT CACHE_ASSOCIATIVITY : CACHE_ASSOCIATIVITY_TYPE := FOUR_WAY_ASSOCIATIVITY; --remember to change subtype TAG_VALUE
-	CONSTANT REPLACEMENT_STRATEGY : CACHE_REPLACEMENT_STRATEGY := REPLACEMENT_RANDOM;
 
-	FUNCTION RAND_RANGE(signal previous : IN INTEGER; CONSTANT max : IN INTEGER) return INTEGER;
+	CONSTANT CACHE_ASSOCIATIVITY : CACHE_ASSOCIATIVITY_TYPE := FULL_ASSOCIATIVITY; --remember to change subtype TAG_VALUE
+	CONSTANT REPLACEMENT_STRATEGY : CACHE_REPLACEMENT_STRATEGY := REPLACEMENT_BIT_PLRU;
+
+	FUNCTION RAND_RANGE(previous : IN INTEGER; CONSTANT max : IN INTEGER) return INTEGER;
 END cache_infrastructure ; -- cache_infrastructure
 
 PACKAGE BODY cache_infrastructure IS
-	FUNCTION RAND_RANGE(signal previous : IN INTEGER; CONSTANT max : IN INTEGER) RETURN INTEGER IS
-		variable next_value : INTEGER;
+	FUNCTION RAND_RANGE(previous : IN INTEGER; CONSTANT max : IN INTEGER) RETURN INTEGER IS
+		variable next_value : UNSIGNED(64-1 downto 0);
 	BEGIN
-		next_value := previous * 1103515245 + 12345;
-		return INTEGER(next_value / 65536) mod max;
+		next_value := TO_UNSIGNED(previous, 32) * 1103515245 + 12345;
+		SHOW("RAND " & INTEGER'image(previous), "--> " & INTEGER'image(TO_INTEGER(next_value) mod max), "with max " & INTEGER'image(max));
+		--return TO_INTEGER(next_value / 65536) mod max;
+		return TO_INTEGER(next_value) mod max;
 	END RAND_RANGE;
 END cache_infrastructure;

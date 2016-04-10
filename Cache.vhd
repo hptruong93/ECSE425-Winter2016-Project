@@ -46,13 +46,13 @@ signal cached_tags : CACHE_TAG_TYPE;
 
 signal fifo_data : FIFO_DATA_TYPE;
 signal lru_data : LRU_DATA_TYPE;
-signal rand : INTEGER := 1; --this is the seed for the random function.
 
 begin
 	synced_clock : process(clk, reset)
 
 -------------------------------------------------------------------------------------------------------------
 -------------------------------------------------------------------------------------------------------------
+		variable rand : INTEGER := 27; --this is the seed for the random function.
 		variable cached_value : REGISTER_VALUE;
 		variable cache_hit : BOOLEAN;
 
@@ -162,7 +162,8 @@ begin
 
 			if all_used = '1' then --all are used. Set everything to 0
 				--SHOW("CACHE REPLACEMENT_BIT_PLRU ALL USED");
-				unused_index := start_lru_index + RAND_RANGE(rand, end_lru_index - start_lru_index);
+				rand := RAND_RANGE(rand, end_lru_index - start_lru_index);
+				unused_index := start_lru_index + rand;
 				lru_data <= (others => '0');
 			end if;
 
@@ -195,7 +196,8 @@ begin
 					tag := STD_LOGIC_VECTOR(TO_UNSIGNED(address, tag'length));
 					case( REPLACEMENT_STRATEGY ) is
 						when REPLACEMENT_RANDOM =>
-							index := RAND_RANGE(rand, 2);
+							rand := RAND_RANGE(rand, 2);
+							index := rand;
 
 							cached_data(slot_number + index) <= retrieved_value;
 							cached_tags(slot_number + index) <= tag;
@@ -210,7 +212,8 @@ begin
 					tag := STD_LOGIC_VECTOR(TO_UNSIGNED(address, tag'length));
 					case( REPLACEMENT_STRATEGY ) is
 						when REPLACEMENT_RANDOM =>
-							index := RAND_RANGE(rand, 4);
+							rand := RAND_RANGE(rand, 4);
+							index := rand;
 
 							cached_data(slot_number + index) <= retrieved_value;
 							cached_tags(slot_number + index) <= tag;
@@ -224,10 +227,10 @@ begin
 					tag := STD_LOGIC_VECTOR(TO_UNSIGNED(address, tag'length));
 					case( REPLACEMENT_STRATEGY ) is
 						when REPLACEMENT_RANDOM =>
-							slot_number := RAND_RANGE(rand, CACHE_SIZE_IN_WORD);
-							rand <= slot_number;
+							rand := RAND_RANGE(rand, CACHE_SIZE_IN_WORD);
+							slot_number := rand;
 
-							--SHOW("CACHE Replacement to slot " & INTEGER'image(slot_number), "at address " & INTEGER'image(address));
+							SHOW("CACHE Replacement to slot " & INTEGER'image(slot_number), "at address " & INTEGER'image(address));
 
 							cached_data(slot_number) <= retrieved_value;
 							cached_tags(slot_number) <= tag;

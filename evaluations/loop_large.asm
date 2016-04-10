@@ -29,10 +29,11 @@ FOUND_PRIME: div $1 $2				#check if $2 divides $1													#56
 mfhi $3																										#60
 bne $3 $0 OUTER_LOOP																						#64
 
-add $8 $2 $0																								#68
-sw $2 0($5)							#Store the result 														#72
-addi $5 $5 4						#Increment pointer in memory											#76
 
-j OUTER_LOOP																								#80
+sw $2 0($5)							#Store the result 														#68
+addi $5 $5 4						#Increment pointer in memory											#22
 
+j OUTER_LOOP																								#76
+
+add $8 $2 $0																								#80
 END: j END																									#84

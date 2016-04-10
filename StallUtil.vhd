@@ -37,7 +37,7 @@ PACKAGE BODY StallUtil IS
 											""	& INTEGER'image(TO_INTEGER(UNSIGNED(previous_sources_output(1)))),
 											""	& INTEGER'image(TO_INTEGER(UNSIGNED(previous_sources_output(2)))));
 
-		--Stall if lw, sw, lb, sb are previous instruction and this instruction is dependent on those
+		--Stall if lw, sw, lb, sb are previous instruction
 		if previous_sources_output(2) = FORWARD_SOURCE_MEM then
 			result := '1';
 		elsif previous_sources_output(1) = FORWARD_SOURCE_MEM then

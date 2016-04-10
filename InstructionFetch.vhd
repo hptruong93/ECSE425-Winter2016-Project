@@ -53,6 +53,8 @@ signal pending_instruction : STD_LOGIC;
 
 begin
 	synced_clock : process(clk, reset)
+		variable finished_count : NATURAL := 0;
+
 		PROCEDURE update_instruction(signal new_instruction : STD_LOGIC_VECTOR(32-1 downto 0)) IS
 		BEGIN
 			if (new_instruction = Z_BYTE_32) then
@@ -80,7 +82,8 @@ begin
 
 			--For evaluation purpose
 			if program_counter = PROGRAM_END_INSTRUCTION_ADDRESS then
-				SHOW("Program finished");
+				finished_count := finished_count + 1;
+				SHOW("Program finished " & INTEGER'image(finished_count), ".");
 			end if;
 		END got_fetch;
 
