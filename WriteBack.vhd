@@ -110,9 +110,8 @@ begin
 						current_state <= IDLE;
 
 						if pending_writeback_source /= NO_WRITE_BACK then
-							SHOW_LOVE("Writing back the value ", STD_LOGIC_VECTOR(signed(mem_stage_output)));
-							SHOW("WRITE BACK FROM MEM TO REGISTER " & integer'image(to_integer(unsigned(destination_reg))));
-							registers(to_integer(unsigned(destination_reg))) <= STD_LOGIC_VECTOR(signed(mem_stage_output));
+							SHOW_LOVE("WRITE BACK FROM MEM TO REGISTER ", "" & INTEGER'image(TO_INTEGER(UNSIGNED(destination_reg))), STD_LOGIC_VECTOR(SIGNED(mem_stage_output)));
+							registers(TO_INTEGER(UNSIGNED(destination_reg))) <= STD_LOGIC_VECTOR(SIGNED(mem_stage_output));
 						else
 							SHOW("WRITE BACK SKIP BECAUSE OF STORE.");
 						end if;
