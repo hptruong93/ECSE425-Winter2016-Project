@@ -318,12 +318,12 @@ BEGIN
 
 							--A wild jr appears
 							when "001000" => --jr
-								if (check_stall(ZERO_REGISTER) = '1') then
+								if (SHOULD_STALL_BRANCH(rs, ZERO_REGISTER, previous_stall_destinations, previous_stall_sources) = '1') then
 									stall_decoder;
 								else
 									update_history(ZERO_REGISTER, FORWARD_SOURCE_ALU, rs, rt);
 
-									SHOW("Handling a wild jr at register " & integer'image(to_integer(unsigned(rs))));
+									SHOW("Handling a wild jr at register " & integer'image(to_integer(unsigned(rs))), "jumping to " & INTEGER'image(TO_INTEGER(UNSIGNED(registers(to_integer(unsigned(rs)))))));
 									operation <= "100000"; --Tell ALU to not do anything
 									data1 <= (others => '0');
 									data2 <= (others => '0');

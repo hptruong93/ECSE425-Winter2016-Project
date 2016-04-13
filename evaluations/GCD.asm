@@ -4,9 +4,9 @@
 
 
 #store x, y, z in $5, $6
-addi $5 $0 24  # x === 24 											#0
-addi $6 $0 10	# y == 10											#4
-addi $8 $0 8	# z == 8 											#8
+addi $5 $0 24   															#0
+addi $6 $0 10																#4
+addi $8 $0 8	 															#8
 
 
 START0: 	div $5 $6														#12
@@ -14,10 +14,10 @@ START0: 	div $5 $6														#12
 			beq $7 $0 START1												#20
 			add $5 $6 $0													#24
 			add $6 $7 $0													#28
-			j START0															#32
+			j START0														#32
 
 
-START1:	beq $6 $0 FINISH												#36					
+START1:	beq $6 $0 FINISH													#36
 			add $7 $6 $0													#40
 			slt $9 $7 $8													#44
 			beq $9 $0 loop													#48
@@ -32,9 +32,9 @@ loop:		div $7 $8														#64
 			add $8 $10 $0													#80
 			j loop															#84
 
-FINISH: sw $8  1000($0)						#put output into $	#88
+FINISH: sw $8  1000($0)						#put output into $8				#88
 		  lw $9  1000($0)													#92
 
 END:	add $31 $31 $0														#96
-		j END																	#100
+		j END																#100
 
