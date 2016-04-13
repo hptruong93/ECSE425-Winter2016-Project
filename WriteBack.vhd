@@ -31,6 +31,7 @@ type state is (
 signal current_state : state;
 
 signal destination_reg : STD_LOGIC_VECTOR(5-1 downto 0) := (others => '0');
+signal pending_writeback_source : STD_LOGIC_VECTOR(3-1 downto 0);
 
 begin
 	synced_clock : process(clk, reset)
@@ -68,12 +69,16 @@ begin
 			registers(29) <= (others => '0');
 			registers(30) <= (others => '0');
 			registers(31) <= (others => '0');
+
 			current_state <= IDLE;
+			pending_writeback_source <= NO_WRITE_BACK;
 		elsif (rising_edge(clk)) then
 			current_state <= current_state;
 
 			case( current_state ) is
 				when IDLE =>
+					pending_writeback_source <= NO_WRITE_BACK;
+
 					case( writeback_source ) is
 						when LO_AS_SOURCE =>
 							SHOW("WRITE BACK lo as source " & INTEGER'image(TO_INTEGER(UNSIGNED(STD_LOGIC_VECTOR(lo_reg)))), "--> $" & integer'image(to_integer(unsigned(mem_writeback_register))));
@@ -91,12 +96,9 @@ begin
 							--Therefore there is no way for write back unit to write back at this point. We have to wait for at least
 							--one cycle
 
-							--if mem_stage_busy = '0' then
-								--registers(to_integer(unsigned(mem_writeback_register))) <= STD_LOGIC_VECTOR(signed(mem_stage_output));
-							--else
 							destination_reg <= mem_writeback_register;
 							current_state <= MEM_WAIT;
-							--end if;
+							pending_writeback_source <= writeback_source;
 						when NO_WRITE_BACK =>
 							SHOW("NO WRITE BACK");
 						when others =>
@@ -107,15 +109,16 @@ begin
 					if mem_stage_busy = '0' then
 						current_state <= IDLE;
 
-						if writeback_source /= NO_WRITE_BACK then
+						if pending_writeback_source /= NO_WRITE_BACK then
 							SHOW_LOVE("Writing back the value ", STD_LOGIC_VECTOR(signed(mem_stage_output)));
 							SHOW("WRITE BACK FROM MEM TO REGISTER " & integer'image(to_integer(unsigned(destination_reg))));
 							registers(to_integer(unsigned(destination_reg))) <= STD_LOGIC_VECTOR(signed(mem_stage_output));
 						else
 							SHOW("WRITE BACK SKIP BECAUSE OF STORE.");
 						end if;
+						pending_writeback_source <= NO_WRITE_BACK;
 					else
-						SHOW("WRITE BACK WAITING FOR MEM");
+						SHOW("WRITE BACK WAITING FOR MEM WITH PENDING WRITE BACK SOURCE " & INTEGER'image(TO_INTEGER(UNSIGNED(pending_writeback_source))));
 					end if;
 
 				when others =>
