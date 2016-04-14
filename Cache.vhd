@@ -86,7 +86,7 @@ begin
 						cache_hit := FALSE;
 					end if;
 				when TWO_WAY_ASSOCIATIVITY =>
-					slot_number := address mod (CACHE_SIZE_IN_WORD / 2);
+					slot_number := 2 * (address mod (CACHE_SIZE_IN_WORD / 2));
 					tag := STD_LOGIC_VECTOR(TO_UNSIGNED(address, tag'length));
 
 					cached_value := X_BYTE_32;
@@ -104,7 +104,7 @@ begin
 						end if;
 					end loop;
 				when FOUR_WAY_ASSOCIATIVITY =>
-					slot_number := address mod (CACHE_SIZE_IN_WORD / 4);
+					slot_number := 4 * (address mod (CACHE_SIZE_IN_WORD / 4));
 					tag := STD_LOGIC_VECTOR(TO_UNSIGNED(address, tag'length));
 
 					cached_value := X_BYTE_32;
@@ -192,7 +192,7 @@ begin
 					cached_data(slot_number) <= retrieved_value;
 					cached_tags(slot_number) <= tag;
 				when TWO_WAY_ASSOCIATIVITY =>
-					slot_number := address mod (CACHE_SIZE_IN_WORD / 2);
+					slot_number := 2 * (address mod (CACHE_SIZE_IN_WORD / 2));
 					tag := STD_LOGIC_VECTOR(TO_UNSIGNED(address, tag'length));
 					case( REPLACEMENT_STRATEGY ) is
 						when REPLACEMENT_RANDOM =>
@@ -208,7 +208,7 @@ begin
 						when others =>
 					end case;
 				when FOUR_WAY_ASSOCIATIVITY =>
-					slot_number := address mod (CACHE_SIZE_IN_WORD / 4);
+					slot_number := 4 * (address mod (CACHE_SIZE_IN_WORD / 4));
 					tag := STD_LOGIC_VECTOR(TO_UNSIGNED(address, tag'length));
 					case( REPLACEMENT_STRATEGY ) is
 						when REPLACEMENT_RANDOM =>
@@ -269,14 +269,14 @@ begin
 				when REPLACEMENT_BIT_PLRU =>
 					case( CACHE_ASSOCIATIVITY ) is
 						when TWO_WAY_ASSOCIATIVITY =>
-							slot_number := address mod (CACHE_SIZE_IN_WORD / 2);
+							slot_number := 2 * (address mod (CACHE_SIZE_IN_WORD / 2));
 							tag := STD_LOGIC_VECTOR(TO_UNSIGNED(address, tag'length));
 
 							start_lru_index := slot_number;
 							end_lru_index := slot_number + 1;
 							lru_mark_on_hit(tag, start_lru_index, end_lru_index);
 						when FOUR_WAY_ASSOCIATIVITY =>
-							slot_number := address mod (CACHE_SIZE_IN_WORD / 4);
+							slot_number := 4 * (address mod (CACHE_SIZE_IN_WORD / 4));
 							tag := STD_LOGIC_VECTOR(TO_UNSIGNED(address, tag'length));
 
 							start_lru_index := slot_number;
@@ -317,7 +317,7 @@ begin
 			case( current_state ) is
 				when STALL =>
 					--This state is present to accommodate the fact that the client (i.e. instructi0on fetch) operates on rising edge
-					--Therefore we must stall at least half a clock cycle so that the client can react to our 
+					--Therefore we must stall at least half a clock cycle so that the client can react to our
 					SHOW("CACHE STALLING");
 					current_state <= IDLE;
 					do_read <= '0';
@@ -364,7 +364,7 @@ begin
 						current_state <= IDLE;
 					end if;
 				when PREFETCHING =>
-					--We have this stage because the underlying layer (i.e. memory arbiter) actually needs a complete clock cycle to 
+					--We have this stage because the underlying layer (i.e. memory arbiter) actually needs a complete clock cycle to
 					--response (i.e. set busy to high) in case of two requests from port 1 and port 2 happening at the same time
 
 					--This is also reasonable even if the underlying layer (i.e. memory arbiter) can response in half clock cycle since
